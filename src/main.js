@@ -1,9 +1,11 @@
 const { app, ipcMain, dialog, BrowserWindow } = require('electron');
 const path = require('node:path');
 const http = require('node:http');
+const url = require('node:url');
 const fs = require('node:fs');
+const QRCode = require('qrcode');
 
-var filePath = null;
+var urlPathMappings = {};
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -14,8 +16,9 @@ async function handleFileOpen() {
   const { canceled, filePaths } = await dialog.showOpenDialog({});
   if (!canceled && filePaths.length > 0) {
     //const data = await fs.readFile(filePaths[0], 'utf-8');
-    filePath = filePaths[0];
-    return filePaths[0]; // returned to renderer
+    let id = Math.floor(Math.random() * 1000000);
+    urlPathMappings[id] = filePaths[0];
+    return [id, filePaths[0]]; // returned to renderer
   }
   return null;
 }
@@ -48,6 +51,17 @@ app.whenReady().then(() => {
 
   //create client web server
   const server = http.createServer((req, res) => {
+
+    const parsedUrl = url.parse(req.url, true);
+    const urlFilter = /^\/get\/(\d+)$/;
+
+    let filePath = null;
+    if (urlFilter.test(parsedUrl.pathname)) {
+      const match = parsedUrl.pathname.match(urlFilter);
+      const index = match[1];
+      filePath = urlPathMappings[index];
+    }
+
     if (filePath == null) {
       res.statusCode = 500;
       res.end("No file specified.")
