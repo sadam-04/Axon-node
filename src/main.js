@@ -7,6 +7,8 @@ const QRCode = require('qrcode');
 
 var urlPathMappings = {};
 
+process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -20,7 +22,7 @@ async function handleFileOpen() {
     urlPathMappings[id] = filePaths[0];
     return [id, filePaths[0]]; // returned to renderer
   }
-  return null;
+  return [0, "null"];
 }
 
 const createWindow = () => {
@@ -30,7 +32,8 @@ const createWindow = () => {
     height: 600,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-      nodeIntegration: true,
+      nodeIntegration: false,
+      devTools: true,
     },
   });
 
