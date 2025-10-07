@@ -9,6 +9,11 @@ body {
 }
 
 .file-entry {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: flex-start;
+  
   border: none;
   border-radius: 8px;
   padding: 15px;
@@ -18,17 +23,95 @@ body {
   background-color: #202020;
 }
 
-.add-data-button {
-  padding: 5px;
-  border: none;
-  border-radius: 10px;
-  margin-bottom: 10px;
-  background-color: #f55;
-  color: #fff;
-  width: 30px;
-  aspect-ratio: 1 / 1;
+.details-list {
+  list-style-type: none;
+  padding-left: 8px;
+  margin-top: 4px;
 }
-.add-data-button:hover {
-  background-color: #e44;
+
+.qr-wrapper {
+  position: relative;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #808080;
+  font-style: italic;
   cursor: pointer;
 }
+
+.qr-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+
+  background-color: #404040a0;
+
+  /* background: rgba(0, 0, 0, 0.5);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s; */
+}
+.qr-wrapper:hover .qr-overlay {
+  opacity: 1;
+}
+
+.qr-overlay-text {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  text-shadow: 0 0 8px #000;
+  opacity: 1;
+}
+
+.plus-btn {
+  margin: auto;
+  margin-top: 20px;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  background-color: #e44;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.plus-btn:hover {
+  background-color: #f66;
+}
+
+.plus-btn::before,
+.plus-btn::after {
+  content: "";
+  position: absolute;
+  background-color: #fff;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.plus-btn::before {
+  width: 50%;
+  height: 2px;
+}
+
+.plus-btn::after {
+  width: 2px;
+  height: 50%;
+}
+
+.no-files-msg {
+  background-color: #202020;
+  color: #606060;
+  font-style: italic;
+  padding: 12px;
+  text-align: center;
+  border-radius: 8px;
+  margin: auto;
+  margin-top: 20px;
+} 

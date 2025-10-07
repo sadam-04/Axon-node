@@ -20,11 +20,13 @@ async function handleFileOpen() {
     //const data = await fs.readFile(filePaths[0], 'utf-8');
     let id = Math.floor(Math.random() * 1000000);
     urlPathMappings[id] = [filePaths[0], true];
-    return [id, filePaths[0]]; // returned to renderer
+    const fileSize = fs.statSync(filePaths[0]).size;
+    return [id, filePaths[0], fileSize]; // return to renderer
   }
-  return [0, "null"];
+  return [0, "null", 0];
 }
 
+// toggle a file on/off
 async function handleSetServing(event, shouldServe, id) {
   console.log(`Set checkbox ${id} to ${shouldServe}`);
   if (!(id in urlPathMappings)) {
