@@ -13,4 +13,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setTitle: (title) => ipcRenderer.send('set-title', title),
     ping: () => ipcRenderer.invoke('ping'),
     openFile: () => ipcRenderer.invoke('openFile'),
+    setServing: (shouldServe, id) => ipcRenderer.invoke('setServing', shouldServe, id),
 })

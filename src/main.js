@@ -19,10 +19,19 @@ async function handleFileOpen() {
   if (!canceled && filePaths.length > 0) {
     //const data = await fs.readFile(filePaths[0], 'utf-8');
     let id = Math.floor(Math.random() * 1000000);
-    urlPathMappings[id] = filePaths[0];
+    urlPathMappings[id] = [filePaths[0], true];
     return [id, filePaths[0]]; // returned to renderer
   }
   return [0, "null"];
+}
+
+async function handleSetServing(event, shouldServe, id) {
+  console.log(`Set checkbox ${id} to ${shouldServe}`);
+  if (!(id in urlPathMappings)) {
+    return false;
+  }
+  urlPathMappings[id][1] = shouldServe ? true : false;
+  return true;
 }
 
 const createWindow = () => {
@@ -44,11 +53,14 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 };
 
+
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
+  ipcMain.handle('setServing', handleSetServing);
 
   createWindow();
 
@@ -59,10 +71,19 @@ app.whenReady().then(() => {
     const urlFilter = /^\/get\/(\d+)$/;
 
     let filePath = null;
+    let index = null;
+
     if (urlFilter.test(parsedUrl.pathname)) {
       const match = parsedUrl.pathname.match(urlFilter);
-      const index = match[1];
-      filePath = urlPathMappings[index];
+
+      index = match[1];
+      filePath = urlPathMappings[index][0];
+
+      if (urlPathMappings[index][1] == false) {
+        res.statusCode = 404;
+        res.end("File not found");
+        return;
+      }
     }
 
     if (filePath == null) {
