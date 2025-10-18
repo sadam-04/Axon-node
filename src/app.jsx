@@ -6,8 +6,12 @@ const root = createRoot(document.body);
 
 function App() {
   const [children, setChildren] = useState([]);
+  const [recvQrSrc, setRecvQrSrc] = useState("");
+  
+  let ip = "";
+  let recvUrl = "";
 
-  function handleClick() {
+  function handleFileOpenClick() {
       window.electronAPI.openFile().then(([hostUrl, filePath, fileSize]) => {
           if (hostUrl == 0 && filePath == "null") {
             return;
@@ -16,21 +20,61 @@ function App() {
       });
   }
 
+  function sendMode() {
+    let sendPanel = document.getElementById("send-panel");
+    let recvPanel = document.getElementById("recv-panel");
+    
+    sendPanel.style.display = "block";
+    recvPanel.style.display = "none";
+  }
+
+  function recvMode() {
+    let sendPanel = document.getElementById("send-panel");
+    let recvPanel = document.getElementById("recv-panel");
+    
+    sendPanel.style.display = "none";
+    recvPanel.style.display = "block";
+  }
+
   if (children.length === 0) {
     return (
       <div>
-        <div className="no-files-msg" onClick={handleClick}>No files added yet. Click here to add one.</div>
-        <div className="plus-btn" onClick={handleClick} />
+        <div className="no-files-msg" onClick={handleFileOpenClick}>No files added yet. Click here to add one.</div>
+        <div className="plus-btn" onClick={handleFileOpenClick} />
       </div>
     );
   }
 
+  (async () => {
+    try {
+      ip = await window.electronAPI.getDefaultIP();
+      recvUrl = `http://${ip}:3030/send`;
+      setRecvQrSrc(await QRCode.toDataURL(recvUrl, {margin: 4}));
+    } catch (err) {
+      console.error("Failed to generate QR code", err);
+    }
+  })();
+
   return (
-    <div>
-      {children.map((child) => (
-        <ServedItem key={child.id} path={child.path} url={child.url} size={child.size} />
-      ))}
-      <div className="plus-btn" onClick={handleClick} />
+    <div className="outer-wrapper">
+      <div className="nav-sidebar">
+        <div className="sidebar-button" onClick={sendMode}>Send</div>
+        <div className="sidebar-button" onClick={recvMode}>Receive</div>
+      </div>
+      <div className="content-wrapper">
+        <div id="send-panel">
+          {children.map((child) => (
+            <ServedItem key={child.id} path={child.path} url={child.url} size={child.size} />
+          ))}
+          <div className="plus-btn" onClick={handleFileOpenClick} />
+        </div>
+
+        <div id="recv-panel" style={{display: "none"}}>
+          <div className="file-entry">
+            {recvQrSrc ? <img src={recvQrSrc} /> : <p>Loading QR...</p>}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -39,8 +83,10 @@ function ServedItem({path, url, size}) {
   const [src, setSrc] = useState("");
   const [checked, setChecked] = useState(true);
   const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
+  const [fullUrl, setFullUrl] = useState("");
 
-  const fullUrl = `http://192.168.1.182:3030/get/${url}`;
+  let ip = "";
+  // const fullUrl = `http://${ip}:3030/get/${url}`;
 
   const handleCheckboxChange = (e) => {
     const isChecked = e.target.checked ? true : false;
@@ -49,7 +95,7 @@ function ServedItem({path, url, size}) {
     // You can also call local or Electron IPC functions here
   };
 
-  const handleQRClick = (e) => {
+  const handleQRClick = async (e) => {
     navigator.clipboard.writeText(fullUrl).then(() => {
       setQrHoverMsg("Copied!");
     })
@@ -58,12 +104,22 @@ function ServedItem({path, url, size}) {
   useEffect(() => {
     (async () => {
       try {
-        const dataUrl = await QRCode.toDataURL(fullUrl, {margin: 4});
+        ip = await window.electronAPI.getDefaultIP();
+        console.log("renderer: set ip to " + ip);
+
+        // setFullUrl(`http://${ip}:3030/get/${url}`, async () => {
+          // console.log("renderer: fullUrl is " + fullUrl);
+        setFullUrl(`http://${ip}:3030/get/${url}`);
+
+        const dataUrl = await QRCode.toDataURL(`http://${ip}:3030/get/${url}`, {margin: 4});
         setSrc(dataUrl);
+        // });
+
       } catch (err) {
         console.error("Failed to generate QR code", err);
       }
     })();
+
   }, [url]);
 
   path = path.replace(/^.*[\\/]/, '');
