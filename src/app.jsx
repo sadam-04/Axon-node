@@ -107,11 +107,13 @@ function ServedItem({path, url, size}) {
         ip = await window.electronAPI.getDefaultIP();
         console.log("renderer: set ip to " + ip);
 
-        setFullUrl(`http://${ip}:3030/get/${url}`, async () => {
-          console.log("renderer: fullUrl is " + fullUrl);
-          const dataUrl = await QRCode.toDataURL(fullUrl, {margin: 4});
-          setSrc(dataUrl);
-        });
+        // setFullUrl(`http://${ip}:3030/get/${url}`, async () => {
+          // console.log("renderer: fullUrl is " + fullUrl);
+        setFullUrl(`http://${ip}:3030/get/${url}`);
+
+        const dataUrl = await QRCode.toDataURL(`http://${ip}:3030/get/${url}`, {margin: 4});
+        setSrc(dataUrl);
+        // });
 
       } catch (err) {
         console.error("Failed to generate QR code", err);
