@@ -3,6 +3,7 @@ const path = require('node:path');
 const http = require('node:http');
 const url = require('node:url');
 const fs = require('node:fs');
+const os = require('node:os');
 const QRCode = require('qrcode');
 
 var urlPathMappings = {};
@@ -27,13 +28,26 @@ async function handleFileOpen() {
 }
 
 // toggle a file on/off
-async function handleSetServing(event, shouldServe, id) {
+async function toggleSpecificItem(event, shouldServe, id) {
   console.log(`Set checkbox ${id} to ${shouldServe}`);
   if (!(id in urlPathMappings)) {
     return false;
   }
   urlPathMappings[id][1] = shouldServe ? true : false;
   return true;
+}
+
+function getDefaultIP() {
+  const interfaces = os.networkInterfaces();
+  for (const name in interfaces) {
+    const addrs = interfaces[name];
+    for (const addr of addrs) {
+      if (addr.family == 'IPv4' && !addr.internal && !addr.address.startsWith("169.254")) {
+        return addr.address;
+      }
+    }
+  }
+  return null;
 }
 
 const createWindow = () => {
@@ -56,13 +70,14 @@ const createWindow = () => {
 };
 
 
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
-  ipcMain.handle('setServing', handleSetServing);
+  ipcMain.handle('setServing', toggleSpecificItem);
+
+  ipcMain.handle('getDefaultIP', getDefaultIP);
 
   createWindow();
 
@@ -71,6 +86,12 @@ app.whenReady().then(() => {
 
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/;
+
+    if (parsedUrl.pathname == "/send") {
+      res.statusCode = 200;
+      res.end("send endpoint");
+      return;
+    }
 
     let filePath = null;
     let index = null;
@@ -83,27 +104,27 @@ app.whenReady().then(() => {
 
       if (urlPathMappings[index][1] == false) {
         res.statusCode = 404;
-        res.end("File not found");
+        res.end("Not found");
         return;
       }
     }
 
     if (filePath == null) {
       res.statusCode = 500;
-      res.end("No file specified.")
+      res.end("Unknown request")
       return;
     }
 
     fs.access(filePath, fs.constants.F_OK, (err) => {
       if (err) {
         res.statusCode = 404;
-        res.end("File not found");
+        res.end("Not found");
       }
 
       fs.stat(filePath, (err, stats) => {
         if (err) {
           res.statusCode = 500;
-          res.end("Error reading file metadata");
+          res.end("Server error");
           return;
         }
 
@@ -117,7 +138,7 @@ app.whenReady().then(() => {
           console.error('Error reading file: ', err);
           if (!res.headersSent) {
             res.statusCode = 500;
-            res.end("Error reading file");
+            res.end("Server error");
           }
         });
 
