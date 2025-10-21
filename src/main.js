@@ -6,6 +6,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const QRCode = require('qrcode');
 
+const projectRoot = app.isPackaged
+  ? process.resourcesPath
+  : path.join(app.getAppPath(), 'src');
+
 var urlPathMappings = {};
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
@@ -88,8 +92,21 @@ app.whenReady().then(() => {
     const urlFilter = /^\/get\/(\d+)$/;
 
     if (parsedUrl.pathname == "/send") {
-      res.statusCode = 200;
-      res.end("send endpoint");
+
+      const filePath = path.join(projectRoot, 'index.html');
+      fs.readFile(filePath, (err, data) => {
+          if (err) {
+              res.writeHead(500, { 'Content-Type': 'text/plain' });
+              res.end('Server Error: ' + err);
+              return;
+          }
+
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(data);
+      });
+
+      // res.statusCode = 200;
+      // res.end("send endpoint");
       return;
     }
 

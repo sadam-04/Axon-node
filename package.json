@@ -37,6 +37,7 @@
     "style-loader": "^3.3.4"
   },
   "dependencies": {
+    "electron-forge": "^5.2.4",
     "electron-squirrel-startup": "^1.0.1",
     "qrcode": "^1.5.4",
     "react": "^19.1.1",
