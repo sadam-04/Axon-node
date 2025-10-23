@@ -4,6 +4,7 @@ const http = require('node:http');
 const url = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
+const multer = require('multer');
 const QRCode = require('qrcode');
 
 const projectRoot = app.isPackaged
@@ -73,6 +74,16 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 };
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/'); // Specify the directory to save files
+    },
+    filename: function (req, file, cb) {
+        // Customize filename to avoid conflicts
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -92,7 +103,17 @@ app.whenReady().then(() => {
     const urlFilter = /^\/get\/(\d+)$/;
 
     if (parsedUrl.pathname == "/send") {
-
+      if (req.method == 'POST') {
+        upload.single('file')(req, res, function (err) {
+          if (err) {
+            res.statusCode = 500;
+            res.end("Error uploading file");
+            return;
+          }
+          console.log(req.file);
+        });
+      }
+      
       const filePath = path.join(projectRoot, 'index.html');
       fs.readFile(filePath, (err, data) => {
           if (err) {
@@ -163,6 +184,7 @@ app.whenReady().then(() => {
       });
     });
   });
+
   server.listen(3030, () => {
     console.log('Server running at http://localhost:3030/');
   });
