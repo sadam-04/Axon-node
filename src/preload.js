@@ -15,5 +15,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openFile: () => ipcRenderer.invoke('openFile'),
     setServing: (shouldServe, id) => ipcRenderer.invoke('setServing', shouldServe, id),
     getDefaultIP: () => ipcRenderer.invoke('getDefaultIP'),
-    
+    listAddrs: () => ipcRenderer.invoke('listAddrs'),
 })

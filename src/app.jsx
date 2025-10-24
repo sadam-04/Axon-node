@@ -5,11 +5,14 @@ import QRCode from 'qrcode';
 const root = createRoot(document.body);
 
 function App() {
-  const [children, setChildren] = useState([]);
+  const [hostedFiles, setHostedFiles] = useState([]);
+
+  const [addrs, setAddrs] = useState([]);
   // const [recvQrSrc, setRecvQrSrc] = useState("");
   const [recvUrl, setRecvUrl] = useState("");
+  const [presentedIp, setPresentedIp] = useState("");
 
-  let ip = "";
+  // let ip = "";
   // let recvUrl = "";
 
   function handleFileOpenClick() {
@@ -17,7 +20,7 @@ function App() {
           if (hostUrl == "" || fileName == "null") {
             return;
           }
-          setChildren([...children, { id: Date.now(), fileName: fileName, url: hostUrl, size: fileSize }]);
+          setHostedFiles([...hostedFiles, { id: Date.now(), fileName: fileName, url: hostUrl, presentedHost: presentedIp, size: fileSize }]);
       });
   }
 
@@ -37,7 +40,33 @@ function App() {
     recvPanel.style.display = "block";
   }
 
-  if (children.length === 0) {
+  function setAndPropagatePresentedIp(addr) {
+    return () => {
+      setRecvUrl(`http://${addr}:3030/send`);
+      setPresentedIp(addr);
+      // also update all hostedFiles entries
+      let newHostedFiles = hostedFiles.map((file) => {
+        return { ...file, presentedHost: addr };
+      });
+      setHostedFiles(newHostedFiles);
+    }
+  }
+
+  useEffect(() => {
+    async function getIP() {
+      var ip = await window.electronAPI.getDefaultIP();
+      setRecvUrl(`http://${ip}:3030/send`);
+    }
+    getIP();
+    // console.log("calling listAddrs");
+    async function getAddrs() {
+      setAddrs(await window.electronAPI.listAddrs());
+    }
+    getAddrs();
+
+  }, []);
+
+  if (hostedFiles.length === 0) {
     return (
       <div>
         <div className="no-files-msg" onClick={handleFileOpenClick}>No files added yet. Click here to add one.</div>
@@ -46,15 +75,15 @@ function App() {
     );
   }
 
-  (async () => {
-    try {
-      ip = await window.electronAPI.getDefaultIP();
-      setRecvUrl(`http://${ip}:3030/send`);
-      // setRecvQrSrc(await QRCode.toDataURL(recvUrl, {margin: 4}));
-    } catch (err) {
-      console.error("Failed to generate QR code", err);
-    }
-  })();
+  console.log("App rendering");
+
+
+
+
+
+  // (async () => {
+
+  // })();
 
   return (
     <div className="outer-wrapper">
@@ -63,9 +92,14 @@ function App() {
         <div className="sidebar-button" onClick={recvMode}>Receive</div>
       </div>
       <div className="content-wrapper">
+        <ul id="addr-list">
+          {addrs.map((addr, index) => (
+            <li key={index} onClick={setAndPropagatePresentedIp(addr)}>{addr}</li>
+          ))}
+        </ul>
         <div id="send-panel">
-          {children.map((child) => (
-            <ServedItem key={child.id} filename={child.fileName} url={child.url} size={child.size} />
+          {hostedFiles.map((file) => (
+            <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
           ))}
           <div className="plus-btn" onClick={handleFileOpenClick} />
         </div>
@@ -80,24 +114,27 @@ function App() {
   );
 }
 
-function QrComponent({url}) {
+function QrComponent({url, presentedHost}) {
   const [src, setSrc] = useState("");
   const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
+
+  var combinedUrl = url.replace("localhost", presentedHost ? presentedHost : "localhost");
 
   useEffect(() => {
     (async () => {
       try {
-        console.log("Generating QR for url: " + url);
-        const dataUrl = await QRCode.toDataURL(url, {margin: 4});
+        //var combinedUrl = url.replace("localhost", presentedHost ? presentedHost : "localhost");
+        console.log("Generating QR for url: " + combinedUrl);
+        const dataUrl = await QRCode.toDataURL(combinedUrl, {margin: 4});
         setSrc(dataUrl);
       } catch (err) {
         console.error("Failed to generate QR code", err);
       }
     })();
-  }, [url]);
+  }, [url, presentedHost]);
 
   const handleQRClick = async (e) => {
-    navigator.clipboard.writeText(url).then(() => {
+    navigator.clipboard.writeText(combinedUrl).then(() => {
       setQrHoverMsg("Copied!");
     })
   }
@@ -110,7 +147,7 @@ function QrComponent({url}) {
   );
 }
 
-function ServedItem({filename, url, size}) {
+function ServedItem({filename, url, presentedHost, size}) {
   // const [src, setSrc] = useState("");
   const [checked, setChecked] = useState(true);
   // const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
@@ -160,7 +197,7 @@ function ServedItem({filename, url, size}) {
 
     </div>
     <div className="right-panel">
-      <QrComponent url={url} />
+      <QrComponent url={url} presentedHost={presentedHost} />
     </div>
   </div>
 };
