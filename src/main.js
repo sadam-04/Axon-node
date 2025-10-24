@@ -25,7 +25,7 @@ async function handleFileOpen() {
   if (!canceled && filePaths.length > 0) {
     //const data = await fs.readFile(filePaths[0], 'utf-8');
     let uid = Math.floor(Math.random() * 1000000);
-    const uurl = `http://${getDefaultIP()}:3030/get/${uid}`;
+    const uurl = `http://localhost:3030/get/${uid}`;
     urlPathMappings[uid] = [filePaths[0], true];
     const fileSize = fs.statSync(filePaths[0]).size;
     return [uurl, filePaths[0], fileSize]; // return to renderer
@@ -54,6 +54,24 @@ function getDefaultIP() {
     }
   }
   return null;
+}
+
+function listAddrs() {
+  console.log("listAddrs called");
+  const interfaces = os.networkInterfaces();
+  let filteredAddrs = [];
+  for (const name in interfaces) {
+    const addrs = interfaces[name];
+    for (const addr of addrs) {
+      // console.log(addr.address);
+      if (addr.family == 'IPv4' && !addr.internal && !addr.address.startsWith("169.254")) {
+        // return addr.address;
+        filteredAddrs.push(addr.address);
+      }
+    }
+  }
+  console.log("listAddrs returning:", filteredAddrs);
+  return filteredAddrs;
 }
 
 const createWindow = () => {
@@ -94,6 +112,7 @@ app.whenReady().then(() => {
   ipcMain.handle('setServing', toggleSpecificItem);
 
   ipcMain.handle('getDefaultIP', getDefaultIP);
+  ipcMain.handle('listAddrs', listAddrs);
 
   createWindow();
 
