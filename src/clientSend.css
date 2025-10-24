@@ -1,0 +1,10 @@
+.wrapper {
+    width: 60%;
+    margin: auto;
+    text-align: center;
+}
+
+.uploadForm {
+    width: 100%;
+    margin: auto;
+}

@@ -6,17 +6,18 @@ const root = createRoot(document.body);
 
 function App() {
   const [children, setChildren] = useState([]);
-  const [recvQrSrc, setRecvQrSrc] = useState("");
-  
+  // const [recvQrSrc, setRecvQrSrc] = useState("");
+  const [recvUrl, setRecvUrl] = useState("");
+
   let ip = "";
-  let recvUrl = "";
+  // let recvUrl = "";
 
   function handleFileOpenClick() {
-      window.electronAPI.openFile().then(([hostUrl, filePath, fileSize]) => {
-          if (hostUrl == 0 && filePath == "null") {
+      window.electronAPI.openFile().then(([hostUrl, fileName, fileSize]) => {
+          if (hostUrl == "" || fileName == "null") {
             return;
           }
-          setChildren([...children, { id: Date.now(), path: filePath, url: hostUrl, size: fileSize }]);
+          setChildren([...children, { id: Date.now(), fileName: fileName, url: hostUrl, size: fileSize }]);
       });
   }
 
@@ -48,8 +49,8 @@ function App() {
   (async () => {
     try {
       ip = await window.electronAPI.getDefaultIP();
-      recvUrl = `http://${ip}:3030/send`;
-      setRecvQrSrc(await QRCode.toDataURL(recvUrl, {margin: 4}));
+      setRecvUrl(`http://${ip}:3030/send`);
+      // setRecvQrSrc(await QRCode.toDataURL(recvUrl, {margin: 4}));
     } catch (err) {
       console.error("Failed to generate QR code", err);
     }
@@ -64,14 +65,14 @@ function App() {
       <div className="content-wrapper">
         <div id="send-panel">
           {children.map((child) => (
-            <ServedItem key={child.id} path={child.path} url={child.url} size={child.size} />
+            <ServedItem key={child.id} filename={child.fileName} url={child.url} size={child.size} />
           ))}
           <div className="plus-btn" onClick={handleFileOpenClick} />
         </div>
 
         <div id="recv-panel" style={{display: "none"}}>
           <div className="file-entry">
-            {recvQrSrc ? <img src={recvQrSrc} /> : <p>Loading QR...</p>}
+            {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
           </div>
         </div>
       </div>
@@ -79,56 +80,78 @@ function App() {
   );
 }
 
-function ServedItem({path, url, size}) {
+function QrComponent({url}) {
   const [src, setSrc] = useState("");
-  const [checked, setChecked] = useState(true);
   const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
-  const [fullUrl, setFullUrl] = useState("");
 
-  let ip = "";
+  useEffect(() => {
+    (async () => {
+      try {
+        console.log("Generating QR for url: " + url);
+        const dataUrl = await QRCode.toDataURL(url, {margin: 4});
+        setSrc(dataUrl);
+      } catch (err) {
+        console.error("Failed to generate QR code", err);
+      }
+    })();
+  }, [url]);
+
+  const handleQRClick = async (e) => {
+    navigator.clipboard.writeText(url).then(() => {
+      setQrHoverMsg("Copied!");
+    })
+  }
+
+  return (
+    <div className="qr-wrapper" onClick={handleQRClick} onMouseLeave={() => setQrHoverMsg("Click to copy URL to clipboard")}>
+      {src ? <img src={src} /> : <p>Loading QR...</p>}
+      <div className="qr-overlay"><div className="qr-overlay-text">{qrHoverMsg}</div></div>
+    </div>
+  );
+}
+
+function ServedItem({filename, url, size}) {
+  // const [src, setSrc] = useState("");
+  const [checked, setChecked] = useState(true);
+  // const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
+  // const [fullUrl, setFullUrl] = useState("");
+
+  // let ip = "";
   // const fullUrl = `http://${ip}:3030/get/${url}`;
 
   const handleCheckboxChange = (e) => {
     const isChecked = e.target.checked ? true : false;
     setChecked(isChecked);
     window.electronAPI.setServing(isChecked, url);
-    // You can also call local or Electron IPC functions here
   };
 
-  const handleQRClick = async (e) => {
-    navigator.clipboard.writeText(fullUrl).then(() => {
-      setQrHoverMsg("Copied!");
-    })
-  }
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       // ip = await window.electronAPI.getDefaultIP();
+  //       // console.log("renderer: set ip to " + ip);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        ip = await window.electronAPI.getDefaultIP();
-        console.log("renderer: set ip to " + ip);
+  //       // setFullUrl(`http://${ip}:3030/get/${url}`, async () => {
+  //         // console.log("renderer: fullUrl is " + fullUrl);
+  //       // setFullUrl(`http://${ip}:3030/get/${url}`);
 
-        // setFullUrl(`http://${ip}:3030/get/${url}`, async () => {
-          // console.log("renderer: fullUrl is " + fullUrl);
-        setFullUrl(`http://${ip}:3030/get/${url}`);
 
-        const dataUrl = await QRCode.toDataURL(`http://${ip}:3030/get/${url}`, {margin: 4});
-        setSrc(dataUrl);
-        // });
+  //       // });
 
-      } catch (err) {
-        console.error("Failed to generate QR code", err);
-      }
-    })();
+  //     } catch (err) {
+  //       console.error("Failed to generate QR code", err);
+  //     }
+  //   })();
 
-  }, [url]);
+  // }, [url]);
 
-  path = path.replace(/^.*[\\/]/, '');
+  filename = filename.replace(/^.*[\\/]/, '');
 
   const sizeString = size < 1024 ? `${size} B` : size < 1048576 ? `${(size / 1024).toFixed(2)} KB` : `${(size / 1048576).toFixed(2)} MB`;
 
   return <div className="file-entry">
     <div className="left-panel">
-      <strong>{path}</strong>
+      <strong>{filename}</strong>
       <input type="checkbox" checked={checked} onChange={handleCheckboxChange} />
       <br />
       <ul className="details-list">
@@ -137,12 +160,9 @@ function ServedItem({path, url, size}) {
 
     </div>
     <div className="right-panel">
-      <div className="qr-wrapper" onClick={handleQRClick} onMouseLeave={() => setQrHoverMsg("Click to copy URL to clipboard")}>
-        {src ? <img src={src} /> : <p>Loading QR...</p>}
-        <div className="qr-overlay"><div className="qr-overlay-text">{qrHoverMsg}</div></div>
-      </div>
+      <QrComponent url={url} />
     </div>
-  </div>;
-}
+  </div>
+};
 
 root.render(<App />);

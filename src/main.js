@@ -24,10 +24,11 @@ async function handleFileOpen() {
   const { canceled, filePaths } = await dialog.showOpenDialog({});
   if (!canceled && filePaths.length > 0) {
     //const data = await fs.readFile(filePaths[0], 'utf-8');
-    let id = Math.floor(Math.random() * 1000000);
-    urlPathMappings[id] = [filePaths[0], true];
+    let uid = Math.floor(Math.random() * 1000000);
+    const uurl = `http://${getDefaultIP()}:3030/get/${uid}`;
+    urlPathMappings[uid] = [filePaths[0], true];
     const fileSize = fs.statSync(filePaths[0]).size;
-    return [id, filePaths[0], fileSize]; // return to renderer
+    return [uurl, filePaths[0], fileSize]; // return to renderer
   }
   return [0, "null", 0];
 }
@@ -114,7 +115,7 @@ app.whenReady().then(() => {
         });
       }
       
-      const filePath = path.join(projectRoot, 'index.html');
+      const filePath = path.join(projectRoot, 'clientSend.html');
       fs.readFile(filePath, (err, data) => {
           if (err) {
               res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -128,6 +129,23 @@ app.whenReady().then(() => {
 
       // res.statusCode = 200;
       // res.end("send endpoint");
+      // console.log("returning...");
+      return;
+    }
+
+    if (parsedUrl.pathname == "/clientSend.css") {
+      const filePath = path.join(projectRoot, 'clientSend.css');
+      fs.readFile(filePath, (err, data) => {
+          if (err) {
+              res.writeHead(500, { 'Content-Type': 'text/plain' });
+              res.end('Server Error: ' + err);
+              return;
+          }
+
+          res.writeHead(200, { 'Content-Type': 'text/css' });
+          res.end(data);
+      });
+
       return;
     }
 
