@@ -77,30 +77,48 @@ function App() {
 
   console.log("App rendering");
 
-  const [activeS, setActiveS] = useState(true);
-  const [clickedS, setClickedS] = useState(false);
-  const [hoveredS, setHoveredS] = useState(false);
+  // const [activeS, setActiveS] = useState(true);
+  // const [activeR, setActiveR] = useState(false);
 
-  const [activeR, setActiveR] = useState(false);
-  const [clickedR, setClickedR] = useState(false);
-  const [hoveredR, setHoveredR] = useState(false);
+  // function handleSelectSend() {
+  //   setActiveS(true);
+  //   setActiveR(false);
+  //   sendMode();
+  // }
 
+  // function handleSelectRecv() {
+  //   setActiveR(true);
+  //   setActiveS(false);
+  //   recvMode();
+  // }
+
+  // function addButton() {
+  //   setButtons(prev => [...prev, { id: Date.now(), label: `Btn ${prev.length + 1}` }]);
+  // }
+
+  const [buttons, setButtons] = useState([
+    {id: 1, label: "S", action: sendMode},
+    {id: 2, label: "R", action: recvMode}
+  ]);
+  const [activeIndex, setActiveIndex] = useState(null);
 
   return (
     <div className="outer-wrapper">
       <div className="nav-sidebar">
 
-        {/* onClick={() => {setActive([true, false]); sendMode();}} */}
+        {/* <ResponsiveButton isActive={activeS} setActive={handleSelectSend} />
+        <ResponsiveButton isActive={activeR} setActive={handleSelectRecv} /> */}
 
-        {/* onClick={() => {setActive([false, true]); recvMode();}} */}
+        {buttons.map((btn, i) => (
+          <ResponsiveButton
+            key={btn.id}
+            label={btn.label}
+            buttonAction={btn.action}
+            isActive={activeIndex === i}
+            setActive={() => setActiveIndex(i)}
+          />
+        ))}
 
-        <div  onMouseEnter={() => {setHoveredS(true);}} onMouseLeave={() => {setHoveredS(false)}} onMouseDown={() => {setClickedS(true)}} onMouseUp={() => {setActiveS(true); setActiveR(false); sendMode(); setClickedS(false)}}>
-          <NavbarButton selected={activeS} hovered={hoveredS} pressed={clickedS} icon="S" />
-        </div>
-
-        <div  onMouseEnter={() => {setHoveredR(true);}} onMouseLeave={() => {setHoveredR(false)}} onMouseDown={() => {setClickedR(true)}} onMouseUp={() => {setActiveR(true); setActiveS(false); recvMode(); setClickedR(false)}}>
-          <NavbarButton selected={activeR} hovered={hoveredR} pressed={clickedR} icon="R" />
-        </div>
       </div>
       <div className="content-wrapper">
 
@@ -127,9 +145,28 @@ function App() {
         <div id="right-detail-panel">
 
         </div>
-
       </div>
     </div>
+  );
+}
+
+// function ResponsiveButtonSet({buttonData}) {
+
+//   const [activeStates, setActiveStates] = useState([]);
+
+//   for (let i = 0; i < buttonData.length; i++) {
+//     <ResponsiveButton activeState={buttonData[i].activeState} activeStateSetter={buttonData[i].activeStateSetter} />
+//   }
+// }
+
+function ResponsiveButton({isActive, setActive, buttonAction, label}) {
+  const [clicked, setClicked] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  return (
+  <div  onMouseEnter={() => {setHovered(true);}} onMouseLeave={() => {setHovered(false)}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setActive(); buttonAction(); setClicked(false);}}>
+    <ShadedButton selected={isActive} hovered={hovered} pressed={clicked} icon={label} />
+  </div>
   );
 }
 
@@ -216,7 +253,7 @@ function ServedItem({filename, url, presentedHost, size}) {
     </div>
 
     <div className="right-panel">
-      <QrComponent url={url} presentedHost={presentedHost} />
+      {/* <QrComponent url={url} presentedHost={presentedHost} /> */}
     </div>
   </div>
 };
@@ -225,24 +262,21 @@ function ServedItem({filename, url, presentedHost, size}) {
 
 // }
 
-function NavbarButton({selected, hovered, pressed, icon}) {
-  const [shadeValue, setShadeValue] = useState("");
+function ShadedButton({ selected, hovered, pressed, icon }) {
+  let shadeValue = "#181818";
 
-  useEffect(() => {
-    if ((selected && hovered && pressed) || (selected && !hovered && !pressed) || (!selected && hovered && !pressed)) {
-      setShadeValue("#282828");
-    } else if ((selected && hovered && !pressed) || (!selected && hovered && pressed)) {
-      setShadeValue("#202020");
-    } else if (!selected && !hovered && !pressed) {
-      setShadeValue("#181818");
-    }
-  }, [selected, hovered, pressed]);
-  
-  var shadeStyle = {
-    backgroundColor: shadeValue
+  if ((selected && hovered && pressed) || (selected && !hovered && !pressed) || (!selected && hovered && !pressed)) {
+    shadeValue = "#282828";
+  } else if ((selected && hovered && !pressed) || (!selected && hovered && pressed)) {
+    shadeValue = "#202020";
   }
 
-  return <div className="sidebar-button" style={shadeStyle}><div className="button-icon">{icon}</div></div>
+  return (
+    <div className="sidebar-button" style={{ backgroundColor: shadeValue }}>
+      <div className="button-icon">{icon}</div>
+    </div>
+  );
 }
+
 
 root.render(<App />);
