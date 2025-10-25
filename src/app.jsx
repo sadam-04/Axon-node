@@ -66,14 +66,14 @@ function App() {
 
   }, []);
 
-  if (hostedFiles.length === 0) {
-    return (
-      <div>
-        <div className="no-files-msg" onClick={handleFileOpenClick}>No files added yet. Click here to add one.</div>
-        <div className="plus-btn" onClick={handleFileOpenClick} />
-      </div>
-    );
-  }
+  // if (hostedFiles.length === 0) {
+  //   return (
+  //     <div>
+  //       <div className="no-files-msg" onClick={handleFileOpenClick}>No files added yet. Click here to add one.</div>
+  //       <div className="plus-btn" onClick={handleFileOpenClick} />
+  //     </div>
+  //   );
+  // }
 
   console.log("App rendering");
 
@@ -88,15 +88,16 @@ function App() {
   return (
     <div className="outer-wrapper">
       <div className="nav-sidebar">
-        <div className="sidebar-button" onClick={sendMode}>Send</div>
-        <div className="sidebar-button" onClick={recvMode}>Receive</div>
+        <div className="sidebar-button" onClick={sendMode}>S</div>
+        <div className="sidebar-button" onClick={recvMode}>R</div>
       </div>
       <div className="content-wrapper">
-        <ul id="addr-list">
+        <h4>Select ip address:</h4>
+        <select id="addr-list" onChange={(e) => setAndPropagatePresentedIp(e.target.value)()}>
           {addrs.map((addr, index) => (
-            <li key={index} onClick={setAndPropagatePresentedIp(addr)}>{addr}</li>
+            <option key={index} value={addr}>{addr}</option>
           ))}
-        </ul>
+        </select>
         <div id="send-panel">
           {hostedFiles.map((file) => (
             <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />

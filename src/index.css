@@ -6,6 +6,10 @@ body {
   background: #181818;
 }
 
+h4 {
+  color: white;
+}
+
 .file-entry {
   display: flex;
   gap: 20px;
@@ -64,7 +68,7 @@ body {
   align-items: center;
   justify-content: center;
   color: #fff;
-  text-shadow: 0 0 8px #000;
+  text-shadow: 0px 0px 8px black, 0px 0px 8px black, 0px 0px 8px black;
   opacity: 1;
 }
 
@@ -129,15 +133,25 @@ body {
 
 .sidebar-button {
   display: flex;
-  width: 100px;
-  height: 100px;
-  overflow: hidden;
-  border: 1px solid #303030;
+  border-radius: 5px;
+  width: 35px;
+  height: 35px;
+  margin: 5px 0 0 0;
+
+  background-color: #181818;
+  /* border: 1px solid #303030; */
 }
 
+.sidebar-button:hover {
+  background-color: #202020;
+}
+
+
+
 .content-wrapper {
-  width: 50%;
+  width: 75%;
   /* max-width: 38rem; */
   margin: auto;
   margin-top: 20px;
 }
+

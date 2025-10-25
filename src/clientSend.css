@@ -1,10 +1,67 @@
-.wrapper {
-    width: 60%;
-    margin: auto;
-    text-align: center;
+body {
+	font-family: "Geist Mono", serif;
+	font-weight: 400;
 }
 
-.uploadForm {
-    width: 100%;
-    margin: auto;
+input {
+	font-family: "Geist Mono", serif;
+	font-weight: 400;
+}
+
+.main-content {
+	justify-content: center;
+	justify-items: center;
+	text-align: center;
+	width: 80%;
+	margin: auto;
+	display: block;
+}
+
+.section-title {
+	display: block;
+	text-align: center;
+	font-size: 24px;
+	margin-bottom: 10px;
+}
+
+form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background-color: #f9f9f9;
+	padding: 20px;
+	border: 1px solid #ccc;
+	width: 40%;
+	margin: 20px auto;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media only screen and (max-width: 768px) {
+	form {
+		width: 90%;
+	}
+}
+
+input[type="file"] {
+	display: none;
+}
+
+.form-field {
+	padding: 10px 0px;
+	margin: 5px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+	width: 85%;
+	transition: background-color 0.3s ease;
+	font-size: 1em;
+	cursor: pointer;
+}
+
+.bttn {
+    background-color: #FF353C;
+    color: #fff;
+}
+
+.bttn:hover {
+    background-color: #FF656C;
 }
