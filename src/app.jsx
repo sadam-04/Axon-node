@@ -77,39 +77,57 @@ function App() {
 
   console.log("App rendering");
 
+  const [activeS, setActiveS] = useState(true);
+  const [clickedS, setClickedS] = useState(false);
+  const [hoveredS, setHoveredS] = useState(false);
 
+  const [activeR, setActiveR] = useState(false);
+  const [clickedR, setClickedR] = useState(false);
+  const [hoveredR, setHoveredR] = useState(false);
 
-
-
-  // (async () => {
-
-  // })();
 
   return (
     <div className="outer-wrapper">
       <div className="nav-sidebar">
-        <div className="sidebar-button" onClick={sendMode}>S</div>
-        <div className="sidebar-button" onClick={recvMode}>R</div>
-      </div>
-      <div className="content-wrapper">
-        <h4>Select ip address:</h4>
-        <select id="addr-list" onChange={(e) => setAndPropagatePresentedIp(e.target.value)()}>
-          {addrs.map((addr, index) => (
-            <option key={index} value={addr}>{addr}</option>
-          ))}
-        </select>
-        <div id="send-panel">
-          {hostedFiles.map((file) => (
-            <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
-          ))}
-          <div className="plus-btn" onClick={handleFileOpenClick} />
+
+        {/* onClick={() => {setActive([true, false]); sendMode();}} */}
+
+        {/* onClick={() => {setActive([false, true]); recvMode();}} */}
+
+        <div  onMouseEnter={() => {setHoveredS(true);}} onMouseLeave={() => {setHoveredS(false)}} onMouseDown={() => {setClickedS(true)}} onMouseUp={() => {setActiveS(true); setActiveR(false); sendMode(); setClickedS(false)}}>
+          <NavbarButton selected={activeS} hovered={hoveredS} pressed={clickedS} icon="S" />
         </div>
 
-        <div id="recv-panel" style={{display: "none"}}>
-          <div className="file-entry">
-            {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
+        <div  onMouseEnter={() => {setHoveredR(true);}} onMouseLeave={() => {setHoveredR(false)}} onMouseDown={() => {setClickedR(true)}} onMouseUp={() => {setActiveR(true); setActiveS(false); recvMode(); setClickedR(false)}}>
+          <NavbarButton selected={activeR} hovered={hoveredR} pressed={clickedR} icon="R" />
+        </div>
+      </div>
+      <div className="content-wrapper">
+
+        <div id="left-summary-panel">
+          <h4>Select ip address:</h4>
+          <select id="addr-list" onChange={(e) => setAndPropagatePresentedIp(e.target.value)()}>
+            {addrs.map((addr, index) => (
+              <option key={index} value={addr}>{addr}</option>
+            ))}
+          </select>
+          <div id="send-panel">
+            {hostedFiles.map((file) => (
+              <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
+            ))}
+            <div className="plus-btn" onClick={handleFileOpenClick} />
+          </div>
+          <div id="recv-panel" style={{display: "none"}}>
+            <div className="file-entry">
+              {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
+            </div>
           </div>
         </div>
+
+        <div id="right-detail-panel">
+
+        </div>
+
       </div>
     </div>
   );
@@ -195,12 +213,36 @@ function ServedItem({filename, url, presentedHost, size}) {
       <ul className="details-list">
         <li>Size: {sizeString}</li>
       </ul>
-
     </div>
+
     <div className="right-panel">
       <QrComponent url={url} presentedHost={presentedHost} />
     </div>
   </div>
 };
+
+// function Navbar() {
+
+// }
+
+function NavbarButton({selected, hovered, pressed, icon}) {
+  const [shadeValue, setShadeValue] = useState("");
+
+  useEffect(() => {
+    if ((selected && hovered && pressed) || (selected && !hovered && !pressed) || (!selected && hovered && !pressed)) {
+      setShadeValue("#282828");
+    } else if ((selected && hovered && !pressed) || (!selected && hovered && pressed)) {
+      setShadeValue("#202020");
+    } else if (!selected && !hovered && !pressed) {
+      setShadeValue("#181818");
+    }
+  }, [selected, hovered, pressed]);
+  
+  var shadeStyle = {
+    backgroundColor: shadeValue
+  }
+
+  return <div className="sidebar-button" style={shadeStyle}><div className="button-icon">{icon}</div></div>
+}
 
 root.render(<App />);
