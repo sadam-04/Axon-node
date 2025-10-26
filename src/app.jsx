@@ -97,10 +97,12 @@ function App() {
   // }
 
   const [buttons, setButtons] = useState([
-    {id: 1, label: "S", action: sendMode},
-    {id: 2, label: "R", action: recvMode}
+    {id: 1, label: (<div style={{display: "flex", width: "35px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center"}}>S</div>), action: sendMode},
+    {id: 2, label: (<div style={{display: "flex", width: "35px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center"}}>R</div>), action: recvMode}
   ]);
-  const [activeIndex, setActiveIndex] = useState(null);
+  const [activeNavPage, setActiveNavPage] = useState(null);
+
+  const [activeSFile, setActiveSFile] = useState(null);
 
   return (
     <div className="outer-wrapper">
@@ -114,8 +116,11 @@ function App() {
             key={btn.id}
             label={btn.label}
             buttonAction={btn.action}
-            isActive={activeIndex === i}
-            setActive={() => setActiveIndex(i)}
+            isActive={activeNavPage === i}
+            setActive={() => setActiveNavPage(i)}
+            shadeA={"#181818"}
+            shadeB={"#202020"}
+            shadeC={"#282828"}
           />
         ))}
 
@@ -130,8 +135,23 @@ function App() {
             ))}
           </select>
           <div id="send-panel">
-            {hostedFiles.map((file) => (
-              <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
+            {hostedFiles.map((file, i) => (
+
+
+              <ResponsiveButton
+                key={file.id}
+                label={<div style={{padding: "8px 12px", overflow: "hidden", textOverflow: "ellipsis"}}>{file.fileName.replace(/^.*[\\/]/, '')}</div>}
+                buttonAction={() => console.log("heeeyyyyy")}
+                isActive={activeSFile === i}
+                setActive={() => setActiveSFile(i)}
+                shadeA={"#202020"}
+                shadeB={"#282828"}
+                shadeC={"#303030"}
+              />
+              
+
+
+              // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
             ))}
             <div className="plus-btn" onClick={handleFileOpenClick} />
           </div>
@@ -143,7 +163,22 @@ function App() {
         </div>
 
         <div id="right-detail-panel">
+          {hostedFiles.map((file, i) => (
+              <div style={{display: activeSFile == i ? "block" : "none"}}>
+                <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
+              </div>
 
+              // <ResponsiveButton
+              //   key={file.id}
+              //   label={<ServedItem filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />}
+              //   buttonAction={() => console.log("heeeyyyyy")}
+              //   isActive={activeSFile === i}
+              //   setActive={() => setActiveSFile(i)}
+              //   shadeA={"#202020"}
+              //   shadeB={"#282828"}
+              //   shadeC={"#303030"}
+              // />
+          ))}
         </div>
       </div>
     </div>
@@ -159,13 +194,13 @@ function App() {
 //   }
 // }
 
-function ResponsiveButton({isActive, setActive, buttonAction, label}) {
+function ResponsiveButton({isActive, setActive, buttonAction, label, shadeA, shadeB, shadeC}) {
   const [clicked, setClicked] = useState(false);
   const [hovered, setHovered] = useState(false);
 
   return (
-  <div  onMouseEnter={() => {setHovered(true);}} onMouseLeave={() => {setHovered(false)}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setActive(); buttonAction(); setClicked(false);}}>
-    <ShadedButton selected={isActive} hovered={hovered} pressed={clicked} icon={label} />
+  <div  onMouseEnter={() => {setHovered(true);}} onMouseLeave={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setActive(); buttonAction(); setClicked(false);}}>
+    <ShadedButton selected={isActive} hovered={hovered} pressed={clicked} icon={label} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
   </div>
   );
 }
@@ -253,7 +288,7 @@ function ServedItem({filename, url, presentedHost, size}) {
     </div>
 
     <div className="right-panel">
-      {/* <QrComponent url={url} presentedHost={presentedHost} /> */}
+      <QrComponent url={url} presentedHost={presentedHost} />
     </div>
   </div>
 };
@@ -262,13 +297,13 @@ function ServedItem({filename, url, presentedHost, size}) {
 
 // }
 
-function ShadedButton({ selected, hovered, pressed, icon }) {
-  let shadeValue = "#181818";
+function ShadedButton({ selected, hovered, pressed, icon, shadeA, shadeB, shadeC }) {
+  let shadeValue = shadeA;
 
   if ((selected && hovered && pressed) || (selected && !hovered && !pressed) || (!selected && hovered && !pressed)) {
-    shadeValue = "#282828";
+    shadeValue = shadeB;
   } else if ((selected && hovered && !pressed) || (!selected && hovered && pressed)) {
-    shadeValue = "#202020";
+    shadeValue = shadeC;
   }
 
   return (
