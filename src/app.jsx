@@ -7,6 +7,7 @@ const root = createRoot(document.body);
 function App() {
   const [hostedFiles, setHostedFiles] = useState([]);
 
+  const [guiMode, setGuiMode] = useState("send"); // "send" or "recv"
   const [addrs, setAddrs] = useState([]);
   // const [recvQrSrc, setRecvQrSrc] = useState("");
   const [recvUrl, setRecvUrl] = useState("");
@@ -30,6 +31,8 @@ function App() {
     
     sendPanel.style.display = "block";
     recvPanel.style.display = "none";
+
+    setGuiMode("send");
   }
 
   function recvMode() {
@@ -38,18 +41,18 @@ function App() {
     
     sendPanel.style.display = "none";
     recvPanel.style.display = "block";
+
+    setGuiMode("recv");
   }
 
   function setAndPropagatePresentedIp(addr) {
-    return () => {
-      setRecvUrl(`http://${addr}:3030/send`);
-      setPresentedIp(addr);
-      // also update all hostedFiles entries
-      let newHostedFiles = hostedFiles.map((file) => {
-        return { ...file, presentedHost: addr };
-      });
-      setHostedFiles(newHostedFiles);
-    }
+    setRecvUrl(`http://${addr}:3030/send`);
+    setPresentedIp(addr);
+    // also update all hostedFiles entries
+    let newHostedFiles = hostedFiles.map((file) => {
+      return { ...file, presentedHost: addr };
+    });
+    setHostedFiles(newHostedFiles);
   }
 
   useEffect(() => {
@@ -60,7 +63,10 @@ function App() {
     getIP();
     // console.log("calling listAddrs");
     async function getAddrs() {
-      setAddrs(await window.electronAPI.listAddrs());
+      let addrs = await window.electronAPI.listAddrs();
+      setAddrs(addrs);
+      setAndPropagatePresentedIp(addrs[0]);
+      console.log("Propagated ip: " + addrs[0]);
     }
     getAddrs();
 
@@ -127,21 +133,28 @@ function App() {
       </div>
       <div className="content-wrapper">
 
-        <div id="left-summary-panel">
+        {/* <div className="ip-selector">
           <h4>Select ip address:</h4>
           <select id="addr-list" onChange={(e) => setAndPropagatePresentedIp(e.target.value)()}>
             {addrs.map((addr, index) => (
               <option key={index} value={addr}>{addr}</option>
             ))}
           </select>
-          <div id="send-panel">
-            {hostedFiles.map((file, i) => (
+        </div> */}
 
+        <div id="left-summary-panel">
+          <div id="send-panel">
+            <div className="send-title-ribbon">
+              <h4 style={{marginBottom: "5px", marginTop: "5px" }}>Outbox</h4>
+              <div className="plus-btn" onClick={handleFileOpenClick} />
+            </div>
+            <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "10px 0" }} />
+            {hostedFiles.map((file, i) => (
 
               <ResponsiveButton
                 key={file.id}
-                label={<div style={{padding: "8px 12px", overflow: "hidden", textOverflow: "ellipsis"}}>{file.fileName.replace(/^.*[\\/]/, '')}</div>}
-                buttonAction={() => console.log("heeeyyyyy")}
+                label={<OutboxItemLabel fileName={file.fileName.replace(/^.*[\\/]/, '')} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); window.electronAPI.setServing(false, fileID); setHostedFiles(prev => prev.filter(f => f.id !== file.id));}} />}
+                buttonAction={() => {}}
                 isActive={activeSFile === i}
                 setActive={() => setActiveSFile(i)}
                 shadeA={"#202020"}
@@ -153,9 +166,9 @@ function App() {
 
               // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
             ))}
-            <div className="plus-btn" onClick={handleFileOpenClick} />
           </div>
           <div id="recv-panel" style={{display: "none"}}>
+            <h4 style={{marginBottom: "5px", marginTop: "5px" }}>Inbox</h4>
             <div className="file-entry">
               {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
             </div>
@@ -164,8 +177,12 @@ function App() {
 
         <div id="right-detail-panel">
           {hostedFiles.map((file, i) => (
-              <div style={{display: activeSFile == i ? "block" : "none"}}>
+              <div key={i} style={{display: (activeSFile == i && guiMode == "send") ? "block" : "none"}}>
                 <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
+
+                <div className="right-panel-flexrow">
+
+                </div>
               </div>
 
               // <ResponsiveButton
@@ -179,10 +196,48 @@ function App() {
               //   shadeC={"#303030"}
               // />
           ))}
+          <div className="ip-selector">
+            {/* <h4>Select ip address:</h4> */}
+            <select id="addr-list" onChange={(e) => setAndPropagatePresentedIp(e.target.value)}>
+              {addrs.map((addr, index) => (
+                <option key={index} value={addr}>{addr}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+function OutboxItemLabel({fileName, onCloseClick}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  function handleMouseEnter(event) {
+    setIsHovered(true);
+  }
+
+  function handleMouseLeave(event) {
+    setIsHovered(false);
+  }
+  
+  return (
+    <div
+      onMouseEnter={(event) => {handleMouseEnter(event);}}
+      onMouseLeave={(event) => {handleMouseLeave(event);}}
+      style={{
+        padding: "8px 12px",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        justifyContent: "space-between",
+        display: "flex",
+        width: "calc(100% - 24px)"
+      }}
+    >
+        <div>{fileName}</div>
+        {isHovered ? <div onClick={onCloseClick} className="outboxItemCloseBttn" style={{display: "block"}}>✖</div> : null}
+    </div>
+  )
 }
 
 // function ResponsiveButtonSet({buttonData}) {
@@ -194,12 +249,12 @@ function App() {
 //   }
 // }
 
-function ResponsiveButton({isActive, setActive, buttonAction, label, shadeA, shadeB, shadeC}) {
+function ResponsiveButton({isActive, setActive, buttonAction, onHover = null, label, shadeA, shadeB, shadeC}) {
   const [clicked, setClicked] = useState(false);
   const [hovered, setHovered] = useState(false);
 
   return (
-  <div  onMouseEnter={() => {setHovered(true);}} onMouseLeave={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setActive(); buttonAction(); setClicked(false);}}>
+  <div  onMouseEnter={() => {setHovered(true); if (onHover)onHover();}} onMouseLeave={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setActive(); buttonAction(); setClicked(false);}}>
     <ShadedButton selected={isActive} hovered={hovered} pressed={clicked} icon={label} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
   </div>
   );
@@ -250,7 +305,9 @@ function ServedItem({filename, url, presentedHost, size}) {
   const handleCheckboxChange = (e) => {
     const isChecked = e.target.checked ? true : false;
     setChecked(isChecked);
-    window.electronAPI.setServing(isChecked, url);
+
+    var fileID = new URL(url).pathname.split("/").filter(Boolean).pop()
+    window.electronAPI.setServing(isChecked, fileID);
   };
 
   // useEffect(() => {

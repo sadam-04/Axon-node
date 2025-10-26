@@ -77,8 +77,10 @@ function listAddrs() {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
+    width: 810,
     height: 600,
+    minWidth: 600,
+    minHeight: 275,
     frame: true,
     autoHideMenuBar: true,
     webPreferences: {
