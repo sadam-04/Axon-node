@@ -176,26 +176,19 @@ function App() {
         </div>
 
         <div id="right-detail-panel">
-          {hostedFiles.map((file, i) => (
-              <div key={i} style={{display: (activeSFile == i && guiMode == "send") ? "block" : "none"}}>
-                <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
 
-                <div className="right-panel-flexrow">
+          {activeSFile !== null && guiMode == "send" ? (
+          <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} presentedHost={hostedFiles[activeSFile]?.presentedHost} size={hostedFiles[activeSFile]?.size} />
+          ) : (
+          <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div>
+          )}
 
-                </div>
-              </div>
+          {activeRFile !== null && guiMode == "recv" ? (
+          <ServedItem key={hostedFiles[activeRFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} presentedHost={hostedFiles[activeSFile]?.presentedHost} size={hostedFiles[activeSFile]?.size} />
+          ) : (
+          <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div>
+          )}
 
-              // <ResponsiveButton
-              //   key={file.id}
-              //   label={<ServedItem filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />}
-              //   buttonAction={() => console.log("heeeyyyyy")}
-              //   isActive={activeSFile === i}
-              //   setActive={() => setActiveSFile(i)}
-              //   shadeA={"#202020"}
-              //   shadeB={"#282828"}
-              //   shadeC={"#303030"}
-              // />
-          ))}
           <div className="ip-selector">
             {/* <h4>Select ip address:</h4> */}
             <select id="addr-list" onChange={(e) => setAndPropagatePresentedIp(e.target.value)}>
