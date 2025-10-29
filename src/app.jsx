@@ -2,7 +2,10 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import QRCode from 'qrcode';
 
-const root = createRoot(document.body);
+// const root = createRoot(document.body);
+const root = createRoot(document.getElementById("root"));
+root.render(<App />);
+
 
 function App() {
   const [hostedFiles, setHostedFiles] = useState([]);
@@ -103,12 +106,13 @@ function App() {
   // }
 
   const [buttons, setButtons] = useState([
-    {id: 1, label: (<div style={{display: "flex", width: "35px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center"}}>S</div>), action: sendMode},
-    {id: 2, label: (<div style={{display: "flex", width: "35px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center"}}>R</div>), action: recvMode}
+    {id: 1, label: "S", action: sendMode},
+    {id: 2, label: "R", action: recvMode}
   ]);
   const [activeNavPage, setActiveNavPage] = useState(null);
 
   const [activeSFile, setActiveSFile] = useState(null);
+  const [activeRFile, setActiveRFile] = useState(null);
 
   return (
     <div className="outer-wrapper">
@@ -123,6 +127,7 @@ function App() {
             label={btn.label}
             buttonAction={btn.action}
             isActive={activeNavPage === i}
+            customStyle={{display: "flex", width: "35px", height: "35px", borderRadius: "0", justifyContent: "center", alignItems: "center"}}
             setActive={() => setActiveNavPage(i)}
             shadeA={"#181818"}
             shadeB={"#202020"}
@@ -144,50 +149,61 @@ function App() {
 
         <div id="left-summary-panel">
           <div id="send-panel">
-            <div className="send-title-ribbon">
-              <h4 style={{marginBottom: "5px", marginTop: "5px" }}>Outbox</h4>
-              <div className="plus-btn" onClick={handleFileOpenClick} />
+            <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #303030", paddingBottom: "8px" }}>
+              <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
+              <div style={{display: "flex", flexDirection: "row", alignItems: "space-between"}}>
+                <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} file{hostedFiles.length !== 1 ? "s" : ""}</span>
+                <div className="plus-btn" onClick={handleFileOpenClick} />
+              </div>
             </div>
-            <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "10px 0" }} />
-            {hostedFiles.map((file, i) => (
+            {/* <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "5px 0" }} /> */}
+            <div style={{marginLeft: "0", marginRight: "0"}}>
+              {hostedFiles.map((file, i) => (
 
-              <ResponsiveButton
-                key={file.id}
-                label={<OutboxItemLabel fileName={file.fileName.replace(/^.*[\\/]/, '')} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); window.electronAPI.setServing(false, fileID); setHostedFiles(prev => prev.filter(f => f.id !== file.id));}} />}
-                buttonAction={() => {}}
-                isActive={activeSFile === i}
-                setActive={() => setActiveSFile(i)}
-                shadeA={"#202020"}
-                shadeB={"#282828"}
-                shadeC={"#303030"}
-              />
-              
+                <ResponsiveButton
+                  key={file.id}
+                  label={<OutboxItemLabel fileName={file.fileName.replace(/^.*[\\/]/, '')} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); window.electronAPI.setServing(false, fileID); var _hostedFiles = hostedFiles.filter(f => f.id !== file.id); if (_hostedFiles.length == 0) {setActiveSFile(null);} else {setActiveSFile(0);} setHostedFiles(_hostedFiles);}} />}
+                  buttonAction={() => {}}
+                  isActive={activeSFile === i}
+                  setActive={() => setActiveSFile(i)}
+                  shadeA={"#202020"}
+                  shadeB={"#282828"}
+                  shadeC={"#303030"}
+                />
+                
 
 
-              // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
-            ))}
+                // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
+              ))}
+            </div>
           </div>
           <div id="recv-panel" style={{display: "none"}}>
-            <h4 style={{marginBottom: "5px", marginTop: "5px" }}>Inbox</h4>
-            <div className="file-entry">
-              {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
+            <div className="recv-title-ribbon" style={{ display: "flex", justifyItems: "space-between", marginBottom: "0" }}>
+              <h4 style={{marginBottom: "5px", marginTop: "5px" }}>Inbox</h4>
+              {/* <div className="plus-btn" onClick={handleFileOpenClick} /> */}
             </div>
+            {/* <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "5px 0" }} /> */}
+            {/* <div className="file-entry">
+              {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
+            </div> */}
           </div>
         </div>
 
+        {/* <hr style={{backgroundColor: "#303030", border: "none", width: "1px", marginLeft: "0" }} /> */}
+
+        {(activeSFile !== null && guiMode == "send") ? (
         <div id="right-detail-panel">
 
-          {activeSFile !== null && guiMode == "send" ? (
+          
           <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} presentedHost={hostedFiles[activeSFile]?.presentedHost} size={hostedFiles[activeSFile]?.size} />
-          ) : (
-          <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div>
-          )}
+          {/* <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div> */}
 
-          {activeRFile !== null && guiMode == "recv" ? (
+
+          {/* {activeRFile !== null && guiMode == "recv" ? (
           <ServedItem key={hostedFiles[activeRFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} presentedHost={hostedFiles[activeSFile]?.presentedHost} size={hostedFiles[activeSFile]?.size} />
           ) : (
-          <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div>
-          )}
+            <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div>
+            )} */}
 
           <div className="ip-selector">
             {/* <h4>Select ip address:</h4> */}
@@ -198,6 +214,20 @@ function App() {
             </select>
           </div>
         </div>
+        ) : (null)}
+
+        {(guiMode == "recv" && activeRFile !== null) ? (
+          <div id="right-detail-panel">
+            {/* TODO */}
+          </div>
+        ) : (guiMode == "recv" && activeRFile === null) ? (
+          <div id="right-blank-panel">
+            <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
+            <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
+              {recvUrl ? <QrComponent url={recvUrl} presentedHost={presentedIp} /> : <p>Loading QR...</p>}
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -214,21 +244,22 @@ function OutboxItemLabel({fileName, onCloseClick}) {
     setIsHovered(false);
   }
   
+  var _width = "260px";
+
   return (
     <div
       onMouseEnter={(event) => {handleMouseEnter(event);}}
       onMouseLeave={(event) => {handleMouseLeave(event);}}
       style={{
         padding: "8px 12px",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        justifyContent: "space-between",
         display: "flex",
-        width: "calc(100% - 24px)"
+        justifyContent: "space-between",
+        flexDirection: "row",
+        width: `calc(${_width} - 24px)`,
       }}
     >
-        <div>{fileName}</div>
-        {isHovered ? <div onClick={onCloseClick} className="outboxItemCloseBttn" style={{display: "block"}}>✖</div> : null}
+        <div style={{display: "block", width: `calc(${_width} - 20px)`, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{fileName}</div>
+        {isHovered ? <div onClick={onCloseClick} className="outboxItemCloseBttn" style={{display: "block", width: "10px"}}>✖</div> : null}
     </div>
   )
 }
@@ -242,13 +273,13 @@ function OutboxItemLabel({fileName, onCloseClick}) {
 //   }
 // }
 
-function ResponsiveButton({isActive, setActive, buttonAction, onHover = null, label, shadeA, shadeB, shadeC}) {
+function ResponsiveButton({isActive, setActive, buttonAction, onHover = null, label, customStyle = null, shadeA, shadeB, shadeC}) {
   const [clicked, setClicked] = useState(false);
   const [hovered, setHovered] = useState(false);
 
   return (
-  <div  onMouseEnter={() => {setHovered(true); if (onHover)onHover();}} onMouseLeave={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setActive(); buttonAction(); setClicked(false);}}>
-    <ShadedButton selected={isActive} hovered={hovered} pressed={clicked} icon={label} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
+  <div  onMouseEnter={() => {setHovered(true); if (onHover) onHover();}} onMouseLeave={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setActive(); buttonAction(); setClicked(false);}}>
+    <ShadedButton selected={isActive} hovered={hovered} pressed={clicked} icon={label} customStyle={customStyle} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
   </div>
   );
 }
@@ -257,7 +288,7 @@ function QrComponent({url, presentedHost}) {
   const [src, setSrc] = useState("");
   const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
 
-  var combinedUrl = url.replace("localhost", presentedHost ? presentedHost : "localhost");
+  var combinedUrl = url ? url.replace("localhost", presentedHost ? presentedHost : "localhost") : "";
 
   useEffect(() => {
     (async () => {
@@ -323,7 +354,7 @@ function ServedItem({filename, url, presentedHost, size}) {
 
   // }, [url]);
 
-  filename = filename.replace(/^.*[\\/]/, '');
+  filename = filename ? filename.replace(/^.*[\\/]/, '') : '';
 
   const sizeString = size < 1024 ? `${size} B` : size < 1048576 ? `${(size / 1024).toFixed(2)} KB` : `${(size / 1048576).toFixed(2)} MB`;
 
@@ -347,7 +378,7 @@ function ServedItem({filename, url, presentedHost, size}) {
 
 // }
 
-function ShadedButton({ selected, hovered, pressed, icon, shadeA, shadeB, shadeC }) {
+function ShadedButton({ selected, hovered, pressed, customStyle = null, icon, shadeA, shadeB, shadeC }) {
   let shadeValue = shadeA;
 
   if ((selected && hovered && pressed) || (selected && !hovered && !pressed) || (!selected && hovered && !pressed)) {
@@ -357,11 +388,9 @@ function ShadedButton({ selected, hovered, pressed, icon, shadeA, shadeB, shadeC
   }
 
   return (
-    <div className="sidebar-button" style={{ backgroundColor: shadeValue }}>
-      <div className="button-icon">{icon}</div>
-    </div>
+      <div className="button-icon" style={{ backgroundColor: shadeValue, ...customStyle }}>{icon}</div>
   );
 }
 
 
-root.render(<App />);
+// root.render(<App />);

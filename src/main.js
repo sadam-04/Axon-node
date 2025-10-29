@@ -7,6 +7,8 @@ const os = require('node:os');
 const multer = require('multer');
 const QRCode = require('qrcode');
 
+// red: #FF4a51
+
 const projectRoot = app.isPackaged
   ? process.resourcesPath
   : path.join(app.getAppPath(), 'src');
@@ -77,24 +79,26 @@ function listAddrs() {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 810,
-    height: 600,
-    minWidth: 600,
-    minHeight: 275,
+    width: 800,
+    height: 450,
+    minWidth: 800,
+    minHeight: 310,
     frame: true,
     autoHideMenuBar: true,
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
       devTools: true,
     },
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {})
   });
 
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 };
 
 const storage = multer.diskStorage({
