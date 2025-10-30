@@ -5,15 +5,70 @@ const url = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
 const multer = require('multer');
-const QRCode = require('qrcode');
 
 // red: #FF4a51
 
 const projectRoot = app.isPackaged
   ? process.resourcesPath
-  : path.join(app.getAppPath(), 'src');
+  : app.getAppPath();
 
+// send mode url paths
 var urlPathMappings = {};
+
+//recv mode pending file buffers
+const pendingFiles = new Map();
+function addPendingFile(file) {
+  const uid = Math.floor(Math.random() * 1000000);
+
+  pendingFiles.set(uid, {
+    buffer: file.buffer,
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size,
+  });
+  console.log("Added pending file with id: " + uid);
+  return uid;
+}
+function savePendingFile(event, _id) {
+
+  let allWindows = BrowserWindow.getAllWindows();
+  if (allWindows.length === 0) {
+    return;
+  }
+  const window = allWindows[0];
+  
+
+  const id = JSON.parse(_id);
+
+  console.log("Saving pending file with id: " + id);
+
+  const file = pendingFiles.get(id);
+  
+  
+  if (!file) {
+    console.log("File not found in pendingFiles map.");
+    return;
+  }
+
+  if (!fs.existsSync(path.join(projectRoot, "uploads"))) {
+    fs.mkdirSync(path.join(projectRoot, "uploads"));
+  }
+
+  const filePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.originalname);
+  console.log("File found, saving as " + filePath);
+
+  fs.writeFile(filePath, file.buffer, (err) => {
+    if (err) {
+      console.error("Error saving file: ", err);
+      window.webContents.send('save-file-result', {id: id, success: false});
+      return;
+    }
+    
+    pendingFiles.delete(id);
+    window.webContents.send('save-file-result', {id: id, success: true});
+    console.log("File saved and removed from pendingFiles map.");
+  });
+}
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
@@ -59,7 +114,7 @@ function getDefaultIP() {
 }
 
 function listAddrs() {
-  console.log("listAddrs called");
+  // console.log("listAddrs called");
   const interfaces = os.networkInterfaces();
   let filteredAddrs = [];
   for (const name in interfaces) {
@@ -72,8 +127,16 @@ function listAddrs() {
       }
     }
   }
-  console.log("listAddrs returning:", filteredAddrs);
+  // console.log("listAddrs returning:", filteredAddrs);
   return filteredAddrs;
+}
+
+function notifyRendererOfNewFile(window, file) {
+  window.webContents.send('new-uploaded-file', file);
+}
+
+function notifySaveResult(window, id, success) {
+  window.webContents.send('save-file-result', {id: id, success: success});
 }
 
 const createWindow = () => {
@@ -91,7 +154,11 @@ const createWindow = () => {
       nodeIntegration: false,
       devTools: true,
     },
-    ...(process.platform !== 'darwin' ? { titleBarOverlay: true } : {})
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: {
+      color: '#202020ff',
+      symbolColor: '#686868ff',
+      height: 34
+    }} : {})
   });
 
   // and load the index.html of the app.
@@ -99,18 +166,21 @@ const createWindow = () => {
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
+
+  return mainWindow;
 };
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Specify the directory to save files
-    },
-    filename: function (req, file, cb) {
-        // Customize filename to avoid conflicts
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
+// const multerDisk = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, 'uploads/'); // Specify the directory to save files
+//     },
+//     filename: function (req, file, cb) {
+//         // Customize filename to avoid conflicts
+//         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+//     }
+// });
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -118,11 +188,11 @@ const upload = multer({ storage: storage });
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
   ipcMain.handle('setServing', toggleSpecificItem);
-
   ipcMain.handle('getDefaultIP', getDefaultIP);
   ipcMain.handle('listAddrs', listAddrs);
+  ipcMain.handle('savePendingFile', savePendingFile);
 
-  createWindow();
+  const mainWindow = createWindow();
 
   //create client web server
   const server = http.createServer((req, res) => {
@@ -138,11 +208,15 @@ app.whenReady().then(() => {
             res.end("Error uploading file");
             return;
           }
-          console.log(req.file);
+          // console.log(req.file.buffer);
+
+          const file = req.file;
+          const uid = addPendingFile(file);
+          notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid});
         });
       }
       
-      const filePath = path.join(projectRoot, 'clientSend.html');
+      const filePath = path.join(projectRoot, 'src', 'clientSend.html');
       fs.readFile(filePath, (err, data) => {
           if (err) {
               res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -161,7 +235,7 @@ app.whenReady().then(() => {
     }
 
     if (parsedUrl.pathname == "/clientSend.css") {
-      const filePath = path.join(projectRoot, 'clientSend.css');
+      const filePath = path.join(projectRoot, 'src', 'clientSend.css');
       fs.readFile(filePath, (err, data) => {
           if (err) {
               res.writeHead(500, { 'Content-Type': 'text/plain' });

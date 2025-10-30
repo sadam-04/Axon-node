@@ -16,4 +16,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setServing: (shouldServe, id) => ipcRenderer.invoke('setServing', shouldServe, id),
     getDefaultIP: () => ipcRenderer.invoke('getDefaultIP'),
     listAddrs: () => ipcRenderer.invoke('listAddrs'),
-})
+});
+
+contextBridge.exposeInMainWorld('recvFileAPI', {
+    onNewFile: (callback) => ipcRenderer.on('new-uploaded-file', (e, file) => callback(file)),
+    savePendingFile: (id) => ipcRenderer.invoke('savePendingFile', id),
+
+    onSaveFileResult: (callback) => ipcRenderer.on('save-file-result', (e, result) => callback(result)),
+});

@@ -9,6 +9,7 @@ root.render(<App />);
 
 function App() {
   const [hostedFiles, setHostedFiles] = useState([]);
+  const [pendingFiles, setPendingFiles] = useState([]);
 
   const [guiMode, setGuiMode] = useState("send"); // "send" or "recv"
   const [addrs, setAddrs] = useState([]);
@@ -73,6 +74,25 @@ function App() {
     }
     getAddrs();
 
+    async function listenForNewUploads() {
+      window.recvFileAPI.onNewFile((file) => {
+        //Call this when a new file is received by the main process
+        setPendingFiles((prevPendingFiles) => [...prevPendingFiles, file]);
+      });
+    }
+    listenForNewUploads();
+
+    async function listenForSaveResults() {
+      window.recvFileAPI.onSaveFileResult((result) => {
+        const id = result.id;
+        const success = result.success;
+        console.log(`Save result for file id ${id}: ${success}`);
+        if (success) {
+          setPendingFiles((prevPendingFiles) => prevPendingFiles.filter((file) => file.id !== id));
+        }
+      });
+    }
+    listenForSaveResults();
   }, []);
 
   // if (hostedFiles.length === 0) {
@@ -106,8 +126,8 @@ function App() {
   // }
 
   const [buttons, setButtons] = useState([
-    {id: 1, label: "S", action: sendMode},
-    {id: 2, label: "R", action: recvMode}
+    {id: 1, label: "Send", action: sendMode},
+    {id: 2, label: "Recv", action: recvMode}
   ]);
   const [activeNavPage, setActiveNavPage] = useState(null);
 
@@ -127,11 +147,11 @@ function App() {
             label={btn.label}
             buttonAction={btn.action}
             isActive={activeNavPage === i}
-            customStyle={{display: "flex", width: "35px", height: "35px", borderRadius: "0", justifyContent: "center", alignItems: "center"}}
+            customStyle={{display: "flex", width: "35px", height: "35px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginBottom: "3px"}}
             setActive={() => setActiveNavPage(i)}
-            shadeA={"#181818"}
-            shadeB={"#202020"}
-            shadeC={"#282828"}
+            shadeA={"#202020"}
+            shadeB={"#282828"}
+            shadeC={"#303030"}
           />
         ))}
 
@@ -149,9 +169,9 @@ function App() {
 
         <div id="left-summary-panel">
           <div id="send-panel">
-            <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #303030", paddingBottom: "8px" }}>
+            <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #303030", paddingBottom: "4px" }}>
               <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
-              <div style={{display: "flex", flexDirection: "row", alignItems: "space-between"}}>
+              <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                 <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} file{hostedFiles.length !== 1 ? "s" : ""}</span>
                 <div className="plus-btn" onClick={handleFileOpenClick} />
               </div>
@@ -166,9 +186,9 @@ function App() {
                   buttonAction={() => {}}
                   isActive={activeSFile === i}
                   setActive={() => setActiveSFile(i)}
-                  shadeA={"#202020"}
-                  shadeB={"#282828"}
-                  shadeC={"#303030"}
+                  shadeA={"#282828"}
+                  shadeB={"#303030"}
+                  shadeC={"#383838"}
                 />
                 
 
@@ -178,10 +198,32 @@ function App() {
             </div>
           </div>
           <div id="recv-panel" style={{display: "none"}}>
-            <div className="recv-title-ribbon" style={{ display: "flex", justifyItems: "space-between", marginBottom: "0" }}>
-              <h4 style={{marginBottom: "5px", marginTop: "5px" }}>Inbox</h4>
+            <div className="left-recv-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #303030", paddingBottom: "4px" }}>
+              <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
+              <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
+                <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}</span>
+              </div>
               {/* <div className="plus-btn" onClick={handleFileOpenClick} /> */}
             </div>
+
+            <div style={{marginLeft: "0", marginRight: "0"}}>
+              {pendingFiles.map((file, i) => (
+
+                <ResponsiveButton
+                  key={file.id}
+                  label={<OutboxItemLabel fileName={file.filename.replace(/^.*[\\/]/, '')}  />}
+                  buttonAction={() => {}}
+                  isActive={activeRFile === i}
+                  setActive={() => setActiveRFile(i)}
+                  shadeA={"#282828"}
+                  shadeB={"#303030"}
+                  shadeC={"#383838"}
+                />
+            
+                // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
+              ))}
+            </div>
+
             {/* <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "5px 0" }} /> */}
             {/* <div className="file-entry">
               {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
@@ -215,18 +257,30 @@ function App() {
           </div>
         </div>
         ) : (null)}
-
-        {(guiMode == "recv" && activeRFile !== null) ? (
-          <div id="right-detail-panel">
-            {/* TODO */}
-          </div>
-        ) : (guiMode == "recv" && activeRFile === null) ? (
-          <div id="right-blank-panel">
-            <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
-            <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
-              {recvUrl ? <QrComponent url={recvUrl} presentedHost={presentedIp} /> : <p>Loading QR...</p>}
+        
+        {(guiMode == "recv") ? (
+          (pendingFiles.length === 0 || activeRFile === null) ? (
+            <div id="right-blank-panel">
+              <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
+              <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
+                {recvUrl ? <QrComponent url={recvUrl} presentedHost={presentedIp} /> : <p>Loading QR...</p>}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div id="right-detail-panel">
+              <ServedItem key={pendingFiles[activeRFile]?.id} filename={pendingFiles[activeRFile]?.filename} url={"https://google.com"} presentedHost={"grok"} size={"50 terabytes"} />
+              <ResponsiveButton
+                label={"Save File"}
+                buttonAction={() => {window.recvFileAPI.savePendingFile(pendingFiles[activeRFile].id);}}
+                isActive={false}
+                setActive={() => {}}
+                customStyle={{display: "flex", width: "100px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px"}}
+                shadeA={"#286040"}
+                shadeB={"#347d4c"}
+                shadeC={"#3fa858"}
+              />
+            </div>
+          )
         ) : null}
       </div>
     </div>
@@ -251,15 +305,16 @@ function OutboxItemLabel({fileName, onCloseClick}) {
       onMouseEnter={(event) => {handleMouseEnter(event);}}
       onMouseLeave={(event) => {handleMouseLeave(event);}}
       style={{
-        padding: "8px 12px",
+        padding: "6px 10px",
         display: "flex",
         justifyContent: "space-between",
         flexDirection: "row",
         width: `calc(${_width} - 24px)`,
+        height: "20px",
       }}
     >
-        <div style={{display: "block", width: `calc(${_width} - 20px)`, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{fileName}</div>
-        {isHovered ? <div onClick={onCloseClick} className="outboxItemCloseBttn" style={{display: "block", width: "10px"}}>✖</div> : null}
+        <div style={{display: "block", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{fileName}</div>
+        {isHovered ? <div onClick={onCloseClick} className="outboxItemCloseBttn" style={{display: "block", width: "10px", height: "fit-content", margin: "auto", marginRight: "5px", marginTop: "0"}}>✖</div> : null}
     </div>
   )
 }
@@ -382,9 +437,9 @@ function ShadedButton({ selected, hovered, pressed, customStyle = null, icon, sh
   let shadeValue = shadeA;
 
   if ((selected && hovered && pressed) || (selected && !hovered && !pressed) || (!selected && hovered && !pressed)) {
-    shadeValue = shadeB;
-  } else if ((selected && hovered && !pressed) || (!selected && hovered && pressed)) {
     shadeValue = shadeC;
+  } else if ((selected && hovered && !pressed) || (!selected && hovered && pressed)) {
+    shadeValue = shadeB;
   }
 
   return (
