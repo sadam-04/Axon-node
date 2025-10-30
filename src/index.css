@@ -245,8 +245,8 @@ h4 {
 } */
 
 .content-wrapper {
-  width: calc(100% - 5px);
-  height: calc(100% - 5px);
+  width: calc(100%);
+  height: calc(100%);
   margin-left: 0px;
   margin-top: 0;
 
