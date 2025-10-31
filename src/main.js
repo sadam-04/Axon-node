@@ -4,6 +4,7 @@ const http = require('node:http');
 const url = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
+const { exec } = require('node:child_process');
 const multer = require('multer');
 
 // red: #FF4a51
@@ -25,11 +26,12 @@ function addPendingFile(file) {
     originalname: file.originalname,
     mimetype: file.mimetype,
     size: file.size,
+    savedPath: "",
   });
   console.log("Added pending file with id: " + uid);
   return uid;
 }
-function savePendingFile(event, _id) {
+function savePendingFile(event, _id, callback=null) {
 
   let allWindows = BrowserWindow.getAllWindows();
   if (allWindows.length === 0) {
@@ -64,10 +66,38 @@ function savePendingFile(event, _id) {
       return;
     }
     
+    pendingFiles.get(_id).savedPath = filePath;
+    
+    if (callback) {
+      callback();
+    }
+
     // pendingFiles.delete(id);
     window.webContents.send('save-file-result', {id: id, path: filePath });
     // console.log("File saved and removed from pendingFiles map.");
   });
+}
+function saveAndRevealFile(event, _id) {
+  const file = pendingFiles.get(_id);
+
+  savePendingFile(event, _id, () => {
+    if (file) {
+      // const filePath = path.join(projectRoot, "uploads", file.originalname);
+      const filePath = file.savedPath;
+
+      exec(`explorer.exe "${path.dirname(filePath)}"`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`exec error: ${error}`);
+          return;
+        }
+        console.log(`stdout: ${stdout}`);
+        console.error(`stderr: ${stderr}`);
+      });
+    }
+  });
+
+  // console.log("Opening saved file with id: " + _id);
+
 }
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
@@ -187,6 +217,7 @@ app.whenReady().then(() => {
   ipcMain.handle('getDefaultIP', getDefaultIP);
   ipcMain.handle('listAddrs', listAddrs);
   ipcMain.handle('savePendingFile', savePendingFile);
+  ipcMain.handle('saveAndOpenFile', saveAndOpenFile);
 
   const mainWindow = createWindow();
 
@@ -327,4 +358,4 @@ app.on('window-all-closed', () => {
 });
 
 // In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+// code. You can also put them in separate files and import them here.}

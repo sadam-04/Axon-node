@@ -312,13 +312,13 @@ function App() {
             }}>
               <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
               {/* <div style={{margin: "10px 0 ", fontWeight: "bold", fontSize: "14px"}}>{pendingFiles[activeRFile]?.filename}</div> */}
-                <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px)"}}>
+                <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
                   <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.filename} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
                 </div>
                 <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
                   <ResponsiveButton
-                    label={"Save"}
-                    buttonAction={() => {window.recvFileAPI.savePendingFile(pendingFiles[activeRFile].id);}}
+                    label={"Open"}
+                    buttonAction={() => {window.recvFileAPI.saveAndOpenFile(pendingFiles[activeRFile].id);}}
                     isActive={false}
                     setActive={() => {}}
                     customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -328,7 +328,7 @@ function App() {
                   />
 
                   <ResponsiveButton
-                    label={"Save as..."}
+                    label={"Save"}
                     buttonAction={() => {window.recvFileAPI.savePendingFile(pendingFiles[activeRFile].id);}}
                     isActive={false}
                     setActive={() => {}}
@@ -350,7 +350,8 @@ function App() {
                   />
                 </div>
               </div>
-              <div>{saveMessage}</div>
+              {savePath != "" ? (<div onClick={() => {window.recvFileAPI.saveAndOpenFile(pendingFiles[activeRFile].id);}}>{savePath}</div>) : null}
+              {/* <div>{saveMessage}</div> */}
             </div>
           )
         ) : null}
