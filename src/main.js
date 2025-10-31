@@ -60,13 +60,13 @@ function savePendingFile(event, _id) {
   fs.writeFile(filePath, file.buffer, (err) => {
     if (err) {
       console.error("Error saving file: ", err);
-      window.webContents.send('save-file-result', {id: id, success: false});
+      window.webContents.send('save-file-result', {id: id, path: ""});
       return;
     }
     
-    pendingFiles.delete(id);
-    window.webContents.send('save-file-result', {id: id, success: true});
-    console.log("File saved and removed from pendingFiles map.");
+    // pendingFiles.delete(id);
+    window.webContents.send('save-file-result', {id: id, path: filePath });
+    // console.log("File saved and removed from pendingFiles map.");
   });
 }
 
@@ -133,10 +133,6 @@ function listAddrs() {
 
 function notifyRendererOfNewFile(window, file) {
   window.webContents.send('new-uploaded-file', file);
-}
-
-function notifySaveResult(window, id, success) {
-  window.webContents.send('save-file-result', {id: id, success: success});
 }
 
 const createWindow = () => {
@@ -212,7 +208,7 @@ app.whenReady().then(() => {
 
           const file = req.file;
           const uid = addPendingFile(file);
-          notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid});
+          notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size});
         });
       }
       

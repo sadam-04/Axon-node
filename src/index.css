@@ -49,20 +49,9 @@ h4 {
   white-space: normal;
 }
 
-.file-entry .left-panel {
-  /* min-width: 150px; */
-  width: calc(100% - 148px);
-}
-
 .file-entry img {
   max-width: 148px;
   max-height: 148px;
-}
-
-.details-list {
-  list-style-type: none;
-  padding-left: 8px;
-  margin-top: 4px;
 }
 
 .qr-wrapper {
@@ -110,7 +99,7 @@ h4 {
 
 .plus-btn {
   margin: auto;
-  margin-right: 10px;
+  margin-right: 7px;
   /* margin-top: 20px; */
   position: relative;
   width: 25px;
@@ -171,7 +160,7 @@ h4 {
   height: auto;
   padding: 0;
   flex-direction: column;
-  width: 35px;
+  width: 45px;
 }
 
 .ip-selector {
@@ -218,9 +207,9 @@ h4 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  padding: 0;
-  margin: 0;
+  /* width: 100%; */
+  /* padding: 0; */
+  /* margin: 0; */
 }
 
 .outboxItemCloseBttn {
@@ -264,13 +253,13 @@ h4 {
   overflow-y: hidden;
 }
 
-#left-summary-panel, #right-detail-panel, #right-blank-panel {
+#left-summary-panel, #right-blank-panel {
   vertical-align: top;
 }
 
 #left-summary-panel {
   /* width: calc(30% - 24px); */
-  width: 260px;
+  width: 263px;
   /* min-width: 260px; */
   color: white;
   overflow-y: auto;
@@ -284,11 +273,11 @@ h4 {
   white-space: normal;
 }
 
-#right-detail-panel, #right-blank-panel {
+#right-blank-panel {
   background-color: #303030;
   border-radius: 10px;
   margin-right: 10px;
-  width: calc(100% - 260px - 10px);
+  width: calc(100% - 263px - 10px);
   margin-top: 10px;
   margin-bottom: 10px;
   height: calc(100% - 20px);
@@ -300,7 +289,7 @@ h4 {
   justify-content: center;
   /* align-items: space-around; */
   /* border: 3px dashed #404040; */
-  background-color: #202020;
+  background-color: #282828;
   /* width: calc(50% - 60px); */
   /* height: calc(30% - 6px); */
   /* min-height: 200px;
