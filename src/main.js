@@ -77,24 +77,38 @@ function savePendingFile(event, _id, callback=null) {
     // console.log("File saved and removed from pendingFiles map.");
   });
 }
-function saveAndRevealFile(event, _id) {
+function revealFile(event, _id) {
   const file = pendingFiles.get(_id);
+  if (!file) return;
 
-  savePendingFile(event, _id, () => {
-    if (file) {
-      // const filePath = path.join(projectRoot, "uploads", file.originalname);
-      const filePath = file.savedPath;
+  if (!file.savedPath || file.savedPath === "") return;
 
-      exec(`explorer.exe "${path.dirname(filePath)}"`, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`exec error: ${error}`);
-          return;
-        }
-        console.log(`stdout: ${stdout}`);
-        console.error(`stderr: ${stderr}`);
-      });
+  const filePath = file.savedPath;
+
+  exec(`explorer.exe "${path.dirname(filePath)}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      return;
     }
+    console.log(`stdout: ${stdout}`);
+    console.error(`stderr: ${stderr}`);
   });
+
+  // savePendingFile(event, _id, () => {
+  //   if (file) {
+  //     // const filePath = path.join(projectRoot, "uploads", file.originalname);
+  //     const filePath = file.savedPath;
+
+  //     exec(`explorer.exe "${path.dirname(filePath)}"`, (error, stdout, stderr) => {
+  //       if (error) {
+  //         console.error(`exec error: ${error}`);
+  //         return;
+  //       }
+  //       console.log(`stdout: ${stdout}`);
+  //       console.error(`stderr: ${stderr}`);
+  //     });
+  //   }
+  // });
 
   // console.log("Opening saved file with id: " + _id);
 
@@ -217,7 +231,7 @@ app.whenReady().then(() => {
   ipcMain.handle('getDefaultIP', getDefaultIP);
   ipcMain.handle('listAddrs', listAddrs);
   ipcMain.handle('savePendingFile', savePendingFile);
-  ipcMain.handle('saveAndOpenFile', saveAndOpenFile);
+  ipcMain.handle('revealFile', revealFile);
 
   const mainWindow = createWindow();
 
@@ -243,7 +257,7 @@ app.whenReady().then(() => {
 
           const file = req.file;
           const uid = addPendingFile(file);
-          notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size});
+          notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size, savedAt: ""});
         });
       }
       

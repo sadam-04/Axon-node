@@ -23,5 +23,5 @@ contextBridge.exposeInMainWorld('recvFileAPI', {
     onSaveFileResult: (callback) => ipcRenderer.on('save-file-result', (e, result) => callback(result)),
     
     savePendingFile: (id) => ipcRenderer.invoke('savePendingFile', id),
-    saveAndOpenFile: (id) => ipcRenderer.invoke('saveAndOpenFile', id),
+    revealFile: (id) => ipcRenderer.invoke('revealFile', id),
 });

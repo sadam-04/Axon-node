@@ -17,7 +17,7 @@ function App() {
   const [recvUrl, setRecvUrl] = useState("");
   const [presentedIp, setPresentedIp] = useState("");
 
-  const [savePath, setSavePath] = useState("");
+  const [savePaths, setSavePaths] = useState({});
 
   const [buttons, setButtons] = useState([
     {id: 1, label: "Outbox", action: sendMode},
@@ -99,8 +99,8 @@ function App() {
         const parsed = result
 
         const id = parsed.id;
-        setSavePath(parsed.path);
-        console.log("SAVE PATH: " + parsed.path);
+        setSavePaths((prev) => ({ ...prev, [id]: parsed.path }));
+        // console.log("SAVE PATH: " + parsed.path);
         console.log(`Save result for file id ${id}: ${parsed.path}`);
         if (parsed.path != null) {
           // setPendingFiles((prevPendingFiles) => prevPendingFiles.filter((file) => file.id !== id));
@@ -144,15 +144,15 @@ function App() {
   //   setButtons(prev => [...prev, { id: Date.now(), label: `Btn ${prev.length + 1}` }]);
   // }
 
-  const [saveMessage, setSaveMessage] = useState("");
-  useEffect(() => {
-    if (savePath == "") {
-      setSaveMessage("");
-    }
-    else {
-      setSaveMessage(`File saved to: ${savePath}`);
-    }
-  }, [savePath]);
+  // const [saveMessage, setSaveMessage] = useState("");
+  // useEffect(() => {
+  //   if (savePaths.get(pendingFiles[activeRFile].id) == "") {
+  //     // setSaveMessage("");
+  //   }
+  //   else {
+  //     // setSaveMessage(`File saved to: ${savePath}`);
+  //   }
+  // }, [savePath]);
 
   return (
     <div className="outer-wrapper">
@@ -315,10 +315,12 @@ function App() {
                 <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
                   <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.filename} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
                 </div>
+
                 <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
+
                   <ResponsiveButton
-                    label={"Open"}
-                    buttonAction={() => {window.recvFileAPI.saveAndOpenFile(pendingFiles[activeRFile].id);}}
+                    label={"Save"}
+                    buttonAction={() => {window.recvFileAPI.savePendingFile(pendingFiles[activeRFile].id, ()=>{console.log("TESTING")});}}
                     isActive={false}
                     setActive={() => {}}
                     customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -328,11 +330,11 @@ function App() {
                   />
 
                   <ResponsiveButton
-                    label={"Save"}
-                    buttonAction={() => {window.recvFileAPI.savePendingFile(pendingFiles[activeRFile].id);}}
+                    label={"Go to folder"}
+                    buttonAction={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}
                     isActive={false}
                     setActive={() => {}}
-                    customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                    customStyle={{...(savePaths[pendingFiles[activeRFile].id] == null ? ({color: "#606060"}) : ({color: "#ffffff"})), display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                     shadeA={"#303030"}
                     shadeB={"#383838"}
                     shadeC={"#404040"}
@@ -340,7 +342,7 @@ function App() {
 
                   <ResponsiveButton
                     label={"Discard"}
-                    buttonAction={() => {console.log("saveMessage: " + saveMessage + ", savePath: " + savePath);}}
+                    buttonAction={() => {console.log("savedPaths " + savePaths[pendingFiles[activeRFile].id]);}}
                     isActive={false}
                     setActive={() => {}}
                     customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -350,7 +352,8 @@ function App() {
                   />
                 </div>
               </div>
-              {savePath != "" ? (<div onClick={() => {window.recvFileAPI.saveAndOpenFile(pendingFiles[activeRFile].id);}}>{savePath}</div>) : null}
+              <div>{pendingFiles[activeRFile].savedAt}</div>
+              {/* {savePath != "" ? (<div onClick={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}>{savePath}</div>) : null} */}
               {/* <div>{saveMessage}</div> */}
             </div>
           )
