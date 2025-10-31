@@ -199,6 +199,10 @@ app.whenReady().then(() => {
     if (parsedUrl.pathname == "/send") {
       if (req.method == 'POST') {
         upload.single('file')(req, res, function (err) {
+          if (!req.file) {
+            return;
+          }
+          
           if (err) {
             res.statusCode = 500;
             res.end("Error uploading file");

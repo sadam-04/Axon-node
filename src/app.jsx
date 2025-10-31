@@ -300,8 +300,8 @@ function App() {
               verticalAlign: "top",
               backgroundColor: "#303030",
               borderRadius: "10px",
-              marginRight: "10px",
-              width: "calc(100% - 263px - 10px)",
+              marginRight: "15px",
+              width: "calc(100% - 263px - 15px)",
               marginTop: "10px",
               marginBottom: "10px",
               height: "calc(100% - 20px)",
@@ -312,10 +312,10 @@ function App() {
             }}>
               <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
               {/* <div style={{margin: "10px 0 ", fontWeight: "bold", fontSize: "14px"}}>{pendingFiles[activeRFile]?.filename}</div> */}
-                <div style={{margin: "10px", flexGrow: 1}}>
+                <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px)"}}>
                   <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.filename} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
                 </div>
-                <div style={{display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
+                <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
                   <ResponsiveButton
                     label={"Save"}
                     buttonAction={() => {window.recvFileAPI.savePendingFile(pendingFiles[activeRFile].id);}}
@@ -447,7 +447,7 @@ function QrComponent({url, presentedHost}) {
 
 function SimpleTextHeader({primaryText, postPrimaryContent=null, secondaryText}) {
   return (
-    <div style={{width: "calc(100% - 148px)"}}>
+    <div style={{width: "100%", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"}}>
       <strong>{primaryText}</strong>
       {postPrimaryContent}
       <br />
