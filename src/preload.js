@@ -20,8 +20,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
 contextBridge.exposeInMainWorld('recvFileAPI', {
     onNewFile: (callback) => ipcRenderer.on('new-uploaded-file', (e, file) => callback(file)),
-    onSaveFileResult: (callback) => ipcRenderer.on('save-file-result', (e, result) => callback(result)),
+
+    onSaveFileResult: (callback) => ipcRenderer.on('savePendingFileResult', (e, result) => callback(result)),
     
-    savePendingFile: (id) => ipcRenderer.invoke('savePendingFile', id),
-    revealFile: (id) => ipcRenderer.invoke('revealFile', id),
+    saveFile: (id) => ipcRenderer.invoke('savePendingFile', id),
+    revealFile: (id) => ipcRenderer.invoke('revealPendingFile', id),
+    discardFile: (id) => ipcRenderer.invoke('discardPendingFile', id),
 });

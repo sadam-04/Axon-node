@@ -150,28 +150,9 @@ h4 {
   margin-top: 20px;
 }
 
-.outer-wrapper {
-  display: flex;
-  flex-direction: row;
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
-.nav-sidebar {
-  display: flex;
-  margin-left: 0;
-  margin-top: 0;
-  margin-right: 5px;
-  height: auto;
-  padding: 0;
-  flex-direction: column;
-  width: 45px;
-}
-
 .ip-selector {
   display: inline-block;
-  border-radius: 5px;
+  /* border-radius: 5px; */
 }
 
 .ip-selector:hover {
@@ -179,19 +160,19 @@ h4 {
 }
 
 .ip-selector h4, .ip-selector select {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  padding: 10px 0 10px 0;
   margin: auto;
   appearance: none;
   text-align: center;
-  font-size: 16px;
+  /* font-size: 10px; */
   /* border: 1px solid #ccc; */
   border: none;
   outline: none;
   background-color: #00000000;
   color: white;
-  width: 148px;
 }
 
 .ip-selector select option {

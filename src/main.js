@@ -62,7 +62,7 @@ function savePendingFile(event, _id, callback=null) {
   fs.writeFile(filePath, file.buffer, (err) => {
     if (err) {
       console.error("Error saving file: ", err);
-      window.webContents.send('save-file-result', {id: id, path: ""});
+      window.webContents.send('savePendingFileResult', {id: id, path: ""});
       return;
     }
     
@@ -73,11 +73,11 @@ function savePendingFile(event, _id, callback=null) {
     }
 
     // pendingFiles.delete(id);
-    window.webContents.send('save-file-result', {id: id, path: filePath });
+    window.webContents.send('savePendingFileResult', {id: id, path: filePath });
     // console.log("File saved and removed from pendingFiles map.");
   });
 }
-function revealFile(event, _id) {
+function revealPendingFile(event, _id) {
   const file = pendingFiles.get(_id);
   if (!file) return;
 
@@ -112,6 +112,11 @@ function revealFile(event, _id) {
 
   // console.log("Opening saved file with id: " + _id);
 
+}
+
+function discardPendingFile(event, _id) {
+  // const id = JSON.parse(_id);
+  pendingFiles.delete(_id);
 }
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
@@ -231,7 +236,8 @@ app.whenReady().then(() => {
   ipcMain.handle('getDefaultIP', getDefaultIP);
   ipcMain.handle('listAddrs', listAddrs);
   ipcMain.handle('savePendingFile', savePendingFile);
-  ipcMain.handle('revealFile', revealFile);
+  ipcMain.handle('revealPendingFile', revealPendingFile);
+  ipcMain.handle('discardPendingFile', discardPendingFile);
 
   const mainWindow = createWindow();
 
