@@ -1,6 +1,6 @@
 const { app, ipcMain, dialog, BrowserWindow } = require('electron');
 const path = require('node:path');
-const http = require('node:http');
+const https = require('node:https');
 const url = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -241,8 +241,13 @@ app.whenReady().then(() => {
 
   const mainWindow = createWindow();
 
+  const SSLOptions = {
+    key: fs.readFileSync(path.join(projectRoot, 'cert', 'key.pem')),
+    cert: fs.readFileSync(path.join(projectRoot, 'cert', 'cert.pem')),
+  };
+
   //create client web server
-  const server = http.createServer((req, res) => {
+  const server = https.createServer(SSLOptions, (req, res) => {
 
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/;

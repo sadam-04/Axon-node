@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import QRCode from 'qrcode';
+// import { protocol } from "electron";
 
 // const root = createRoot(document.body);
 const root = createRoot(document.getElementById("root"));
@@ -27,6 +28,8 @@ function App() {
 
   const [activeSFile, setSelectedSFile] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
+
+  const [protocol, setProtocol] = useState("HTTP");
 
   //TODO :GET RID OF THIS!!!
   function handleFileOpenClick() {
@@ -393,13 +396,29 @@ function App() {
           ) : null}
         </div>
       </div>
-      <div style={{boxSizing: "border-box", height: footerHeight, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
+      <div style={{display: "flex", flexDirection: "row", boxSizing: "border-box", height: footerHeight, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
         <div className="ip-selector" style={{boxSizing: "border-box", padding: "0 2px 0 2px", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
-          <select style={{height: "100%", fontSize: "12px"}} onChange={(e) => setAndPropagatePresentedIp(e.target.value)}>
+          <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setAndPropagatePresentedIp(e.target.value)}>
             {addrs.map((addr, index) => (
               <option key={index} value={addr}>{addr}</option>
             ))}
           </select>
+        </div>
+
+        <div style={{boxSizing: "border-box", padding: "0 2px 0 2px", margin: "0", width: "50px", height: footerHeight, overflow: "hidden"}}>
+            <ResponsiveButton
+              label={protocol}
+              buttonAction={async () => {
+                setProtocol(protocol === "HTTP" ? "HTTPS" : "HTTP");
+              }}
+              selected={false}
+              setSelected={() => {}}
+              enabled={true}
+              customStyle={{height: footerHeight, fontSize: "12px", fontWeight: "regular", color: "#a0a0a0"}}
+              shadeA={"#202020"}
+              shadeB={"#282828"}
+              shadeC={"#303030"}
+            />
         </div>
       </div>
     </div>
@@ -479,6 +498,7 @@ function QrComponent({url, presentedHost}) {
   }, [url, presentedHost]);
 
   const handleQRClick = async (e) => {
+    window.focus();
     navigator.clipboard.writeText(combinedUrl).then(() => {
       setQrHoverMsg("Copied!");
     })
