@@ -1,11 +1,15 @@
 const { app, ipcMain, dialog, BrowserWindow } = require('electron');
 const path = require('node:path');
-const https = require('node:https');
+// const https = require('node:https');
 const url = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
+// const Store = require('electron-store');
 const { exec } = require('node:child_process');
 const multer = require('multer');
+
+import Store from 'electron-store';
+const userConfig = new Store();
 
 // red: #FF4a51
 
@@ -15,6 +19,8 @@ const projectRoot = app.isPackaged
 
 // send mode url paths
 var urlPathMappings = {};
+
+var protocol = userConfig.get('useHTTPS') == true ? 'HTTPS' : 'HTTP';
 
 //recv mode pending file buffers
 const pendingFiles = new Map();
@@ -31,6 +37,7 @@ function addPendingFile(file) {
   console.log("Added pending file with id: " + uid);
   return uid;
 }
+
 function savePendingFile(event, _id, callback=null) {
 
   let allWindows = BrowserWindow.getAllWindows();
@@ -77,6 +84,7 @@ function savePendingFile(event, _id, callback=null) {
     // console.log("File saved and removed from pendingFiles map.");
   });
 }
+
 function revealPendingFile(event, _id) {
   const file = pendingFiles.get(_id);
   if (!file) return;
@@ -131,7 +139,7 @@ async function handleFileOpen() {
   if (!canceled && filePaths.length > 0) {
     //const data = await fs.readFile(filePaths[0], 'utf-8');
     let uid = Math.floor(Math.random() * 1000000);
-    const uurl = `http://localhost:3030/get/${uid}`;
+    const uurl = `${protocol}://localhost:3030/get/${uid}`;
     urlPathMappings[uid] = [filePaths[0], true];
     const fileSize = fs.statSync(filePaths[0]).size;
     return [uurl, filePaths[0], fileSize]; // return to renderer
@@ -238,16 +246,42 @@ app.whenReady().then(() => {
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', discardPendingFile);
+  ipcMain.handle('setProtocol', (event, newProtocol) => {
+    console.log("Setting protocol to: " + newProtocol);
+    protocol = newProtocol;
+    userConfig.set('useHTTPS', newProtocol === 'HTTPS' ? true : false);
+    initServer();
+  });
+  ipcMain.handle('getProtocol', () => {
+    return protocol;
+  });
+
+  let server = null;
+
+  console.log("Protocol: " + protocol);
 
   const mainWindow = createWindow();
+
+  function initServer() {
+    if (server != null) {
+      server.close();
+    }
+    if (userConfig.get('useHTTPS') == true) {
+      server = require('https').createServer(SSLOptions, serverBehavior);
+    } else {
+      server = require('http').createServer(serverBehavior);
+    }
+    server.listen(3030, () => {
+      console.log('Server running at http://localhost:3030/');
+    });
+  }
 
   const SSLOptions = {
     key: fs.readFileSync(path.join(projectRoot, 'cert', 'key.pem')),
     cert: fs.readFileSync(path.join(projectRoot, 'cert', 'cert.pem')),
   };
 
-  //create client web server
-  const server = https.createServer(SSLOptions, (req, res) => {
+  const serverBehavior = (req, res) => {
 
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/;
@@ -358,11 +392,22 @@ app.whenReady().then(() => {
         stream.pipe(res);
       });
     });
-  });
+  };
 
-  server.listen(3030, () => {
-    console.log('Server running at http://localhost:3030/');
-  });
+  initServer();
+
+  //create client web server
+
+
+  // if (userConfig.get('useHTTPS') == true) {
+  //   server = require('https').createServer(SSLOptions, serverBehavior);
+  // } else {
+  //   server = require('http').createServer(serverBehavior);
+  // }
+  
+  // server.listen(3030, () => {
+  //   console.log('Server running at http://localhost:3030/');
+  // });
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.

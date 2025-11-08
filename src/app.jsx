@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import QRCode from 'qrcode';
-// import { protocol } from "electron";
 
 // const root = createRoot(document.body);
 const root = createRoot(document.getElementById("root"));
 root.render(<App />);
-
 
 function App() {
   const [hostedFiles, setHostedFiles] = useState([]);
@@ -14,7 +12,7 @@ function App() {
 
   const [guiMode, setGuiMode] = useState("send"); // "send" or "recv"
   const [addrs, setAddrs] = useState([]);
-  // const [recvQrSrc, setRecvQrSrc] = useState("");
+
   const [recvUrl, setRecvUrl] = useState("");
   const [presentedIp, setPresentedIp] = useState("");
 
@@ -24,12 +22,12 @@ function App() {
     {id: 1, label: "Outbox", action: sendMode},
     {id: 2, label: "Inbox", action: recvMode}
   ]);
-  const [activeNavPage, setSelectedNavPage] = useState(0);
+  const [selectedNavPage, setSelectedNavPage] = useState(0);
 
   const [activeSFile, setSelectedSFile] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
 
-  const [protocol, setProtocol] = useState("HTTP");
+  const [protocol, setProtocol] = useState("");
 
   //TODO :GET RID OF THIS!!!
   function handleFileOpenClick() {
@@ -74,11 +72,24 @@ function App() {
   }
 
   function setAndPropagatePresentedIp(addr) {
-    setRecvUrl(`http://${addr}:3030/send`);
     setPresentedIp(addr);
-    // also update all hostedFiles entries
+    
+    // update url for recv mode
+    setRecvUrl(`${protocol}://${addr}:3030/send`);
+    // also update all urls of hosted files
     let newHostedFiles = hostedFiles.map((file) => {
       return { ...file, presentedHost: addr };
+    });
+    setHostedFiles(newHostedFiles);
+  }
+
+  function applyProtocolToUrls(newProtocol) {
+    setRecvUrl(`${newProtocol}://${presentedIp}:3030/send`);
+
+    let newHostedFiles = hostedFiles.map((file) => {
+      let urlObj = new URL(file.url);
+      urlObj.protocol = newProtocol.toLowerCase();
+      return { ...file, url: urlObj.toString() };
     });
     setHostedFiles(newHostedFiles);
   }
@@ -86,7 +97,7 @@ function App() {
   useEffect(() => {
     async function getIP() {
       var ip = await window.electronAPI.getDefaultIP();
-      setRecvUrl(`http://${ip}:3030/send`);
+      setRecvUrl(`${protocol}://${ip}:3030/send`);
     }
     getIP();
     // console.log("calling listAddrs");
@@ -121,6 +132,10 @@ function App() {
       });
     }
     listenForSaveResults();
+
+    window.electronAPI.getProtocolFromMain().then((savedProtocol) => {
+      setProtocol(savedProtocol);
+    });
   }, []);
 
   useEffect(() => {
@@ -203,10 +218,10 @@ function App() {
               key={btn.id}
               label={btn.label}
               buttonAction={btn.action}
-              selected={activeNavPage === i}
+              selected={selectedNavPage === i}
               setSelected={() => setSelectedNavPage(i)}
               enabled={true}
-              customStyle={{transition: "background-color 100ms linear", display: "flex", width: "42px", height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "0 6px 6px 0", justifyContent: "center", alignItems: "center", marginBottom: "3px", paddingRight: "0", paddingLeft: activeNavPage == i ? "0px" : "3px", borderLeft: activeNavPage == i ? "3px solid white" : "none"}}
+              customStyle={{transition: "background-color 100ms linear", display: "flex", width: "42px", height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "0 6px 6px 0", justifyContent: "center", alignItems: "center", marginBottom: "3px", paddingRight: "0", paddingLeft: selectedNavPage == i ? "0px" : "3px", borderLeft: selectedNavPage == i ? "3px solid white" : "none"}}
               shadeA={"#202020"}
               shadeB={"#282828"}
               shadeC={"#303030"}
@@ -215,15 +230,6 @@ function App() {
 
         </div>
         <div className="content-wrapper">
-
-          {/* <div className="ip-selector">
-            <h4>Select ip address:</h4>
-            <select id="addr-list" onChange={(e) => setAndPropagatePresentedIp(e.target.value)()}>
-              {addrs.map((addr, index) => (
-                <option key={index} value={addr}>{addr}</option>
-              ))}
-            </select>
-          </div> */}
 
           <div id="left-summary-panel">
             <div id="send-panel">
@@ -409,7 +415,10 @@ function App() {
             <ResponsiveButton
               label={protocol}
               buttonAction={async () => {
-                setProtocol(protocol === "HTTP" ? "HTTPS" : "HTTP");
+                var newProtocol = (protocol === "HTTP" ? "HTTPS" : "HTTP");
+                setProtocol(newProtocol);
+                window.electronAPI.setProtocol(newProtocol);
+                applyProtocolToUrls(newProtocol);
               }}
               selected={false}
               setSelected={() => {}}
@@ -495,7 +504,7 @@ function QrComponent({url, presentedHost}) {
         console.error("Failed to generate QR code", err);
       }
     })();
-  }, [url, presentedHost]);
+  }, [url, presentedHost, ]);
 
   const handleQRClick = async (e) => {
     window.focus();
