@@ -139,10 +139,10 @@ async function handleFileOpen() {
   if (!canceled && filePaths.length > 0) {
     //const data = await fs.readFile(filePaths[0], 'utf-8');
     let uid = Math.floor(Math.random() * 1000000);
-    const uurl = `${protocol}://localhost:3030/get/${uid}`;
+    // const uurl = `${protocol}://localhost:3030/get/${uid}`;
     urlPathMappings[uid] = [filePaths[0], true];
     const fileSize = fs.statSync(filePaths[0]).size;
-    return [uurl, filePaths[0], fileSize]; // return to renderer
+    return [uid, filePaths[0], fileSize]; // return to renderer
   }
   return [0, "null", 0];
 }
@@ -247,15 +247,29 @@ app.whenReady().then(() => {
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', discardPendingFile);
   ipcMain.handle('attemptToggleProtocol', (event) => {
+    var res;
     if (protocol === 'HTTP') {
-      protocol = 'HTTPS';
+      //attempt switching to HTTPS
+      res = initServer('HTTPS');
+      console.log("Attempted to switch to HTTPS, success: " + res);
+      if (res == false) {
+        console.log("Failed to switch to HTTPS, keeping HTTP.");
+        initServer('HTTP');
+        // inform UI of failure
+        
+      } else {
+        // succeeded, update protocol
+        protocol = 'HTTPS';
+      }
     } else {
+      // switch from HTTPS to HTTP
       protocol = 'HTTP';
+      res = initServer(protocol);
     }
-    console.log("Setting protocol to: " + protocol);
+    console.log("Protocol updated to " + protocol);
     userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
-    initServer();
-    return protocol;
+    // initServer();
+    return [protocol, res];
   });
 
   ipcMain.handle('getProtocol', () => {
@@ -268,24 +282,44 @@ app.whenReady().then(() => {
 
   const mainWindow = createWindow();
 
-  function initServer() {
+  function initServer(proto) {
+    console.log("Initializing server with protocol: " + proto);
     if (server != null) {
       server.close();
     }
-    if (userConfig.get('useHTTPS') == true) {
-      server = require('https').createServer(SSLOptions, serverBehavior);
+    if (proto == 'HTTPS') {
+      try {
+        var key = fs.readFileSync(path.join(projectRoot, 'cert', 'key.pem'));
+        var cert = fs.readFileSync(path.join(projectRoot, 'cert', 'cert.pem'));
+
+        console.log("Loaded SSL key and cert.");
+
+        if (!key || !cert) {
+          console.log("SSL key or cert not found.");
+          throw("Unable to load SSL key/cert");
+        }
+
+        const SSLOptions = {
+          key: key,
+          cert: cert,
+        };
+      
+        server = require('https').createServer(SSLOptions, serverBehavior);
+      } catch (e) {
+        console.log("Error initializing HTTPS server: ", e);
+        return false;
+      }
     } else {
       server = require('http').createServer(serverBehavior);
     }
     server.listen(3030, () => {
-      console.log('Server running at http://localhost:3030/');
+      console.log(`Server listening at ${protocol.toLowerCase()}://*:3030/`);
     });
+
+    return true;
   }
 
-  const SSLOptions = {
-    key: fs.readFileSync(path.join(projectRoot, 'cert', 'key.pem')),
-    cert: fs.readFileSync(path.join(projectRoot, 'cert', 'cert.pem')),
-  };
+
 
   const serverBehavior = (req, res) => {
 

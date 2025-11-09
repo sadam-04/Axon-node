@@ -16,6 +16,8 @@ function App() {
   const [presentedIp, setPresentedIp] = useState("");
   const [protocol, setProtocol] = useState("");
 
+  const [protocolMessage, setProtocolMessage] = useState("");
+
   const [recvUrl, setRecvUrl] = useState("");
 
   const [savePaths, setSavePaths] = useState({});
@@ -32,11 +34,12 @@ function App() {
 
   //TODO :GET RID OF THIS!!!
   function handleFileOpenClick() {
-      window.electronAPI.openFile().then(([hostUrl, fileName, fileSize]) => {
-          if (hostUrl == "" || fileName == "null") {
+      window.electronAPI.openFile().then(([uid, fileName, fileSize]) => {
+          if (uid == "" || fileName == "null") {
             return;
           }
-          setHostedFiles([...hostedFiles, { id: Date.now(), fileName: fileName, url: hostUrl, presentedHost: presentedIp, size: fileSize }]);
+          var url = `${protocol}://${presentedIp}:3030/get/${uid}`;
+          setHostedFiles([...hostedFiles, { id: Date.now(), fileName: fileName, url: url, size: fileSize }]);
       });
   }
 
@@ -317,7 +320,7 @@ function App() {
               marginBottom: "10px",
               height: "calc(100% - 20px)",
             }}>
-              <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} presentedHost={hostedFiles[activeSFile]?.presentedHost} size={hostedFiles[activeSFile]?.size} />
+              <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} /*presentedHost={hostedFiles[activeSFile]?.presentedHost}*/ size={hostedFiles[activeSFile]?.size} />
               {/* <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div> */}
 
 
@@ -408,7 +411,7 @@ function App() {
         </div>
       </div>
       <div style={{display: "flex", flexDirection: "row", boxSizing: "border-box", height: footerHeight, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
-        <div className="ip-selector" style={{boxSizing: "border-box", padding: "0 2px 0 2px", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
+        <div className="ip-selector" style={{boxSizing: "border-box", padding: "2px 2px 0 2px", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
           <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setPresentedIp(e.target.value)} value={presentedIp}>
             {addrs.map((addr, index) => (
               <option key={index} value={addr}>{addr}</option>
@@ -422,8 +425,13 @@ function App() {
               buttonAction={async () => {
                 // var newProtocol = (protocol === "HTTP" ? "HTTPS" : "HTTP");
                 // setProtocol(newProtocol);
-                window.electronAPI.attemptToggleProtocol().then((newProtocol) => {
+                window.electronAPI.attemptToggleProtocol().then(([newProtocol, toggleSuccess]) => {
                   setProtocol(newProtocol);
+                  if (newProtocol == "HTTP" && !toggleSuccess) {
+                    setProtocolMessage("Unable to switch to HTTPS. Make sure key and cert files are present.");
+                  } else {
+                    setProtocolMessage("");
+                  }
                   // updateURLsWithProtocol(newProtocol);
                   // console.log("Protocol toggled to " + newProtocol + " in main process");
                 });
@@ -437,6 +445,9 @@ function App() {
               shadeB={"#282828"}
               shadeC={"#303030"}
             />
+        </div>
+        <div style={{boxSizing: "border-box", display: "flex", alignItems: "center", padding: "0 2px 0 2px", margin: "0", height: footerHeight, overflow: "hidden"}}>
+          {protocolMessage ? <span style={{height: "wrap-content", fontSize: "12px", color: "#a04040"}}>{protocolMessage}</span> : null}
         </div>
       </div>
     </div>
