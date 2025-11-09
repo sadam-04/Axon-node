@@ -246,12 +246,18 @@ app.whenReady().then(() => {
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', discardPendingFile);
-  ipcMain.handle('setProtocol', (event, newProtocol) => {
-    console.log("Setting protocol to: " + newProtocol);
-    protocol = newProtocol;
-    userConfig.set('useHTTPS', newProtocol === 'HTTPS' ? true : false);
+  ipcMain.handle('attemptToggleProtocol', (event) => {
+    if (protocol === 'HTTP') {
+      protocol = 'HTTPS';
+    } else {
+      protocol = 'HTTP';
+    }
+    console.log("Setting protocol to: " + protocol);
+    userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
     initServer();
+    return protocol;
   });
+
   ipcMain.handle('getProtocol', () => {
     return protocol;
   });

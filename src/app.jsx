@@ -13,8 +13,10 @@ function App() {
   const [guiMode, setGuiMode] = useState("send"); // "send" or "recv"
   const [addrs, setAddrs] = useState([]);
 
-  const [recvUrl, setRecvUrl] = useState("");
   const [presentedIp, setPresentedIp] = useState("");
+  const [protocol, setProtocol] = useState("");
+
+  const [recvUrl, setRecvUrl] = useState("");
 
   const [savePaths, setSavePaths] = useState({});
 
@@ -27,7 +29,6 @@ function App() {
   const [activeSFile, setSelectedSFile] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
 
-  const [protocol, setProtocol] = useState("");
 
   //TODO :GET RID OF THIS!!!
   function handleFileOpenClick() {
@@ -71,29 +72,30 @@ function App() {
     setGuiMode("recv");
   }
 
-  function setAndPropagatePresentedIp(addr) {
-    setPresentedIp(addr);
+  // function setAndPropagatePresentedIp(addr) {
+  //   setPresentedIp(addr);
     
-    // update url for recv mode
-    setRecvUrl(`${protocol}://${addr}:3030/send`);
-    // also update all urls of hosted files
-    let newHostedFiles = hostedFiles.map((file) => {
-      return { ...file, presentedHost: addr };
-    });
-    setHostedFiles(newHostedFiles);
-  }
+  //   // update url for recv mode
+  //   setRecvUrl(`${protocol}://${addr}:3030/send`);
+  //   // also update all urls of hosted files
+  //   let newHostedFiles = hostedFiles.map((file) => {
+  //     return { ...file, presentedHost: addr };
+  //   });
+  //   setHostedFiles(newHostedFiles);
+  // }
 
-  function applyProtocolToUrls(newProtocol) {
-    setRecvUrl(`${newProtocol}://${presentedIp}:3030/send`);
+  // function updateURLsWithProtocol(newProtocol) {
+  //   setRecvUrl(`${newProtocol}://${presentedIp}:3030/send`);
 
-    let newHostedFiles = hostedFiles.map((file) => {
-      let urlObj = new URL(file.url);
-      urlObj.protocol = newProtocol.toLowerCase();
-      return { ...file, url: urlObj.toString() };
-    });
-    setHostedFiles(newHostedFiles);
-  }
+  //   let newHostedFiles = hostedFiles.map((file) => {
+  //     let urlObj = new URL(file.url);
+  //     urlObj.protocol = newProtocol.toLowerCase();
+  //     return { ...file, url: urlObj.toString() };
+  //   });
+  //   setHostedFiles(newHostedFiles);
+  // }
 
+  // initialization
   useEffect(() => {
     async function getIP() {
       var ip = await window.electronAPI.getDefaultIP();
@@ -104,7 +106,8 @@ function App() {
     async function getAddrs() {
       let addrs = await window.electronAPI.listAddrs();
       setAddrs(addrs);
-      setAndPropagatePresentedIp(addrs[0]);
+      // setAndPropagatePresentedIp(addrs[0]);
+      setPresentedIp(addrs[0]);
       console.log("Propagated ip: " + addrs[0]);
     }
     getAddrs();
@@ -138,18 +141,20 @@ function App() {
     });
   }, []);
 
+  //update all URLs when protocol or presentedIp changes
   useEffect(() => {
-    // setSaveActionResult(null);
-  }, [activeRFile]); 
+    // update recv url
+    setRecvUrl(`${protocol}://${presentedIp}:3030/send`);
 
-  // if (hostedFiles.length === 0) {
-  //   return (
-  //     <div>
-  //       <div className="no-files-msg" onClick={handleFileOpenClick}>No files added yet. Click here to add one.</div>
-  //       <div className="plus-btn" onClick={handleFileOpenClick} />
-  //     </div>
-  //   );
-  // }
+    // also update all urls of hosted files
+    let newHostedFiles = hostedFiles.map((file) => {
+      let urlObj = new URL(file.url);
+      urlObj.protocol = protocol.toLowerCase();
+      urlObj.hostname = presentedIp;
+      return { ...file, url: urlObj.toString() };
+    });
+    setHostedFiles(newHostedFiles);
+  }, [protocol, presentedIp]);
 
   console.log("App rendering");
 
@@ -329,7 +334,7 @@ function App() {
               <div id="right-blank-panel">
                 <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
                 <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
-                  {recvUrl ? <QrComponent url={recvUrl} presentedHost={presentedIp} /> : <p>Loading QR...</p>}
+                  {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
                 </div>
               </div>
             ) : (
@@ -404,7 +409,7 @@ function App() {
       </div>
       <div style={{display: "flex", flexDirection: "row", boxSizing: "border-box", height: footerHeight, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
         <div className="ip-selector" style={{boxSizing: "border-box", padding: "0 2px 0 2px", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
-          <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setAndPropagatePresentedIp(e.target.value)}>
+          <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setPresentedIp(e.target.value)} value={presentedIp}>
             {addrs.map((addr, index) => (
               <option key={index} value={addr}>{addr}</option>
             ))}
@@ -415,10 +420,14 @@ function App() {
             <ResponsiveButton
               label={protocol}
               buttonAction={async () => {
-                var newProtocol = (protocol === "HTTP" ? "HTTPS" : "HTTP");
-                setProtocol(newProtocol);
-                window.electronAPI.setProtocol(newProtocol);
-                applyProtocolToUrls(newProtocol);
+                // var newProtocol = (protocol === "HTTP" ? "HTTPS" : "HTTP");
+                // setProtocol(newProtocol);
+                window.electronAPI.attemptToggleProtocol().then((newProtocol) => {
+                  setProtocol(newProtocol);
+                  // updateURLsWithProtocol(newProtocol);
+                  // console.log("Protocol toggled to " + newProtocol + " in main process");
+                });
+                // applyProtocolToUrls(newProtocol);
               }}
               selected={false}
               setSelected={() => {}}
@@ -487,28 +496,28 @@ function ResponsiveButton({selected, setSelected, enabled, buttonAction, onHover
   );
 }
 
-function QrComponent({url, presentedHost}) {
+function QrComponent({url}) {
   const [src, setSrc] = useState("");
   const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
 
-  var combinedUrl = url ? url.replace("localhost", presentedHost ? presentedHost : "localhost") : "";
+  // var combinedUrl = url ? url.replace("localhost", presentedHost ? presentedHost : "localhost") : "";
 
   useEffect(() => {
     (async () => {
       try {
         //var combinedUrl = url.replace("localhost", presentedHost ? presentedHost : "localhost");
-        console.log("Generating QR for url: " + combinedUrl);
-        const dataUrl = await QRCode.toDataURL(combinedUrl, {margin: 4});
+        console.log("Generating QR for url: " + url);
+        const dataUrl = await QRCode.toDataURL(url, {margin: 4});
         setSrc(dataUrl);
       } catch (err) {
         console.error("Failed to generate QR code", err);
       }
     })();
-  }, [url, presentedHost, ]);
+  }, [url]);
 
   const handleQRClick = async (e) => {
     window.focus();
-    navigator.clipboard.writeText(combinedUrl).then(() => {
+    navigator.clipboard.writeText(url).then(() => {
       setQrHoverMsg("Copied!");
     })
   }
@@ -538,7 +547,7 @@ function SimpleTextHeader({primaryText, postPrimaryContent=null, secondaryText})
   )
 }
 
-function ServedItem({filename, url, presentedHost, size}) {
+function ServedItem({filename, url, size}) {
   // const [src, setSrc] = useState("");
   const [checked, setChecked] = useState(true);
   // const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
@@ -583,7 +592,7 @@ function ServedItem({filename, url, presentedHost, size}) {
 
     <SimpleTextHeader primaryText={filename} postPrimaryContent={<input type="checkbox" checked={checked} onChange={handleCheckboxChange} />} secondaryText={`Size: ${sizeString}`} />
     <div className="right-panel">
-      <QrComponent url={url} presentedHost={presentedHost} />
+      <QrComponent url={url} />
     </div>
   </div>
 };
