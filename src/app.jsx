@@ -194,7 +194,9 @@ function App() {
   // }, [savePath]);
 
   function hasCurrentFileBeenSaved() {
-    return savePaths[pendingFiles[activeRFile].id] != null;
+    let tmp = pendingFiles[activeRFile];
+    console.log("Active rfile:" + activeRFile);
+    return savePaths[tmp.id] != null;
   }
 
   const footerHeight = "24px";
@@ -219,11 +221,6 @@ function App() {
           justifyContent: "space-between",
           width: "45px",
         }}>
-
-
-
-          {/* <ResponsiveButton selected={activeS} setSelected={handleSelectSend} />
-          <ResponsiveButton selected={activeR} setSelected={handleSelectRecv} /> */}
           <div style={{display: "flex", flexDirection: "column"}}>
             {buttons.map((btn, i) => (
               <ResponsiveButton
@@ -255,9 +252,9 @@ function App() {
             shadeC={"#303030"}
           />
         </div>
-        <div className="content-wrapper">
-          <div id="left-summary-panel">
-            {selectedNavPage == 0 ? (
+        {selectedNavPage == 0 ? (
+          <div className="content-wrapper">
+            <div id="left-summary-panel">
               <div id="send-panel">
                 <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
                   <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
@@ -289,7 +286,25 @@ function App() {
                   ))}
                 </div>
               </div>
-            ) : selectedNavPage == 1 ? (
+            </div>
+            {activeSFile !== null ? (
+              <div id="right-detail-panel" style={{
+              verticalAlign: "top",
+              backgroundColor: "#303030",
+              borderRadius: "10px",
+              marginRight: "10px",
+              width: "calc(100% - 263px - 10px)",
+              marginTop: "10px",
+              marginBottom: "10px",
+              height: "calc(100% - 20px)",
+            }}>
+              <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} /*presentedHost={hostedFiles[activeSFile]?.presentedHost}*/ size={hostedFiles[activeSFile]?.size} />
+            </div>
+            ) : null}
+          </div>
+        ) : selectedNavPage == 1 ? (
+          <div className="content-wrapper">
+            <div id="left-summary-panel">
               <div id="recv-panel">
                 <div className="left-recv-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
                   <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
@@ -318,43 +333,9 @@ function App() {
                     // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
                   ))}
                 </div>
-
-                {/* <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "5px 0" }} /> */}
-                {/* <div className="file-entry">
-                  {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
-                </div> */}
               </div>
-            ) : null}
-
-          </div>
-
-          {/* <hr style={{backgroundColor: "#303030", border: "none", width: "1px", marginLeft: "0" }} /> */}
-
-          {(activeSFile !== null && selectedNavPage == 0) ? (
-            <div id="right-detail-panel" style={{
-              verticalAlign: "top",
-              backgroundColor: "#303030",
-              borderRadius: "10px",
-              marginRight: "10px",
-              width: "calc(100% - 263px - 10px)",
-              marginTop: "10px",
-              marginBottom: "10px",
-              height: "calc(100% - 20px)",
-            }}>
-              <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} /*presentedHost={hostedFiles[activeSFile]?.presentedHost}*/ size={hostedFiles[activeSFile]?.size} />
-              {/* <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div> */}
-
-
-              {/* {activeRFile !== null && guiMode == "recv" ? (
-              <ServedItem key={hostedFiles[activeRFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} presentedHost={hostedFiles[activeSFile]?.presentedHost} size={hostedFiles[activeSFile]?.size} />
-              ) : (
-                <div style={{color: "white"}}>No file selected. Please select a file from the outbox to see details.</div>
-                )} */}
             </div>
-          ) : (null)}
-          
-          {(selectedNavPage == 1) ? (
-            (pendingFiles.length === 0 || activeRFile === null) ? (
+            {activeRFile === null ? (
               <div id="right-blank-panel">
                 <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
                 <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
@@ -427,9 +408,9 @@ function App() {
                 {/* {savePath != "" ? (<div onClick={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}>{savePath}</div>) : null} */}
                 {/* <div>{saveMessage}</div> */}
               </div>
-            )
-          ) : null}
-        </div>
+            )}
+          </div>
+        ) : null}
       </div>
       <div style={{display: "flex", flexDirection: "row", boxSizing: "border-box", height: footerHeight, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
         <div className="ip-selector" style={{boxSizing: "border-box", padding: "2px 2px 0 2px", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
