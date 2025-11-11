@@ -434,7 +434,7 @@ app.whenReady().then(() => {
     });
   };
 
-  initServer();
+  initServer(protocol);
 
   //create client web server
 
