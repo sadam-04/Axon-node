@@ -207,20 +207,26 @@ function App() {
       flexDirection: "column",
       margin: 0,
       padding: 0,
-      height: "100%"
+      height: "100%",
+      borderTop: "1px solid #303030",
+      boxSizing: "border-box",
     }}>
       <div style={{display: "flex", flexDirection: "row", width: "100%", height: `calc(100% - ${footerHeight})`}}>
         <div id="nav-sidebar" style={{
+          borderRight: "1px solid #303030",
+          boxSizing: "border-box",
           display: "flex",
           marginLeft: "0",
           marginTop: "0",
-          marginRight: "5px",
+          marginRight: "0",
           height: "auto",
           padding: "0",
+          flexGrow: "0",
           flexDirection: "column",
           justifyContent: "space-between",
           width: "45px",
         }}>
+          {/* Inbox/Outbox buttons */}
           <div style={{display: "flex", flexDirection: "column"}}>
             {buttons.map((btn, i) => (
               <ResponsiveButton
@@ -230,7 +236,7 @@ function App() {
                 selected={selectedNavPage === i}
                 setSelected={() => setSelectedNavPage(i)}
                 enabled={true}
-                customStyle={{transition: "background-color 100ms linear", display: "flex", width: "42px", height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "0 6px 6px 0", justifyContent: "center", alignItems: "center", marginBottom: "3px", paddingRight: "0", paddingLeft: selectedNavPage == i ? "0px" : "3px", borderLeft: selectedNavPage == i ? "3px solid white" : "none"}}
+                customStyle={{transition: "background-color 100ms linear", display: "flex", width: "100%", height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "0", justifyContent: "center", alignItems: "center", fontWeight: selectedNavPage == i ? "bold" : "normal"}}
                 shadeA={"#202020"}
                 shadeB={"#282828"}
                 shadeC={"#303030"}
@@ -246,173 +252,182 @@ function App() {
             selected={selectedNavPage === -1}
             setSelected={() => setSelectedNavPage(-1)}
             enabled={true}
-            customStyle={{transition: "background-color 100ms linear", display: "flex", width: "42px", height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "0 6px 6px 0", justifyContent: "center", alignItems: "center", marginBottom: "3px", paddingRight: "0", paddingLeft: selectedNavPage == -1 ? "0px" : "3px", borderLeft: selectedNavPage == -1 ? "3px solid white" : "none"}}
+            customStyle={{transition: "background-color 100ms linear", display: "flex", width: "100%", height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "0", justifyContent: "center", alignItems: "center", fontWeight: selectedNavPage == -1 ? "bold" : "normal"}}
             shadeA={"#202020"}
             shadeB={"#282828"}
             shadeC={"#303030"}
           />
         </div>
-        {selectedNavPage == 0 ? (
-          <div className="content-wrapper">
-            <div id="left-summary-panel">
-              <div id="send-panel">
-                <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
-                  <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
-                  <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
-                    <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} file{hostedFiles.length !== 1 ? "s" : ""}</span>
-                    <div className="plus-btn" onClick={handleFileOpenClick} />
+        <div className="content-wrapper" style={{boxSizing: "border-box", flexGrow: "1", height: "100%"}}>
+          {selectedNavPage == 0 ? (
+            <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
+              <div id="left-summary-panel">
+                <div id="send-panel">
+                  <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
+                    <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
+                    <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
+                      <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} file{hostedFiles.length !== 1 ? "s" : ""}</span>
+                      <div className="plus-btn" onClick={handleFileOpenClick} />
+                    </div>
+                  </div>
+                  {/* <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "5px 0" }} /> */}
+                  <div style={{marginLeft: "0", marginRight: "0"}}>
+                    {hostedFiles.map((file, i) => (
+
+                      <ResponsiveButton
+                        key={file.id}
+                        label={<SummaryListItem fileName={file.fileName.replace(/^.*[\\/]/, '')} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); window.electronAPI.setServing(false, fileID); var _hostedFiles = hostedFiles.filter(f => f.id !== file.id); if (_hostedFiles.length == 0) {setSelectedSFile(null);} else {setSelectedSFile(0);} setHostedFiles(_hostedFiles);}} />}
+                        buttonAction={() => {}}
+                        selected={activeSFile === i}
+                        setSelected={() => setSelectedSFile(i)}
+                        enabled={true}
+                        customStyle={{transition: "background-color 100ms linear", paddingLeft: activeSFile == i ? "0px" : "3px", borderLeft: activeSFile == i ? "3px solid white" : "none"}}
+                        shadeA={"#282828"}
+                        shadeB={"#303030"}
+                        shadeC={"#383838"}
+                      />
+                      
+
+
+                      // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
+                    ))}
                   </div>
                 </div>
-                {/* <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "5px 0" }} /> */}
-                <div style={{marginLeft: "0", marginRight: "0"}}>
-                  {hostedFiles.map((file, i) => (
-
-                    <ResponsiveButton
-                      key={file.id}
-                      label={<SummaryListItem fileName={file.fileName.replace(/^.*[\\/]/, '')} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); window.electronAPI.setServing(false, fileID); var _hostedFiles = hostedFiles.filter(f => f.id !== file.id); if (_hostedFiles.length == 0) {setSelectedSFile(null);} else {setSelectedSFile(0);} setHostedFiles(_hostedFiles);}} />}
-                      buttonAction={() => {}}
-                      selected={activeSFile === i}
-                      setSelected={() => setSelectedSFile(i)}
-                      enabled={true}
-                      customStyle={{transition: "background-color 100ms linear", paddingLeft: activeSFile == i ? "0px" : "3px", borderLeft: activeSFile == i ? "3px solid white" : "none"}}
-                      shadeA={"#282828"}
-                      shadeB={"#303030"}
-                      shadeC={"#383838"}
-                    />
-                    
-
-
-                    // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
-                  ))}
-                </div>
               </div>
-            </div>
-            {activeSFile !== null ? (
-              <div id="right-detail-panel" style={{
-              verticalAlign: "top",
-              backgroundColor: "#303030",
-              borderRadius: "10px",
-              marginRight: "10px",
-              width: "calc(100% - 263px - 10px)",
-              marginTop: "10px",
-              marginBottom: "10px",
-              height: "calc(100% - 20px)",
-            }}>
-              <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} /*presentedHost={hostedFiles[activeSFile]?.presentedHost}*/ size={hostedFiles[activeSFile]?.size} />
-            </div>
-            ) : null}
-          </div>
-        ) : selectedNavPage == 1 ? (
-          <div className="content-wrapper">
-            <div id="left-summary-panel">
-              <div id="recv-panel">
-                <div className="left-recv-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
-                  <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
-                  <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
-                    <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}</span>
-                  </div>
-                  {/* <div className="plus-btn" onClick={handleFileOpenClick} /> */}
-                </div>
-
-                <div style={{marginLeft: "0", marginRight: "0"}}>
-                  {pendingFiles.map((file, i) => (
-
-                    <ResponsiveButton
-                      key={file.id}
-                      label={<SummaryListItem fileName={file.filename.replace(/^.*[\\/]/, '')} onCloseClick={discardPendingFile} />}
-                      buttonAction={() => {}}
-                      selected={activeRFile === i}
-                      setSelected={() => setSelectedRFile(i)}
-                      enabled={true}
-                      customStyle={{transition: "background-color 100ms linear", paddingLeft: activeRFile == i ? "0px" : "3px", borderLeft: activeRFile == i ? "3px solid white" : "none"}}
-                      shadeA={"#282828"}
-                      shadeB={"#303030"}
-                      shadeC={"#383838"}
-                    />
-                
-                    // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
-                  ))}
-                </div>
-              </div>
-            </div>
-            {activeRFile === null ? (
-              <div id="right-blank-panel">
-                <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
-                <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
-                  {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
-                </div>
-              </div>
-            ) : (
-              <div id="right-detail-panel" style={{
+              {activeSFile !== null ? (
+                <div id="right-detail-panel" style={{
                 verticalAlign: "top",
                 backgroundColor: "#303030",
-                borderRadius: "10px 0 0 0",
-                marginRight: "15px",
-                width: "calc(100% - 263px - 15px)",
+                borderRadius: "10px",
+                marginRight: "10px",
+                width: "calc(100% - 263px - 10px)",
                 marginTop: "10px",
                 marginBottom: "10px",
                 height: "calc(100% - 20px)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "start",
-                alignItems: "center",
               }}>
-                <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
-                {/* <div style={{margin: "10px 0 ", fontWeight: "bold", fontSize: "14px"}}>{pendingFiles[activeRFile]?.filename}</div> */}
-                  <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
-                    <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.filename} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
+                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} /*presentedHost={hostedFiles[activeSFile]?.presentedHost}*/ size={hostedFiles[activeSFile]?.size} />
+              </div>
+              ) : null}
+            </div>
+          ) : selectedNavPage == 1 ? (
+            <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
+              <div id="left-summary-panel">
+                <div id="recv-panel">
+                  <div className="left-recv-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
+                    <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
+                    <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
+                      <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}</span>
+                    </div>
+                    {/* <div className="plus-btn" onClick={handleFileOpenClick} /> */}
                   </div>
 
-                  <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
+                  <div style={{marginLeft: "0", marginRight: "0"}}>
+                    {pendingFiles.map((file, i) => (
 
-                    <ResponsiveButton
-                      label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
-                      buttonAction={() => {window.recvFileAPI.saveFile(pendingFiles[activeRFile].id, ()=>{console.log("TESTING")});}}
-                      selected={false}
-                      setSelected={() => {}}
-                      enabled={!hasCurrentFileBeenSaved()}
-                      disabledStyle={{color: "#808080"}}
-                      customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                      shadeA={"#303030"}
-                      shadeB={"#383838"}
-                      shadeC={"#404040"}
-                    />
-
-                    <ResponsiveButton
-                      label={"Go to folder"}
-                      buttonAction={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}
-                      selected={false}
-                      setSelected={() => {}}
-                      enabled={hasCurrentFileBeenSaved()}
-                      customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                      disabledStyle={{color: "#808080"}}
-                      shadeA={"#303030"}
-                      shadeB={"#383838"}
-                      shadeC={"#404040"}
-                    />
-
-                    <ResponsiveButton
-                      label={"Discard"}
-                      buttonAction={discardPendingFile}
-                      selected={false}
-                      setSelected={() => {}}
-                      enabled={true}
-                      customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                      shadeA={"#303030"}
-                      shadeB={"#983838"}
-                      shadeC={"#c04040"}
-                    />
+                      <ResponsiveButton
+                        key={file.id}
+                        label={<SummaryListItem fileName={file.filename.replace(/^.*[\\/]/, '')} onCloseClick={discardPendingFile} />}
+                        buttonAction={() => {}}
+                        selected={activeRFile === i}
+                        setSelected={() => setSelectedRFile(i)}
+                        enabled={true}
+                        customStyle={{transition: "background-color 100ms linear", paddingLeft: activeRFile == i ? "0px" : "3px", borderLeft: activeRFile == i ? "3px solid white" : "none"}}
+                        shadeA={"#282828"}
+                        shadeB={"#303030"}
+                        shadeC={"#383838"}
+                      />
+                  
+                      // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
+                    ))}
                   </div>
                 </div>
-                <div>{savePaths[pendingFiles[activeRFile].id]}</div>
-                {/* {savePath != "" ? (<div onClick={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}>{savePath}</div>) : null} */}
-                {/* <div>{saveMessage}</div> */}
               </div>
-            )}
-          </div>
-        ) : null}
+              {activeRFile === null ? (
+                <div id="right-blank-panel">
+                  <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
+                  <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
+                    {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
+                  </div>
+                </div>
+              ) : (
+                <div id="right-detail-panel" style={{
+                  verticalAlign: "top",
+                  backgroundColor: "#303030",
+                  borderRadius: "10px 0 0 0",
+                  marginRight: "15px",
+                  width: "calc(100% - 263px - 15px)",
+                  marginTop: "10px",
+                  marginBottom: "10px",
+                  height: "calc(100% - 20px)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "start",
+                  alignItems: "center",
+                }}>
+                  <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
+                  {/* <div style={{margin: "10px 0 ", fontWeight: "bold", fontSize: "14px"}}>{pendingFiles[activeRFile]?.filename}</div> */}
+                    <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
+                      <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.filename} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
+                    </div>
+
+                    <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
+
+                      <ResponsiveButton
+                        label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
+                        buttonAction={() => {window.recvFileAPI.saveFile(pendingFiles[activeRFile].id, ()=>{console.log("TESTING")});}}
+                        selected={false}
+                        setSelected={() => {}}
+                        enabled={!hasCurrentFileBeenSaved()}
+                        disabledStyle={{color: "#808080"}}
+                        customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                        shadeA={"#303030"}
+                        shadeB={"#383838"}
+                        shadeC={"#404040"}
+                      />
+
+                      <ResponsiveButton
+                        label={"Go to folder"}
+                        buttonAction={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}
+                        selected={false}
+                        setSelected={() => {}}
+                        enabled={hasCurrentFileBeenSaved()}
+                        customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                        disabledStyle={{color: "#808080"}}
+                        shadeA={"#303030"}
+                        shadeB={"#383838"}
+                        shadeC={"#404040"}
+                      />
+
+                      <ResponsiveButton
+                        label={"Discard"}
+                        buttonAction={discardPendingFile}
+                        selected={false}
+                        setSelected={() => {}}
+                        enabled={true}
+                        customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                        shadeA={"#303030"}
+                        shadeB={"#983838"}
+                        shadeC={"#c04040"}
+                      />
+                    </div>
+                  </div>
+                  <div>{savePaths[pendingFiles[activeRFile].id]}</div>
+                  {/* {savePath != "" ? (<div onClick={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}>{savePath}</div>) : null} */}
+                  {/* <div>{saveMessage}</div> */}
+                </div>
+              )}
+            </div>
+          ) : selectedNavPage == -1 ? (
+            <div style={{display: "flex", boxSizing: "border-box", flexDirection: "row", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
+              <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
+              <strong>Prefer HTTPS</strong>
+              <br />
+              <span>This setting requires valid TLS key and certificate files to be present in the application directory.</span>
+            </div>
+          ) : null}
+        </div>
       </div>
-      <div style={{display: "flex", flexDirection: "row", boxSizing: "border-box", height: footerHeight, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
+      <div style={{display: "flex", flexDirection: "row", boxSizing: "border-box", height: footerHeight, width: "100%", borderTop: "1px solid #303030", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
         <div className="ip-selector" style={{boxSizing: "border-box", padding: "2px 2px 0 2px", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
           <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setPresentedIp(e.target.value)} value={presentedIp}>
             {addrs.map((addr, index) => (
@@ -503,7 +518,7 @@ function ResponsiveButton({selected, setSelected, enabled, buttonAction, onHover
   const [hovered, setHovered] = useState(false);
 
   return (
-  <div  onMouseEnter={() => {setHovered(true); if (onHover) onHover();}} onMouseLeave={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setSelected(); if (enabled) {buttonAction();} setClicked(false);}}>
+  <div onMouseEnter={() => {setHovered(true); if (onHover) onHover();}} onMouseLeave={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setSelected(); if (enabled) {buttonAction();} setClicked(false);}}>
     <ShadedButton selected={selected} hovered={hovered} pressed={clicked} enabled={enabled} icon={label} customStyle={customStyle} disabledStyle={disabledStyle} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
   </div>
   );

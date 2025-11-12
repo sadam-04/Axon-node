@@ -221,7 +221,7 @@ h4 {
 } */
 
 .content-wrapper {
-  width: calc(100%);
+  /* width: calc(100%); */
   height: calc(100%);
   margin-left: 0px;
   margin-top: 0;
@@ -231,7 +231,7 @@ h4 {
   /* padding-left: 15px;
   padding-top: 8px; */
 
-  border-radius: 6px 0 0 0;
+  border-radius: 0 0 0 0;
   /* max-width: 38rem; */
   /* margin: auto; */
   background-color: #282828;
