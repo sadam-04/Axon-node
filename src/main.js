@@ -219,8 +219,6 @@ function attemptToggleProtocol(initServer){
     // initServer();
     return [protocol, res];
   }
-} {
-
 }
 
 const createWindow = () => {
@@ -278,6 +276,10 @@ app.whenReady().then(() => {
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', discardPendingFile);
   ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
+  ipcMain.handle('setPort', (event, newPort) => {userConfig.set('port', newPort); initServer(protocol);});
+  ipcMain.handle('getPort', () => {
+    return userConfig.get('port');
+  });
   ipcMain.handle('getProtocol', () => {
     return protocol;
   });
@@ -293,8 +295,6 @@ app.whenReady().then(() => {
   let server = null;
 
   console.log("Protocol: " + protocol);
-
-  
 
   const mainWindow = createWindow();
 
@@ -338,17 +338,19 @@ app.whenReady().then(() => {
     } else {
       server = require('http').createServer(serverBehavior);
     }
-    server.listen(3030, () => {
-      console.log(`Server listening at ${protocol.toLowerCase()}://*:3030/`);
+    let p = userConfig.get('port');
+    if (!p || isNaN(p)) {
+      p = 2222;
+      userConfig.set('port', p);
+    }
+    server.listen(userConfig.get('port'), () => {
+      console.log(`Server listening at ${protocol.toLowerCase()}://*:${userConfig.get('port')}/`);
     });
 
     return true;
   }
 
-
-
   const serverBehavior = (req, res) => {
-
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/;
 
