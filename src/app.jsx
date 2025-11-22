@@ -32,6 +32,7 @@ function App() {
   const [activeSFile, setSelectedSFile] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
 
+  const [tlsFilePath, setTLSFilePath] = useState("");
 
   //TODO :GET RID OF THIS!!!
   function handleFileOpenClick() {
@@ -145,6 +146,12 @@ function App() {
     window.electronAPI.getProtocolFromMain().then((savedProtocol) => {
       setProtocol(savedProtocol);
     });
+
+    async function getSavedSettings() {
+      let savedTLSPath = await window.electronAPI.getTLSFilePath();
+      setTLSFilePath(savedTLSPath);
+    }
+    getSavedSettings();
   }, []);
 
   //update all URLs when protocol or presentedIp changes
@@ -208,25 +215,20 @@ function App() {
       margin: 0,
       padding: 0,
       height: "100%",
-      borderTop: "1px solid #303030",
-      boxSizing: "border-box",
     }}>
-      <div style={{display: "flex", flexDirection: "row", width: "100%", height: `calc(100% - ${footerHeight})`}}>
+      <div style={{display: "flex", flexDirection: "row", width: "100%", height: "200px", flexGrow: 1}}>
         <div id="nav-sidebar" style={{
-          borderRight: "1px solid #303030",
-          boxSizing: "border-box",
           display: "flex",
           marginLeft: "0",
           marginTop: "0",
           marginRight: "0",
           height: "auto",
-          padding: "0",
-          flexGrow: "0",
+          padding: "0 4px 0 4px",
           flexDirection: "column",
           justifyContent: "space-between",
           width: "45px",
+          flexGrow: 0,
         }}>
-          {/* Inbox/Outbox buttons */}
           <div style={{display: "flex", flexDirection: "column"}}>
             {buttons.map((btn, i) => (
               <ResponsiveButton
@@ -236,15 +238,14 @@ function App() {
                 selected={selectedNavPage === i}
                 setSelected={() => setSelectedNavPage(i)}
                 enabled={true}
-                customStyle={{transition: "background-color 100ms linear", display: "flex", width: "100%", height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "0", justifyContent: "center", alignItems: "center", fontWeight: selectedNavPage == i ? "bold" : "normal"}}
+                customStyle={{display: "flex", width: "100%",  height: "45px", fontWeight: "regular", fontSize: "0.6rem", marginBottom: "3px",borderRadius: "4px", justifyContent: "center", alignItems: "center"}}
                 shadeA={"#202020"}
                 shadeB={"#282828"}
-                shadeC={"#303030"}
+                shadeC={"#2c2c2c"}
               />
             ))}
           </div>
 
-          {/* Settings button */}
           <ResponsiveButton
             key={-1}
             label={"Settings"}
@@ -252,13 +253,13 @@ function App() {
             selected={selectedNavPage === -1}
             setSelected={() => setSelectedNavPage(-1)}
             enabled={true}
-            customStyle={{transition: "background-color 100ms linear", display: "flex", width: "100%", height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "0", justifyContent: "center", alignItems: "center", fontWeight: selectedNavPage == -1 ? "bold" : "normal"}}
+            customStyle={{display: "flex", width: "100%",  height: "45px", fontWeight: "regular", fontSize: "0.6rem", marginBottom: "3px",borderRadius: "4px", justifyContent: "center", alignItems: "center"}}
             shadeA={"#202020"}
             shadeB={"#282828"}
-            shadeC={"#303030"}
+            shadeC={"#2c2c2c"}
           />
         </div>
-        <div className="content-wrapper" style={{boxSizing: "border-box", flexGrow: "1", height: "100%"}}>
+        <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1}}>
           {selectedNavPage == 0 ? (
             <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
               <div id="left-summary-panel">
@@ -270,7 +271,6 @@ function App() {
                       <div className="plus-btn" onClick={handleFileOpenClick} />
                     </div>
                   </div>
-                  {/* <hr style={{backgroundColor: "#303030", border: "none", height: "1px", margin: "5px 0" }} /> */}
                   <div style={{marginLeft: "0", marginRight: "0"}}>
                     {hostedFiles.map((file, i) => (
 
@@ -281,15 +281,11 @@ function App() {
                         selected={activeSFile === i}
                         setSelected={() => setSelectedSFile(i)}
                         enabled={true}
-                        customStyle={{transition: "background-color 100ms linear", paddingLeft: activeSFile == i ? "0px" : "3px", borderLeft: activeSFile == i ? "3px solid white" : "none"}}
+                        customStyle={{}}
                         shadeA={"#282828"}
                         shadeB={"#303030"}
-                        shadeC={"#383838"}
+                        shadeC={"#343434"}
                       />
-                      
-
-
-                      // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
                     ))}
                   </div>
                 </div>
@@ -305,7 +301,7 @@ function App() {
                 marginBottom: "10px",
                 height: "calc(100% - 20px)",
               }}>
-                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} /*presentedHost={hostedFiles[activeSFile]?.presentedHost}*/ size={hostedFiles[activeSFile]?.size} />
+                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.fileName} url={hostedFiles[activeSFile]?.url} size={hostedFiles[activeSFile]?.size} />
               </div>
               ) : null}
             </div>
@@ -318,7 +314,6 @@ function App() {
                     <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                       <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}</span>
                     </div>
-                    {/* <div className="plus-btn" onClick={handleFileOpenClick} /> */}
                   </div>
 
                   <div style={{marginLeft: "0", marginRight: "0"}}>
@@ -336,8 +331,6 @@ function App() {
                         shadeB={"#303030"}
                         shadeC={"#383838"}
                       />
-                  
-                      // <ServedItem key={file.id} filename={file.fileName} url={file.url} presentedHost={file.presentedHost} size={file.size} />
                     ))}
                   </div>
                 </div>
@@ -365,7 +358,6 @@ function App() {
                   alignItems: "center",
                 }}>
                   <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
-                  {/* <div style={{margin: "10px 0 ", fontWeight: "bold", fontSize: "14px"}}>{pendingFiles[activeRFile]?.filename}</div> */}
                     <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
                       <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.filename} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
                     </div>
@@ -412,23 +404,23 @@ function App() {
                     </div>
                   </div>
                   <div>{savePaths[pendingFiles[activeRFile].id]}</div>
-                  {/* {savePath != "" ? (<div onClick={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}>{savePath}</div>) : null} */}
-                  {/* <div>{saveMessage}</div> */}
                 </div>
               )}
             </div>
           ) : selectedNavPage == -1 ? (
-            <div style={{display: "flex", boxSizing: "border-box", flexDirection: "row", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
+            <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
-              <strong>Prefer HTTPS</strong>
-              <br />
-              <span>This setting requires valid TLS key and certificate files to be present in the application directory.</span>
+              <div style={{flexDirection: "column", display: "flex"}}>
+                <strong>TLS key/certificate location</strong>
+                <span>Specify a custom directory for the TLS key and certificate files. If left blank, defaults to the application directory.</span>
+                <input type="text" style={{marginTop: "5px", width: "200px"}} defaultValue={tlsFilePath} onBlur={(e) => {setTLSFilePath(e.target.value); window.electronAPI.setTLSFilePath(e.target.value);}} placeholder="Enter path to TLS key/cert directory" />
+              </div>
             </div>
           ) : null}
         </div>
       </div>
-      <div style={{display: "flex", flexDirection: "row", boxSizing: "border-box", height: footerHeight, width: "100%", borderTop: "1px solid #303030", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
-        <div className="ip-selector" style={{boxSizing: "border-box", padding: "2px 2px 0 2px", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
+      <div style={{display: "flex", flexDirection: "row", height: footerHeight, flexGrow: 0, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
+        <div className="ip-selector" style={{padding: "0", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
           <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setPresentedIp(e.target.value)} value={presentedIp}>
             {addrs.map((addr, index) => (
               <option key={index} value={addr}>{addr}</option>
@@ -436,7 +428,7 @@ function App() {
           </select>
         </div>
 
-        <div style={{boxSizing: "border-box", padding: "0 2px 0 2px", margin: "0", width: "50px", height: footerHeight, overflow: "hidden"}}>
+        <div style={{margin: "0 2px", width: "50px", height: footerHeight, overflow: "hidden"}}>
             <ResponsiveButton
               label={protocol}
               buttonAction={async () => {
@@ -463,7 +455,7 @@ function App() {
               shadeC={"#303030"}
             />
         </div>
-        <div style={{boxSizing: "border-box", display: "flex", alignItems: "center", padding: "0 2px 0 2px", margin: "0", height: footerHeight, overflow: "hidden"}}>
+        <div style={{display: "flex", alignItems: "center", padding: "0 2px 0 2px", margin: "0", height: footerHeight, overflow: "hidden"}}>
           {protocolMessage ? <span style={{height: "wrap-content", fontSize: "12px", color: "#a04040"}}>{protocolMessage}</span> : null}
         </div>
       </div>

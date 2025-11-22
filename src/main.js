@@ -20,7 +20,8 @@ const projectRoot = app.isPackaged
 // send mode url paths
 var urlPathMappings = {};
 
-var protocol = userConfig.get('useHTTPS') == true ? 'HTTPS' : 'HTTP';
+// var protocol = userConfig.get('useHTTPS') == true ? 'HTTPS' : 'HTTP';
+var protocol = 'HTTP';
 
 //recv mode pending file buffers
 const pendingFiles = new Map();
@@ -192,6 +193,41 @@ function notifyRendererOfNewFile(window, file) {
   window.webContents.send('new-uploaded-file', file);
 }
 
+function setTLSFilePath(event, path) {
+  console.log("received tlsPath: ", path)
+  userConfig.set('tlsFilePath', path);
+}
+
+function attemptToggleProtocol(initServer){
+  return function (){
+    var res;
+    if (protocol === 'HTTP') {
+      //attempt switching to HTTPS
+      res = initServer('HTTPS');
+      console.log("Attempted to switch to HTTPS, success: " + res);
+      if (res == false) {
+        console.log("Failed to switch to HTTPS, keeping HTTP.");
+        initServer('HTTP');
+        // inform UI of failure
+        
+      } else {
+        // succeeded, update protocol
+        protocol = 'HTTPS';
+      }
+    } else {
+      // switch from HTTPS to HTTP
+      protocol = 'HTTP';
+      res = initServer(protocol);
+    }
+    console.log("Protocol updated to " + protocol);
+    userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
+    // initServer();
+    return [protocol, res];
+  }
+} {
+
+}
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -246,39 +282,20 @@ app.whenReady().then(() => {
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', discardPendingFile);
-  ipcMain.handle('attemptToggleProtocol', (event) => {
-    var res;
-    if (protocol === 'HTTP') {
-      //attempt switching to HTTPS
-      res = initServer('HTTPS');
-      console.log("Attempted to switch to HTTPS, success: " + res);
-      if (res == false) {
-        console.log("Failed to switch to HTTPS, keeping HTTP.");
-        initServer('HTTP');
-        // inform UI of failure
-        
-      } else {
-        // succeeded, update protocol
-        protocol = 'HTTPS';
-      }
-    } else {
-      // switch from HTTPS to HTTP
-      protocol = 'HTTP';
-      res = initServer(protocol);
-    }
-    console.log("Protocol updated to " + protocol);
-    userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
-    // initServer();
-    return [protocol, res];
-  });
-
+  ipcMain.handle('setTLSFilePath', setTLSFilePath);
+  ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
   ipcMain.handle('getProtocol', () => {
     return protocol;
+  });
+  ipcMain.handle('getTLSFilePath', () => {
+    return userConfig.get('tlsFilePath');
   });
 
   let server = null;
 
   console.log("Protocol: " + protocol);
+
+  
 
   const mainWindow = createWindow();
 
@@ -289,9 +306,14 @@ app.whenReady().then(() => {
     }
     if (proto == 'HTTPS') {
       try {
-        var key = fs.readFileSync(path.join(projectRoot, 'cert', 'key.pem'));
-        var cert = fs.readFileSync(path.join(projectRoot, 'cert', 'cert.pem'));
+        let tlsPath = userConfig.get('tlsFilePath');
+        console.log("Loaded tlsPath: " + tlsPath);
+        if (!tlsPath || tlsPath === "" || !fs.existsSync(tlsPath)) {
+          tlsPath = projectRoot;
+        }
 
+        var key = fs.readFileSync(path.join(tlsPath, 'key.pem'));
+        var cert = fs.readFileSync(path.join(tlsPath, 'cert.pem'));
         console.log("Loaded SSL key and cert.");
 
         if (!key || !cert) {
@@ -435,6 +457,12 @@ app.whenReady().then(() => {
   };
 
   initServer(protocol);
+
+  // protocol is initialized to HTTP. If userconfig says it should be HTTPS, attempt a switch now
+  if (userConfig.get('useHTTPS') == true) {
+    attemptToggleProtocol(initServer)();
+  }
+
 
   //create client web server
 
