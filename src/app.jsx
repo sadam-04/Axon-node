@@ -18,6 +18,8 @@ function App() {
 
   const [protocolMessage, setProtocolMessage] = useState("");
 
+  const [port, setPort] = useState(2222);
+
   const [recvUrl, setRecvUrl] = useState("");
 
   const [savePaths, setSavePaths] = useState({});
@@ -41,7 +43,7 @@ function App() {
           if (uid == "" || fileName == "null") {
             return;
           }
-          var url = `${protocol}://${presentedIp}:3030/get/${uid}`;
+          var url = `${protocol}://${presentedIp}:${port}/get/${uid}`;
           setHostedFiles([...hostedFiles, { id: Date.now(), fileName: fileName, url: url, size: fileSize }]);
       });
   }
@@ -107,7 +109,7 @@ function App() {
   useEffect(() => {
     async function getIP() {
       var ip = await window.electronAPI.getDefaultIP();
-      setRecvUrl(`${protocol}://${ip}:3030/send`);
+      setRecvUrl(`${protocol}://${ip}:${port}/send`);
     }
     getIP();
     // console.log("calling listAddrs");
@@ -144,7 +146,7 @@ function App() {
     }
     listenForSaveResults();
 
-    window.electronAPI.getProtocolFromMain().then((savedProtocol) => {
+    window.electronAPI.getProtocol().then((savedProtocol) => {
       setProtocol(savedProtocol);
     });
 
@@ -153,26 +155,35 @@ function App() {
       setTLSKeyPath(tlsKeyPath);
       let tlsCertPath = await window.electronAPI.getTLSCertPath();
       setTLSCertPath(tlsCertPath);
+      let savedPort = await window.electronAPI.getPort();
+      setPort(savedPort);
     }
     getSavedSettings();
   }, []);
 
-  //update all URLs when protocol or presentedIp changes
+  //update all URLs when port, protocol or presentedIp changes
   useEffect(() => {
     // update recv url
-    setRecvUrl(`${protocol}://${presentedIp}:3030/send`);
+    setRecvUrl(`${protocol}://${presentedIp}:${port}/send`);
+
+    console.log(`Updated recvUrl to ${protocol}://${presentedIp}:${port}/send`);
+
+    if (port == "" || isNaN(port)) {
+      setPort(2222);
+    }
 
     // also update all urls of hosted files
     let newHostedFiles = hostedFiles.map((file) => {
       let urlObj = new URL(file.url);
       urlObj.protocol = protocol.toLowerCase();
       urlObj.hostname = presentedIp;
+      urlObj.port = port.toString();
       return { ...file, url: urlObj.toString() };
     });
     setHostedFiles(newHostedFiles);
-  }, [protocol, presentedIp]);
+  }, [port, protocol, presentedIp]);
 
-  console.log("App rendering");
+  // console.log("App rendering");
 
   // const [activeS, setSelectedS] = useState(true);
   // const [activeR, setSelectedR] = useState(false);
@@ -425,6 +436,11 @@ function App() {
                 <span>Specify a custom directory for the TLS key and certificate files. If left blank, defaults to the application directory.</span>
                 <input type="text" style={{marginTop: "5px", width: "300px"}} defaultValue={tlsKeyPath} onBlur={(e) => {setTLSKeyPath(e.target.value); window.electronAPI.setTLSKeyPath(e.target.value);}} placeholder="Enter path to TLS key file" />
                 <input type="text" style={{marginTop: "5px", width: "300px"}} defaultValue={tlsCertPath} onBlur={(e) => {setTLSCertPath(e.target.value); window.electronAPI.setTLSCertPath(e.target.value);}} placeholder="Enter path to TLS certificate file" />
+              </div>
+              <div style={{flexDirection: "column", display: "flex"}}>
+                <strong>Server port</strong>
+                <span>Specify the port number the server will listen on. Default is 2222.</span>
+                <input type="number" style={{marginTop: "5px", width: "300px"}} defaultValue={port} onBlur={(e) => {setPort(e.target.value); window.electronAPI.setPort(e.target.value);}} placeholder="Enter server port" />
               </div>
             </div>
           ) : null}
