@@ -403,12 +403,10 @@ function App() {
           ) : selectedNavPage == -1 ? (
             <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
-              <div style={{flexDirection: "row", display: "flex"}}>
-                <input type="checkbox" style={{marginRight: "8px"}} />
-                <div style={{flexDirection: "column", display: "flex"}}>
-                  <strong>Prefer HTTPS</strong>
-                  <span>This setting requires valid TLS key and certificate files to be present in the application directory.</span>
-                </div>
+              <div style={{flexDirection: "column", display: "flex"}}>
+                <strong>TLS key/certificate location</strong>
+                <span>Specify a custom directory for the TLS key and certificate files. Default is the application directory.</span>
+                <input type="text" style={{marginTop: "5px", width: "300px"}} onBlur={(e) => {window.electronAPI.setTLSFilePath(e.target.value); console.log("Updated TLS file path.");}} placeholder="Enter path to TLS key/cert directory" />
               </div>
             </div>
           ) : null}

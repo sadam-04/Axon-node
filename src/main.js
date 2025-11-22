@@ -192,6 +192,11 @@ function notifyRendererOfNewFile(window, file) {
   window.webContents.send('new-uploaded-file', file);
 }
 
+function setTLSFilePath(event, path) {
+  console.log("received tlsPath: ", path)
+  userConfig.set('tlsFilePath', path);
+}
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -246,6 +251,7 @@ app.whenReady().then(() => {
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', discardPendingFile);
+  ipcMain.handle('setTLSFilePath', setTLSFilePath);
   ipcMain.handle('attemptToggleProtocol', (event) => {
     var res;
     if (protocol === 'HTTP') {
@@ -289,9 +295,14 @@ app.whenReady().then(() => {
     }
     if (proto == 'HTTPS') {
       try {
-        var key = fs.readFileSync(path.join(projectRoot, 'cert', 'key.pem'));
-        var cert = fs.readFileSync(path.join(projectRoot, 'cert', 'cert.pem'));
+        let tlsPath = userConfig.get('tlsFilePath');
+        console.log("Loaded tlsPath: " + tlsPath);
+        if (!tlsPath || tlsPath === "" || !fs.existsSync(tlsPath)) {
+          tlsPath = projectRoot;
+        }
 
+        var key = fs.readFileSync(path.join(tlsPath, 'key.pem'));
+        var cert = fs.readFileSync(path.join(tlsPath, 'cert.pem'));
         console.log("Loaded SSL key and cert.");
 
         if (!key || !cert) {
