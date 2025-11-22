@@ -299,7 +299,8 @@ function App() {
                 backgroundColor: "#303030",
                 borderRadius: "10px",
                 marginRight: "10px",
-                width: "calc(100% - 263px - 10px)",
+                width: "200px",
+                flexGrow: 1,
                 marginTop: "10px",
                 marginBottom: "10px",
                 height: "calc(100% - 20px)",
@@ -329,17 +330,17 @@ function App() {
                         selected={activeRFile === i}
                         setSelected={() => setSelectedRFile(i)}
                         enabled={true}
-                        customStyle={{transition: "background-color 100ms linear", paddingLeft: activeRFile == i ? "0px" : "3px", borderLeft: activeRFile == i ? "3px solid white" : "none"}}
+                        customStyle={{}}
                         shadeA={"#282828"}
                         shadeB={"#303030"}
-                        shadeC={"#383838"}
+                        shadeC={"#343434"}
                       />
                     ))}
                   </div>
                 </div>
               </div>
               {activeRFile === null ? (
-                <div id="right-blank-panel">
+                <div id="right-blank-panel" style={{width: "200px", flexGrow: 1}}>
                   <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
                   <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
                     {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
@@ -349,9 +350,10 @@ function App() {
                 <div id="right-detail-panel" style={{
                   verticalAlign: "top",
                   backgroundColor: "#303030",
-                  borderRadius: "10px 0 0 0",
-                  marginRight: "15px",
-                  width: "calc(100% - 263px - 15px)",
+                  borderRadius: "10px",
+                  marginRight: "10px",
+                  width: "200px",
+                  flexGrow: 1,
                   marginTop: "10px",
                   marginBottom: "10px",
                   height: "calc(100% - 20px)",
@@ -359,6 +361,8 @@ function App() {
                   flexDirection: "column",
                   justifyContent: "start",
                   alignItems: "center",
+                  overflowWrap: "break-word",
+                  whiteSpace: "normal",
                 }}>
                   <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
                     <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
@@ -406,7 +410,10 @@ function App() {
                       />
                     </div>
                   </div>
-                  <div>{savePaths[pendingFiles[activeRFile].id]}</div>
+                  <div style={{display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "flex-start", width: "100%", height: "40px", boxSizing: "border-box"}}>
+                    <div style={{width: "18px", flexGrow: 0}} />
+                    <div style={{width: "1px", flexGrow: 1, color: "#808080", fontStyle: "italic"}}>{savePaths[pendingFiles[activeRFile].id] ? "Saved to " + savePaths[pendingFiles[activeRFile].id] : ""}</div>
+                  </div>
                 </div>
               )}
             </div>

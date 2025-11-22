@@ -247,6 +247,7 @@ h4 {
 #left-summary-panel {
   /* width: calc(30% - 24px); */
   width: 263px;
+  flex-grow: 0;
   /* min-width: 260px; */
   color: white;
   overflow-y: auto;
@@ -261,10 +262,11 @@ h4 {
 }
 
 #right-blank-panel {
-  background-color: #303030;
+  /* background-color: #303030; */
   border-radius: 10px;
   margin-right: 10px;
-  width: calc(100% - 263px - 10px);
+  width: 200px;
+  flex-grow: 1;
   margin-top: 10px;
   margin-bottom: 10px;
   height: calc(100% - 20px);
