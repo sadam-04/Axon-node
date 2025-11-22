@@ -20,7 +20,8 @@ const projectRoot = app.isPackaged
 // send mode url paths
 var urlPathMappings = {};
 
-var protocol = userConfig.get('useHTTPS') == true ? 'HTTPS' : 'HTTP';
+// var protocol = userConfig.get('useHTTPS') == true ? 'HTTPS' : 'HTTP';
+var protocol = 'HTTP';
 
 //recv mode pending file buffers
 const pendingFiles = new Map();
@@ -197,6 +198,36 @@ function setTLSFilePath(event, path) {
   userConfig.set('tlsFilePath', path);
 }
 
+function attemptToggleProtocol(initServer){
+  return function (){
+    var res;
+    if (protocol === 'HTTP') {
+      //attempt switching to HTTPS
+      res = initServer('HTTPS');
+      console.log("Attempted to switch to HTTPS, success: " + res);
+      if (res == false) {
+        console.log("Failed to switch to HTTPS, keeping HTTP.");
+        initServer('HTTP');
+        // inform UI of failure
+        
+      } else {
+        // succeeded, update protocol
+        protocol = 'HTTPS';
+      }
+    } else {
+      // switch from HTTPS to HTTP
+      protocol = 'HTTP';
+      res = initServer(protocol);
+    }
+    console.log("Protocol updated to " + protocol);
+    userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
+    // initServer();
+    return [protocol, res];
+  }
+} {
+
+}
+
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -252,37 +283,17 @@ app.whenReady().then(() => {
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', discardPendingFile);
   ipcMain.handle('setTLSFilePath', setTLSFilePath);
-  ipcMain.handle('attemptToggleProtocol', (event) => {
-    var res;
-    if (protocol === 'HTTP') {
-      //attempt switching to HTTPS
-      res = initServer('HTTPS');
-      console.log("Attempted to switch to HTTPS, success: " + res);
-      if (res == false) {
-        console.log("Failed to switch to HTTPS, keeping HTTP.");
-        initServer('HTTP');
-        // inform UI of failure
-        
-      } else {
-        // succeeded, update protocol
-        protocol = 'HTTPS';
-      }
-    } else {
-      // switch from HTTPS to HTTP
-      protocol = 'HTTP';
-      res = initServer(protocol);
-    }
-    console.log("Protocol updated to " + protocol);
-    userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
-    // initServer();
-    return [protocol, res];
-  });
-
+  ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
   ipcMain.handle('getProtocol', () => {
     return protocol;
   });
 
   let server = null;
+
+  // protocol is initialized to HTTP. If userconfig says it should be HTTPS, attempt a switch now
+  if (userConfig.get('useHTTPS') == true) {
+    attemptToggleProtocol();
+  }
 
   console.log("Protocol: " + protocol);
 

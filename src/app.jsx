@@ -32,6 +32,7 @@ function App() {
   const [activeSFile, setSelectedSFile] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
 
+  const [tlsFilePath, setTLSFilePath] = useState("");
 
   //TODO :GET RID OF THIS!!!
   function handleFileOpenClick() {
@@ -405,8 +406,8 @@ function App() {
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>TLS key/certificate location</strong>
-                <span>Specify a custom directory for the TLS key and certificate files. Default is the application directory.</span>
-                <input type="text" style={{marginTop: "5px", width: "300px"}} onBlur={(e) => {window.electronAPI.setTLSFilePath(e.target.value); console.log("Updated TLS file path.");}} placeholder="Enter path to TLS key/cert directory" />
+                <span>Specify a custom directory for the TLS key and certificate files. If left blank, defaults to the application directory.</span>
+                <input type="text" style={{marginTop: "5px", width: "300px"}} onBlur={(e) => {setTLSFilePath(e.target.value); window.electronAPI.setTLSFilePath(e.target.value);}} placeholder="Enter path to TLS key/cert directory" />
               </div>
             </div>
           ) : null}
