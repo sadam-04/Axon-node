@@ -32,7 +32,8 @@ function App() {
   const [activeSFile, setSelectedSFile] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
 
-  const [tlsFilePath, setTLSFilePath] = useState("");
+  const [tlsKeyPath, setTLSKeyPath] = useState("");
+  const [tlsCertPath, setTLSCertPath] = useState("");
 
   //TODO :GET RID OF THIS!!!
   function handleFileOpenClick() {
@@ -148,8 +149,10 @@ function App() {
     });
 
     async function getSavedSettings() {
-      let savedTLSPath = await window.electronAPI.getTLSFilePath();
-      setTLSFilePath(savedTLSPath);
+      let tlsKeyPath = await window.electronAPI.getTLSKeyPath();
+      setTLSKeyPath(tlsKeyPath);
+      let tlsCertPath = await window.electronAPI.getTLSCertPath();
+      setTLSCertPath(tlsCertPath);
     }
     getSavedSettings();
   }, []);
@@ -411,9 +414,10 @@ function App() {
             <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
               <div style={{flexDirection: "column", display: "flex"}}>
-                <strong>TLS key/certificate location</strong>
+                <strong>TLS key/certificate locations</strong>
                 <span>Specify a custom directory for the TLS key and certificate files. If left blank, defaults to the application directory.</span>
-                <input type="text" style={{marginTop: "5px", width: "200px"}} defaultValue={tlsFilePath} onBlur={(e) => {setTLSFilePath(e.target.value); window.electronAPI.setTLSFilePath(e.target.value);}} placeholder="Enter path to TLS key/cert directory" />
+                <input type="text" style={{marginTop: "5px", width: "300px"}} defaultValue={tlsKeyPath} onBlur={(e) => {setTLSKeyPath(e.target.value); window.electronAPI.setTLSKeyPath(e.target.value);}} placeholder="Enter path to TLS key file" />
+                <input type="text" style={{marginTop: "5px", width: "300px"}} defaultValue={tlsCertPath} onBlur={(e) => {setTLSCertPath(e.target.value); window.electronAPI.setTLSCertPath(e.target.value);}} placeholder="Enter path to TLS certificate file" />
               </div>
             </div>
           ) : null}

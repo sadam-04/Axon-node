@@ -18,8 +18,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     listAddrs: () => ipcRenderer.invoke('listAddrs'),
     attemptToggleProtocol: () => ipcRenderer.invoke('attemptToggleProtocol'),
     getProtocolFromMain: () => ipcRenderer.invoke('getProtocol'),
-    setTLSFilePath: (path) => ipcRenderer.invoke('setTLSFilePath', path),
-    getTLSFilePath: () => ipcRenderer.invoke('getTLSFilePath'),
+    getTLSKeyPath: () => ipcRenderer.invoke('getTLSKeyPath'),
+    setTLSKeyPath: (path) => ipcRenderer.invoke('setTLSKeyPath', path),
+    getTLSCertPath: () => ipcRenderer.invoke('getTLSCertPath'),
+    setTLSCertPath: (path) => ipcRenderer.invoke('setTLSCertPath', path),
 });
 
 contextBridge.exposeInMainWorld('recvFileAPI', {

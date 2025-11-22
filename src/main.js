@@ -193,11 +193,6 @@ function notifyRendererOfNewFile(window, file) {
   window.webContents.send('new-uploaded-file', file);
 }
 
-function setTLSFilePath(event, path) {
-  console.log("received tlsPath: ", path)
-  userConfig.set('tlsFilePath', path);
-}
-
 function attemptToggleProtocol(initServer){
   return function (){
     var res;
@@ -282,13 +277,17 @@ app.whenReady().then(() => {
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', discardPendingFile);
-  ipcMain.handle('setTLSFilePath', setTLSFilePath);
   ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
   ipcMain.handle('getProtocol', () => {
     return protocol;
   });
-  ipcMain.handle('getTLSFilePath', () => {
-    return userConfig.get('tlsFilePath');
+  ipcMain.handle('setTLSKeyPath', (event, path) => {console.log("received tlsKeyPath: ", path); userConfig.set('tlsKeyPath', path);});
+  ipcMain.handle('getTLSKeyPath', () => {
+    return userConfig.get('tlsKeyPath');
+  });
+  ipcMain.handle('setTLSCertPath', (event, path) => {console.log("received tlsCertPath: ", path); userConfig.set('tlsCertPath', path);});
+  ipcMain.handle('getTLSCertPath', () => {
+    return userConfig.get('tlsCertPath');
   });
 
   let server = null;
@@ -306,14 +305,19 @@ app.whenReady().then(() => {
     }
     if (proto == 'HTTPS') {
       try {
-        let tlsPath = userConfig.get('tlsFilePath');
-        console.log("Loaded tlsPath: " + tlsPath);
-        if (!tlsPath || tlsPath === "" || !fs.existsSync(tlsPath)) {
-          tlsPath = projectRoot;
+        let tlsKeyPath = userConfig.get('tlsKeyPath');
+        let tlsCertPath = userConfig.get('tlsCertPath');
+        console.log("Loaded tlsKeyPath: " + tlsKeyPath);
+        console.log("Loaded tlsCertPath: " + tlsCertPath);
+        if (!tlsKeyPath || tlsKeyPath === "" || !fs.existsSync(tlsKeyPath)) {
+          tlsKeyPath = path.join(projectRoot, "key.pem");
+        }
+        if (!tlsCertPath || tlsCertPath === "" || !fs.existsSync(tlsCertPath)) {
+          tlsCertPath = path.join(projectRoot, "cert.pem");
         }
 
-        var key = fs.readFileSync(path.join(tlsPath, 'key.pem'));
-        var cert = fs.readFileSync(path.join(tlsPath, 'cert.pem'));
+        var key = fs.readFileSync(tlsKeyPath);
+        var cert = fs.readFileSync(tlsCertPath);
         console.log("Loaded SSL key and cert.");
 
         if (!key || !cert) {
