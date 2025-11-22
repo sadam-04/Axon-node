@@ -1,17 +1,132 @@
 const { app, ipcMain, dialog, BrowserWindow } = require('electron');
 const path = require('node:path');
-const http = require('node:http');
+// const https = require('node:https');
 const url = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
+// const Store = require('electron-store');
+const { exec } = require('node:child_process');
 const multer = require('multer');
-const QRCode = require('qrcode');
+
+import Store from 'electron-store';
+const userConfig = new Store();
+
+// red: #FF4a51
 
 const projectRoot = app.isPackaged
   ? process.resourcesPath
-  : path.join(app.getAppPath(), 'src');
+  : app.getAppPath();
 
+// send mode url paths
 var urlPathMappings = {};
+
+// var protocol = userConfig.get('useHTTPS') == true ? 'HTTPS' : 'HTTP';
+var protocol = 'HTTP';
+
+//recv mode pending file buffers
+const pendingFiles = new Map();
+function addPendingFile(file) {
+  const uid = Math.floor(Math.random() * 1000000);
+
+  pendingFiles.set(uid, {
+    buffer: file.buffer,
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size,
+    savedPath: "",
+  });
+  console.log("Added pending file with id: " + uid);
+  return uid;
+}
+
+function savePendingFile(event, _id, callback=null) {
+
+  let allWindows = BrowserWindow.getAllWindows();
+  if (allWindows.length === 0) {
+    return;
+  }
+  const window = allWindows[0];
+  
+
+  const id = JSON.parse(_id);
+
+  console.log("Saving pending file with id: " + id);
+
+  const file = pendingFiles.get(id);
+  
+  
+  if (!file) {
+    console.log("File not found in pendingFiles map.");
+    return;
+  }
+
+  if (!fs.existsSync(path.join(projectRoot, "uploads"))) {
+    fs.mkdirSync(path.join(projectRoot, "uploads"));
+  }
+
+  const filePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.originalname);
+  console.log("File found, saving as " + filePath);
+
+  fs.writeFile(filePath, file.buffer, (err) => {
+    if (err) {
+      console.error("Error saving file: ", err);
+      window.webContents.send('savePendingFileResult', {id: id, path: ""});
+      return;
+    }
+    
+    pendingFiles.get(_id).savedPath = filePath;
+    
+    if (callback) {
+      callback();
+    }
+
+    // pendingFiles.delete(id);
+    window.webContents.send('savePendingFileResult', {id: id, path: filePath });
+    // console.log("File saved and removed from pendingFiles map.");
+  });
+}
+
+function revealPendingFile(event, _id) {
+  const file = pendingFiles.get(_id);
+  if (!file) return;
+
+  if (!file.savedPath || file.savedPath === "") return;
+
+  const filePath = file.savedPath;
+
+  exec(`explorer.exe "${path.dirname(filePath)}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      return;
+    }
+    console.log(`stdout: ${stdout}`);
+    console.error(`stderr: ${stderr}`);
+  });
+
+  // savePendingFile(event, _id, () => {
+  //   if (file) {
+  //     // const filePath = path.join(projectRoot, "uploads", file.originalname);
+  //     const filePath = file.savedPath;
+
+  //     exec(`explorer.exe "${path.dirname(filePath)}"`, (error, stdout, stderr) => {
+  //       if (error) {
+  //         console.error(`exec error: ${error}`);
+  //         return;
+  //       }
+  //       console.log(`stdout: ${stdout}`);
+  //       console.error(`stderr: ${stderr}`);
+  //     });
+  //   }
+  // });
+
+  // console.log("Opening saved file with id: " + _id);
+
+}
+
+function discardPendingFile(event, _id) {
+  // const id = JSON.parse(_id);
+  pendingFiles.delete(_id);
+}
 
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
@@ -25,10 +140,10 @@ async function handleFileOpen() {
   if (!canceled && filePaths.length > 0) {
     //const data = await fs.readFile(filePaths[0], 'utf-8');
     let uid = Math.floor(Math.random() * 1000000);
-    const uurl = `http://localhost:3030/get/${uid}`;
+    // const uurl = `${protocol}://localhost:3030/get/${uid}`;
     urlPathMappings[uid] = [filePaths[0], true];
     const fileSize = fs.statSync(filePaths[0]).size;
-    return [uurl, filePaths[0], fileSize]; // return to renderer
+    return [uid, filePaths[0], fileSize]; // return to renderer
   }
   return [0, "null", 0];
 }
@@ -57,7 +172,7 @@ function getDefaultIP() {
 }
 
 function listAddrs() {
-  console.log("listAddrs called");
+  // console.log("listAddrs called");
   const interfaces = os.networkInterfaces();
   let filteredAddrs = [];
   for (const name in interfaces) {
@@ -70,39 +185,86 @@ function listAddrs() {
       }
     }
   }
-  console.log("listAddrs returning:", filteredAddrs);
+  // console.log("listAddrs returning:", filteredAddrs);
   return filteredAddrs;
+}
+
+function notifyRendererOfNewFile(window, file) {
+  window.webContents.send('new-uploaded-file', file);
+}
+
+function attemptToggleProtocol(initServer){
+  return function (){
+    var res;
+    if (protocol === 'HTTP') {
+      //attempt switching to HTTPS
+      res = initServer('HTTPS');
+      console.log("Attempted to switch to HTTPS, success: " + res);
+      if (res == false) {
+        console.log("Failed to switch to HTTPS, keeping HTTP.");
+        initServer('HTTP');
+        // inform UI of failure
+        
+      } else {
+        // succeeded, update protocol
+        protocol = 'HTTPS';
+      }
+    } else {
+      // switch from HTTPS to HTTP
+      protocol = 'HTTP';
+      res = initServer(protocol);
+    }
+    console.log("Protocol updated to " + protocol);
+    userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
+    // initServer();
+    return [protocol, res];
+  }
+} {
+
 }
 
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 800,
-    height: 600,
+    height: 450,
+    minWidth: 800,
+    minHeight: 310,
+    frame: true,
+    autoHideMenuBar: true,
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
       devTools: true,
     },
+    ...(process.platform !== 'darwin' ? { titleBarOverlay: {
+      color: '#202020ff',
+      symbolColor: '#686868ff',
+      height: 34
+    }} : {})
   });
 
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
+
+  return mainWindow;
 };
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Specify the directory to save files
-    },
-    filename: function (req, file, cb) {
-        // Customize filename to avoid conflicts
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
+// const multerDisk = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, 'uploads/'); // Specify the directory to save files
+//     },
+//     filename: function (req, file, cb) {
+//         // Customize filename to avoid conflicts
+//         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+//     }
+// });
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -110,14 +272,82 @@ const upload = multer({ storage: storage });
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
   ipcMain.handle('setServing', toggleSpecificItem);
-
   ipcMain.handle('getDefaultIP', getDefaultIP);
   ipcMain.handle('listAddrs', listAddrs);
+  ipcMain.handle('savePendingFile', savePendingFile);
+  ipcMain.handle('revealPendingFile', revealPendingFile);
+  ipcMain.handle('discardPendingFile', discardPendingFile);
+  ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
+  ipcMain.handle('getProtocol', () => {
+    return protocol;
+  });
+  ipcMain.handle('setTLSKeyPath', (event, path) => {console.log("received tlsKeyPath: ", path); userConfig.set('tlsKeyPath', path);});
+  ipcMain.handle('getTLSKeyPath', () => {
+    return userConfig.get('tlsKeyPath');
+  });
+  ipcMain.handle('setTLSCertPath', (event, path) => {console.log("received tlsCertPath: ", path); userConfig.set('tlsCertPath', path);});
+  ipcMain.handle('getTLSCertPath', () => {
+    return userConfig.get('tlsCertPath');
+  });
 
-  createWindow();
+  let server = null;
 
-  //create client web server
-  const server = http.createServer((req, res) => {
+  console.log("Protocol: " + protocol);
+
+  
+
+  const mainWindow = createWindow();
+
+  function initServer(proto) {
+    console.log("Initializing server with protocol: " + proto);
+    if (server != null) {
+      server.close();
+    }
+    if (proto == 'HTTPS') {
+      try {
+        let tlsKeyPath = userConfig.get('tlsKeyPath');
+        let tlsCertPath = userConfig.get('tlsCertPath');
+        console.log("Loaded tlsKeyPath: " + tlsKeyPath);
+        console.log("Loaded tlsCertPath: " + tlsCertPath);
+        if (!tlsKeyPath || tlsKeyPath === "" || !fs.existsSync(tlsKeyPath)) {
+          tlsKeyPath = path.join(projectRoot, "key.pem");
+        }
+        if (!tlsCertPath || tlsCertPath === "" || !fs.existsSync(tlsCertPath)) {
+          tlsCertPath = path.join(projectRoot, "cert.pem");
+        }
+
+        var key = fs.readFileSync(tlsKeyPath);
+        var cert = fs.readFileSync(tlsCertPath);
+        console.log("Loaded SSL key and cert.");
+
+        if (!key || !cert) {
+          console.log("SSL key or cert not found.");
+          throw("Unable to load SSL key/cert");
+        }
+
+        const SSLOptions = {
+          key: key,
+          cert: cert,
+        };
+      
+        server = require('https').createServer(SSLOptions, serverBehavior);
+      } catch (e) {
+        console.log("Error initializing HTTPS server: ", e);
+        return false;
+      }
+    } else {
+      server = require('http').createServer(serverBehavior);
+    }
+    server.listen(3030, () => {
+      console.log(`Server listening at ${protocol.toLowerCase()}://*:3030/`);
+    });
+
+    return true;
+  }
+
+
+
+  const serverBehavior = (req, res) => {
 
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/;
@@ -125,16 +355,24 @@ app.whenReady().then(() => {
     if (parsedUrl.pathname == "/send") {
       if (req.method == 'POST') {
         upload.single('file')(req, res, function (err) {
+          if (!req.file) {
+            return;
+          }
+          
           if (err) {
             res.statusCode = 500;
             res.end("Error uploading file");
             return;
           }
-          console.log(req.file);
+          // console.log(req.file.buffer);
+
+          const file = req.file;
+          const uid = addPendingFile(file);
+          notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size, savedAt: ""});
         });
       }
       
-      const filePath = path.join(projectRoot, 'clientSend.html');
+      const filePath = path.join(projectRoot, 'src', 'clientSend.html');
       fs.readFile(filePath, (err, data) => {
           if (err) {
               res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -153,7 +391,7 @@ app.whenReady().then(() => {
     }
 
     if (parsedUrl.pathname == "/clientSend.css") {
-      const filePath = path.join(projectRoot, 'clientSend.css');
+      const filePath = path.join(projectRoot, 'src', 'clientSend.css');
       fs.readFile(filePath, (err, data) => {
           if (err) {
               res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -220,11 +458,28 @@ app.whenReady().then(() => {
         stream.pipe(res);
       });
     });
-  });
+  };
 
-  server.listen(3030, () => {
-    console.log('Server running at http://localhost:3030/');
-  });
+  initServer(protocol);
+
+  // protocol is initialized to HTTP. If userconfig says it should be HTTPS, attempt a switch now
+  if (userConfig.get('useHTTPS') == true) {
+    attemptToggleProtocol(initServer)();
+  }
+
+
+  //create client web server
+
+
+  // if (userConfig.get('useHTTPS') == true) {
+  //   server = require('https').createServer(SSLOptions, serverBehavior);
+  // } else {
+  //   server = require('http').createServer(serverBehavior);
+  // }
+  
+  // server.listen(3030, () => {
+  //   console.log('Server running at http://localhost:3030/');
+  // });
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
@@ -245,4 +500,4 @@ app.on('window-all-closed', () => {
 });
 
 // In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
+// code. You can also put them in separate files and import them here.}

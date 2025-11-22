@@ -7,12 +7,34 @@
 
     <link rel="stylesheet" type="text/css" href="/clientSend.css">
 
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script>
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('file-input');
+        fileInput.addEventListener('change', (event) => {
+          if (event.target.files.length === 0) {
+            return;
+          }
+          const fileName = event.target.files[0].name;
+          fileInput.nextElementSibling.textContent = fileName;
+        });
+      });
+    </script>
+
   </head>
   <body>
-    <div class="wrapper">
-      <form class="uploadForm" action="/send" method="post" enctype="multipart/form-data">
-        <input type="file" id="file" name="file" />
-        <input type="submit" value="Upload" />
+    <div class="main-content">
+      <form action="/send" method="post" enctype="multipart/form-data">
+        <span class="section-title">Upload a file</span>
+        <hr style="width:100%" />
+
+        <label for="file-input" class="form-field bttn">Choose a file</label>
+        <input id="file-input" name="file" type="file" />
+
+        <span class="file-name">No file chosen</span>
+        <input type="submit" class="form-field bttn" value="Upload" />
       </form>
     </div>
   </body>
