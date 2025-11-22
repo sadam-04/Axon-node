@@ -146,6 +146,12 @@ function App() {
     window.electronAPI.getProtocolFromMain().then((savedProtocol) => {
       setProtocol(savedProtocol);
     });
+
+    async function getSavedSettings() {
+      let savedTLSPath = await window.electronAPI.getTLSFilePath();
+      setTLSFilePath(savedTLSPath);
+    }
+    getSavedSettings();
   }, []);
 
   //update all URLs when protocol or presentedIp changes
@@ -407,7 +413,7 @@ function App() {
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>TLS key/certificate location</strong>
                 <span>Specify a custom directory for the TLS key and certificate files. If left blank, defaults to the application directory.</span>
-                <input type="text" style={{marginTop: "5px", width: "300px"}} onBlur={(e) => {setTLSFilePath(e.target.value); window.electronAPI.setTLSFilePath(e.target.value);}} placeholder="Enter path to TLS key/cert directory" />
+                <input type="text" style={{marginTop: "5px", width: "200px"}} defaultValue={tlsFilePath} onBlur={(e) => {setTLSFilePath(e.target.value); window.electronAPI.setTLSFilePath(e.target.value);}} placeholder="Enter path to TLS key/cert directory" />
               </div>
             </div>
           ) : null}

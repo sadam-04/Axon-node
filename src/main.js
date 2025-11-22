@@ -287,15 +287,15 @@ app.whenReady().then(() => {
   ipcMain.handle('getProtocol', () => {
     return protocol;
   });
+  ipcMain.handle('getTLSFilePath', () => {
+    return userConfig.get('tlsFilePath');
+  });
 
   let server = null;
 
-  // protocol is initialized to HTTP. If userconfig says it should be HTTPS, attempt a switch now
-  if (userConfig.get('useHTTPS') == true) {
-    attemptToggleProtocol();
-  }
-
   console.log("Protocol: " + protocol);
+
+  
 
   const mainWindow = createWindow();
 
@@ -457,6 +457,12 @@ app.whenReady().then(() => {
   };
 
   initServer(protocol);
+
+  // protocol is initialized to HTTP. If userconfig says it should be HTTPS, attempt a switch now
+  if (userConfig.get('useHTTPS') == true) {
+    attemptToggleProtocol(initServer)();
+  }
+
 
   //create client web server
 
