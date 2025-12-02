@@ -38,14 +38,29 @@ function App() {
   const [tlsCertPath, setTLSCertPath] = useState("");
 
   //TODO :GET RID OF THIS!!!
-  function handleFileOpenClick() {
-      window.electronAPI.openFile().then(([uid, fileName, fileSize]) => {
-          if (uid == "" || fileName == "null") {
-            return;
-          }
-          var url = `${protocol}://${presentedIp}:${port}/get/${uid}`;
-          setHostedFiles([...hostedFiles, { id: Date.now(), fileName: fileName, url: url, size: fileSize }]);
-      });
+  function handleFileOpenClick(file = null) {
+    console.log("stage 2 file=", file);
+    let _f = null;
+    if (file != null) {
+      _f = file;
+    }
+    console.log("stage 3 file=", _f);
+    window.electronAPI.openSpecificFile(_f).then(([uid, fileName, fileSize]) => {
+        if (uid == "" || fileName == "null") {
+          return;
+        }
+        var url = `${protocol}://${presentedIp}:${port}/get/${uid}`;
+        console.log("appending to hostedfiles (current length " + hostedFiles.length + "): ", { id: uid, fileName: fileName, url: url, size: fileSize });
+        
+        setHostedFiles(prev => {
+          const updated = [...prev, { id: uid, fileName: fileName, url: url, size: fileSize }]
+          setSelectedSFile(updated.length - 1);
+          return updated;
+        });
+
+        // focus on the newly added file
+        // setSelectedSFile(newIdx);
+    });
   }
 
   function discardPendingFile() {
@@ -107,6 +122,18 @@ function App() {
 
   // initialization
   useEffect(() => {
+
+    window.addEventListener("dragover", event => {
+      event.preventDefault();
+    });
+
+    window.addEventListener("drop", event => {
+      event.preventDefault();
+      const file = event.dataTransfer.files[0];
+      console.log("File dropped: ", file);
+      handleFileOpenClick(file);
+    });
+
     async function getIP() {
       var ip = await window.electronAPI.getDefaultIP();
       setRecvUrl(`${protocol}://${ip}:${port}/send`);
@@ -282,7 +309,7 @@ function App() {
                     <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
                     <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                       <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} file{hostedFiles.length !== 1 ? "s" : ""}</span>
-                      <div className="plus-btn" onClick={handleFileOpenClick} />
+                      <div className="plus-btn" onClick={() => {handleFileOpenClick(null)}} />
                     </div>
                   </div>
                   <div style={{marginLeft: "0", marginRight: "0"}}>

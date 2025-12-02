@@ -1,7 +1,7 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 // contextBridge.exposeInMainWorld('versions', {
 //     node: () => process.versions.node,
@@ -24,6 +24,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setTLSCertPath: (path) => ipcRenderer.invoke('setTLSCertPath', path),
     getPort: () => ipcRenderer.invoke('getPort'),
     setPort: (newPort) => ipcRenderer.invoke('setPort', newPort),
+
+    openSpecificFile (file) {
+        console.log("Preload openSpecificFile called with file: ", file);
+        if (file == null) {
+            console.log("No file specified, opening file dialog. file = ", file);
+            return ipcRenderer.invoke('openFile', null);
+        }
+        let path = webUtils.getPathForFile(file);
+        return ipcRenderer.invoke('openSpecificFile', path);
+    },
 });
 
 contextBridge.exposeInMainWorld('recvFileAPI', {
@@ -35,3 +45,7 @@ contextBridge.exposeInMainWorld('recvFileAPI', {
     revealFile: (id) => ipcRenderer.invoke('revealPendingFile', id),
     discardFile: (id) => ipcRenderer.invoke('discardPendingFile', id),
 });
+
+contextBridge.exposeInMainWorld('electron', {
+  
+})

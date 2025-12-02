@@ -135,17 +135,21 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-async function handleFileOpen() {
-  const { canceled, filePaths } = await dialog.showOpenDialog({});
-  if (!canceled && filePaths.length > 0) {
-    //const data = await fs.readFile(filePaths[0], 'utf-8');
-    let uid = Math.floor(Math.random() * 1000000);
-    // const uurl = `${protocol}://localhost:3030/get/${uid}`;
-    urlPathMappings[uid] = [filePaths[0], true];
-    const fileSize = fs.statSync(filePaths[0]).size;
-    return [uid, filePaths[0], fileSize]; // return to renderer
+async function handleFileOpen(e, path) {
+  console.log("Opening specific file: ", path);
+  if (path == null) {
+    const { canceled, filePaths } = await dialog.showOpenDialog({});
+    if (!canceled && filePaths.length > 0) {
+      path = filePaths[0];
+    } else {
+      return [0, "null", 0];
+    }
   }
-  return [0, "null", 0];
+
+  let uid = Math.floor(Math.random() * 1000000);
+  urlPathMappings[uid] = [path, true];
+  const fileSize = fs.statSync(path).size;
+  return [uid, path, fileSize]; // return to renderer
 }
 
 // toggle a file on/off
@@ -269,6 +273,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
+  ipcMain.handle('openSpecificFile', handleFileOpen);
   ipcMain.handle('setServing', toggleSpecificItem);
   ipcMain.handle('getDefaultIP', getDefaultIP);
   ipcMain.handle('listAddrs', listAddrs);
