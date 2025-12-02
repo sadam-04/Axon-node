@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import QRCode from 'qrcode';
 
@@ -37,7 +37,24 @@ function App() {
   const [tlsKeyPath, setTLSKeyPath] = useState("");
   const [tlsCertPath, setTLSCertPath] = useState("");
 
+  const protocolRef = useRef(protocol);
+  const ipRef = useRef(presentedIp);
+  const portRef = useRef(port);
+
+  useEffect(() => {
+    protocolRef.current = protocol;
+  }, [protocol]);
+
+  useEffect(() => {
+    ipRef.current = presentedIp;
+  }, [presentedIp]);
+
+  useEffect(() => {
+    portRef.current = port;
+  }, [port]);
+
   //TODO :GET RID OF THIS!!!
+  // REAL TODO: fix protocol, presentedIp, port being stale. (use react refs) 
   function handleFileOpenClick(file = null) {
     console.log("stage 2 file=", file);
     let _f = null;
@@ -49,7 +66,7 @@ function App() {
         if (uid == "" || fileName == "null") {
           return;
         }
-        var url = `${protocol}://${presentedIp}:${port}/get/${uid}`;
+        var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
         console.log("appending to hostedfiles (current length " + hostedFiles.length + "): ", { id: uid, fileName: fileName, url: url, size: fileSize });
         
         setHostedFiles(prev => {
@@ -57,9 +74,6 @@ function App() {
           setSelectedSFile(updated.length - 1);
           return updated;
         });
-
-        // focus on the newly added file
-        // setSelectedSFile(newIdx);
     });
   }
 
