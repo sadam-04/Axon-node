@@ -559,7 +559,7 @@ function SummaryListItem({fileName, onCloseClick}) {
       }}
     >
         <div style={{display: "block", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{fileName}</div>
-        {isHovered ? <div onClick={onCloseClick} className="outboxItemCloseBttn" style={{display: "block", width: "10px", height: "19px", marginRight: "9.5px"}}>✖</div> : null}
+        {isHovered ? <div onClick={onCloseClick} className="outboxItemCloseBttn" style={{display: "block", width: "10px", height: "19px", marginRight: "8px"}}>✖</div> : null}
     </div>
   )
 }
