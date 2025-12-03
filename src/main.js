@@ -1,4 +1,4 @@
-const { app, ipcMain, dialog, BrowserWindow } = require('electron');
+const { app, ipcMain, dialog, shell, BrowserWindow } = require('electron');
 const path = require('node:path');
 // const https = require('node:https');
 const url = require('node:url');
@@ -239,6 +239,7 @@ const createWindow = () => {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
       devTools: true,
+      sandbox: true,
     },
     ...(process.platform !== 'darwin' ? { titleBarOverlay: {
       color: '#202020ff',
@@ -247,8 +248,35 @@ const createWindow = () => {
     }} : {})
   });
 
+  const wc = mainWindow.webContents;
+  const allowedPrefix = MAIN_WINDOW_WEBPACK_ENTRY; // whatever you load first
+
+  wc.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+
+  wc.on("will-navigate", (event, url) => {
+    if (!url.startsWith(allowedPrefix)) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
+
+  wc.on("will-redirect", (event, url) => {
+    if (!url.startsWith(allowedPrefix)) {
+      event.preventDefault();
+    }
+  });
+
+  wc.setWindowOpenHandler(() => ({ action: "deny" }));
+  
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+
+  
+  console.log("Loading default view: " + MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();

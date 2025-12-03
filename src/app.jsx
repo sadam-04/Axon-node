@@ -6,6 +6,12 @@ import QRCode from 'qrcode';
 const root = createRoot(document.getElementById("root"));
 root.render(<App />);
 
+window.addEventListener("will-navigate", event => {
+  event.preventDefault();
+  console.log("Navigation prevented to: ", event.url);
+  return false;
+});
+
 function App() {
   const [hostedFiles, setHostedFiles] = useState([]);
   const [pendingFiles, setPendingFiles] = useState([]);
@@ -487,44 +493,68 @@ function App() {
           ) : null}
         </div>
       </div>
-      <div style={{display: "flex", flexDirection: "row", height: footerHeight, flexGrow: 0, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
-        <div className="ip-selector" style={{padding: "0", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
-          <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setPresentedIp(e.target.value)} value={presentedIp}>
-            {addrs.map((addr, index) => (
-              <option key={index} value={addr}>{addr}</option>
-            ))}
-          </select>
-        </div>
+      <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", height: footerHeight, flexGrow: 0, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
+        <div id="left-footer" style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
+          <div className="ip-selector" style={{padding: "0", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
+            <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setPresentedIp(e.target.value)} value={presentedIp}>
+              {addrs.map((addr, index) => (
+                <option key={index} value={addr}>{addr}</option>
+              ))}
+            </select>
+          </div>
 
-        <div style={{margin: "0 2px", width: "50px", height: footerHeight, overflow: "hidden"}}>
+          <div style={{margin: "0 2px", width: "50px", height: footerHeight, overflow: "hidden"}}>
+              <ResponsiveButton
+                label={protocol}
+                buttonAction={async () => {
+                  // var newProtocol = (protocol === "HTTP" ? "HTTPS" : "HTTP");
+                  // setProtocol(newProtocol);
+                  window.electronAPI.attemptToggleProtocol().then(([newProtocol, toggleSuccess]) => {
+                    setProtocol(newProtocol);
+                    if (newProtocol == "HTTP" && !toggleSuccess) {
+                      setProtocolMessage("Unable to switch to HTTPS. Make sure key and cert files are present.");
+                    } else {
+                      setProtocolMessage("");
+                    }
+                    // updateURLsWithProtocol(newProtocol);
+                    // console.log("Protocol toggled to " + newProtocol + " in main process");
+                  });
+                  // applyProtocolToUrls(newProtocol);
+                }}
+                selected={false}
+                setSelected={() => {}}
+                enabled={true}
+                customStyle={{height: footerHeight, fontSize: "12px", fontWeight: "regular", color: "#a0a0a0"}}
+                shadeA={"#202020"}
+                shadeB={"#282828"}
+                shadeC={"#303030"}
+              />
+          </div>
+
+          <div style={{display: "flex", alignItems: "center", padding: "0 2px 0 2px", margin: "0", height: footerHeight, overflow: "hidden"}}>
+            {protocolMessage ? <span style={{height: "wrap-content", fontSize: "12px", color: "#a04040"}}>{protocolMessage}</span> : null}
+          </div>
+
+          {/* <div style={{margin: "0 2px", height: footerHeight}}>
+            <a href="https://github.com/sadam-04/Axon-node" style={{height: footerHeight, fontSize: "12px", color: "#a0a0a0", textDecoration: "none", lineHeight: footerHeight}}>Axon-node © 2025</a>
+          </div> */}
+        </div>
+        <div id="right-footer" style={{display: "flex", alignItems: "center"}}>
+          <div style={{width: "115px",height: footerHeight, overflow: "hidden"}}>
             <ResponsiveButton
-              label={protocol}
+              label={"Axon-node © 2025"}
               buttonAction={async () => {
-                // var newProtocol = (protocol === "HTTP" ? "HTTPS" : "HTTP");
-                // setProtocol(newProtocol);
-                window.electronAPI.attemptToggleProtocol().then(([newProtocol, toggleSuccess]) => {
-                  setProtocol(newProtocol);
-                  if (newProtocol == "HTTP" && !toggleSuccess) {
-                    setProtocolMessage("Unable to switch to HTTPS. Make sure key and cert files are present.");
-                  } else {
-                    setProtocolMessage("");
-                  }
-                  // updateURLsWithProtocol(newProtocol);
-                  // console.log("Protocol toggled to " + newProtocol + " in main process");
-                });
-                // applyProtocolToUrls(newProtocol);
+                window.location.href = "https://github.com/sadam-04/Axon-node";
               }}
               selected={false}
               setSelected={() => {}}
               enabled={true}
-              customStyle={{height: footerHeight, fontSize: "12px", fontWeight: "regular", color: "#a0a0a0"}}
+              customStyle={{height: footerHeight, fontSize: "12px", color: "#a0a0a0"}}
               shadeA={"#202020"}
               shadeB={"#282828"}
               shadeC={"#303030"}
             />
-        </div>
-        <div style={{display: "flex", alignItems: "center", padding: "0 2px 0 2px", margin: "0", height: footerHeight, overflow: "hidden"}}>
-          {protocolMessage ? <span style={{height: "wrap-content", fontSize: "12px", color: "#a04040"}}>{protocolMessage}</span> : null}
+          </div>
         </div>
       </div>
     </div>
