@@ -355,18 +355,19 @@ app.whenReady().then(() => {
     return true;
   }
 
-  const serverBehavior = (req, res) => {
+  const serverBehavior = async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/;
 
-    if (parsedUrl.pathname == "/send") {
+    if (parsedUrl.pathname == "/intake") {
       if (req.method == 'POST') {
-        upload.single('file')(req, res, function (err) {
+        await upload.single('file')(req, res, function (err) {
           if (!req.file) {
             return;
           }
           
           if (err) {
+            console.log("Error uploading file: ", err);
             res.statusCode = 500;
             res.end("Error uploading file");
             return;
@@ -376,27 +377,34 @@ app.whenReady().then(() => {
           const file = req.file;
           const uid = addPendingFile(file);
           notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size, savedAt: ""});
+
+          res.statusCode = 200;
+          res.end("OK");
+          return;
         });
+        return;
+      } else {
+        res.statusCode = 405;
+        res.end("Method not allowed");
+        return;
       }
-      
-      const filePath = path.join(projectRoot, 'src', 'clientSend.html');
-      fs.readFile(filePath, (err, data) => {
-          if (err) {
-              res.writeHead(500, { 'Content-Type': 'text/plain' });
-              res.end('Server Error: ' + err);
-              return;
-          }
-
-          res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(data);
-      });
-
-      // res.statusCode = 200;
-      // res.end("send endpoint");
-      // console.log("returning...");
-      return;
     }
 
+    if (parsedUrl.pathname == "/send") {
+      const filePath = path.join(projectRoot, 'src', 'clientSend.html');
+      let data = fs.readFileSync(filePath); 
+      // if (err) {
+      //   res.writeHead(500, { 'Content-Type': 'text/plain' });
+      //   res.end('Server Error: ' + err);
+      //   return;
+      // }
+
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(data);
+
+      return;
+    }
+    
     if (parsedUrl.pathname == "/clientSend.css") {
       const filePath = path.join(projectRoot, 'src', 'clientSend.css');
       fs.readFile(filePath, (err, data) => {

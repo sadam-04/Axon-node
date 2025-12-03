@@ -18,7 +18,7 @@
             return;
           }
           const fileName = event.target.files[0].name;
-          fileInput.nextElementSibling.textContent = fileName;
+          document.getElementById('file-name').textContent = fileName;
         });
       });
     </script>
@@ -26,16 +26,43 @@
   </head>
   <body>
     <div class="main-content">
-      <form action="/send" method="post" enctype="multipart/form-data">
+      <form id="upload-form" method="post" enctype="multipart/form-data">
         <span class="section-title"><strong>Upload a file</strong></span>
         <hr style="width:100%" />
 
         <label for="file-input" class="form-field bttn">Choose a file</label>
         <input id="file-input" name="file" type="file" />
 
-        <span class="file-name">No file chosen</span>
+        <span class="file-name" id="file-name">No file chosen</span>
         <input type="submit" class="form-field bttn" value="Upload" />
       </form>
+      <div id="success-message" style="display:none; flex-direction: row; margin: auto; color: #808080; margin-top: 10px;">
+        <div id="success-filename" style="white-space: nowrap;"></div>
+        <div id="success-text" style="white-space: nowrap;">&nbsp;uploaded successfully!</div>
+      </div>
     </div>
+
+    <script>
+      document.getElementById("upload-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        console.log("Submitting form...");
+
+        const formData = new FormData(e.target);
+
+        const res = await fetch("/intake", {
+          method: "POST",
+          body: formData
+        });
+        console.log("response: " + res);
+
+        if (res.ok) {
+          document.getElementById("success-message").style.display = "flex";
+          document.getElementById('success-filename').textContent = document.getElementById('file-name').textContent;
+          document.getElementById('file-name').textContent = "No file chosen";
+          document.getElementById("upload-form").reset();
+        }
+      });
+    </script>
   </body>
 </html>
