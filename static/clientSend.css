@@ -71,3 +71,28 @@ input[type="file"] {
 .bttn:hover {
     background-color: #343434;
 }
+
+.spinner-container {
+	/* display: flex; */
+	justify-content: center;
+	align-items: center;
+	/* height: 100vh; Centers the spinner vertically on the page */
+}
+
+.spinner {
+	border: 3px solid rgba(0, 0, 0, 0.2); /* Light gray border */
+	border-left-color: #333; /* Darker color for the spinning part */
+	border-radius: 50%; /* Makes it a circle */
+	width: 20px;
+	height: 20px;
+	animation: spin 1s linear infinite; /* Applies the spinning animation */
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}

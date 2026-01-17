@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openFile: () => ipcRenderer.invoke('openFile'),
     setServing: (shouldServe, id) => ipcRenderer.invoke('setServing', shouldServe, id),
     getDefaultIP: () => ipcRenderer.invoke('getDefaultIP'),
+    setIP: (newIP) => ipcRenderer.invoke('setIP', newIP),
     listAddrs: () => ipcRenderer.invoke('listAddrs'),
     attemptToggleProtocol: () => ipcRenderer.invoke('attemptToggleProtocol'),
     getProtocol: () => ipcRenderer.invoke('getProtocol'),

@@ -62,25 +62,31 @@ function App() {
   //TODO :GET RID OF THIS!!!
   // REAL TODO: fix protocol, presentedIp, port being stale. (use react refs) 
   function handleFileOpenClick(file = null) {
-    console.log("stage 2 file=", file);
+    // console.log("stage 2 file=", file);
     let _f = null;
     if (file != null) {
       _f = file;
     }
-    console.log("stage 3 file=", _f);
+    // console.log("stage 3 file=", _f);
     window.electronAPI.openSpecificFile(_f).then(([uid, fileName, fileSize]) => {
-        if (uid == "" || fileName == "null") {
-          return;
-        }
-        var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
-        console.log("appending to hostedfiles (current length " + hostedFiles.length + "): ", { id: uid, fileName: fileName, url: url, size: fileSize });
-        
-        setHostedFiles(prev => {
-          const updated = [...prev, { id: uid, fileName: fileName, url: url, size: fileSize }]
-          setSelectedSFile(updated.length - 1);
-          return updated;
-        });
+      if (uid == "" || fileName == "null") {
+        return;
+      }
+      var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
+      // console.log("appending to hostedfiles (current length " + hostedFiles.length + "): ", { id: uid, fileName: fileName, url: url, size: fileSize });
+      
+      setHostedFiles(prev => {
+        const updated = [...prev, { id: uid, fileName: fileName, url: url, size: fileSize }]
+        setSelectedSFile(updated.length - 1);
+        return updated;
+      });
     });
+  }
+
+  function handleChangedIP(newIP) {
+    setPresentedIp(newIP);
+    // Save ip to config for next launch
+    window.electronAPI.setIP(newIP);
   }
 
   function discardPendingFile() {
@@ -155,17 +161,17 @@ function App() {
     });
 
     async function getIP() {
+      // get default ip for dropdown
       var ip = await window.electronAPI.getDefaultIP();
+      console.log("Got default IP: ", ip);
+      setPresentedIp(ip);
       setRecvUrl(`${protocol}://${ip}:${port}/send`);
     }
     getIP();
-    // console.log("calling listAddrs");
     async function getAddrs() {
+      // get all addresses for dropdown
       let addrs = await window.electronAPI.listAddrs();
       setAddrs(addrs);
-      // setAndPropagatePresentedIp(addrs[0]);
-      setPresentedIp(addrs[0]);
-      console.log("Propagated ip: " + addrs[0]);
     }
     getAddrs();
 
@@ -371,7 +377,7 @@ function App() {
             <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
               <div id="left-summary-panel">
                 <div id="recv-panel">
-                  <div className="left-recv-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
+                  <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
                     <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
                     <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                       <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}</span>
@@ -399,7 +405,7 @@ function App() {
               </div>
               {activeRFile === null ? (
                 <div id="right-blank-panel" style={{width: "200px", flexGrow: 1}}>
-                  <div style={{color: "white", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
+                  <div style={{color: "white", fontSize: "0.9rem", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
                   <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
                     {recvUrl ? <QrComponent url={recvUrl} /> : <p>Loading QR...</p>}
                   </div>
@@ -484,6 +490,7 @@ function App() {
                 <input type="text" style={{marginTop: "5px", width: "300px"}} defaultValue={tlsKeyPath} onBlur={(e) => {setTLSKeyPath(e.target.value); window.electronAPI.setTLSKeyPath(e.target.value);}} placeholder="Enter path to TLS key file" />
                 <input type="text" style={{marginTop: "5px", width: "300px"}} defaultValue={tlsCertPath} onBlur={(e) => {setTLSCertPath(e.target.value); window.electronAPI.setTLSCertPath(e.target.value);}} placeholder="Enter path to TLS certificate file" />
               </div>
+              <br />
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>Server port</strong>
                 <span>Specify the port number the server will listen on. Default is 2222.</span>
@@ -495,10 +502,10 @@ function App() {
       </div>
       <div style={{display: "flex", flexDirection: "row", justifyContent: "space-between", height: footerHeight, flexGrow: 0, width: "100%", backgroundColor: "#202020", lineHeight: "16px", color: "#606060", overflow: "hidden"}}>
         <div id="left-footer" style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
-          <div className="ip-selector" style={{padding: "0", margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
-            <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => setPresentedIp(e.target.value)} value={presentedIp}>
+          <div className="ip-selector" style={{margin: "0", width: "115px", height: footerHeight, overflow: "hidden"}}>
+            <select style={{height: "100%", fontSize: "12px", color: "#a0a0a0"}} onChange={(e) => handleChangedIP(e.target.value)} value={presentedIp}>
               {addrs.map((addr, index) => (
-                <option key={index} value={addr}>{addr}</option>
+                <option key={index} value={addr} style={{height: footerHeight}}>{addr}</option>
               ))}
             </select>
           </div>
@@ -542,7 +549,7 @@ function App() {
         <div id="right-footer" style={{display: "flex", alignItems: "center"}}>
           <div style={{width: "115px",height: footerHeight, overflow: "hidden"}}>
             <ResponsiveButton
-              label={"Axon-node © 2025"}
+              label={"Axon-node © 2026"}
               buttonAction={async () => {
                 window.location.href = "https://github.com/sadam-04/Axon-node";
               }}

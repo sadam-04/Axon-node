@@ -36,6 +36,9 @@
         <span class="file-name" id="file-name">No file chosen</span>
         <input type="submit" class="form-field bttn" value="Upload" />
       </form>
+      <div class="spinner-container" style="display: none;">
+        <div class="spinner"></div>
+      </div>
       <div id="success-message" style="display:none; flex-direction: row; margin: auto; color: #808080; margin-top: 10px;">
         <div id="success-filename" style="white-space: nowrap;"></div>
         <div id="success-text" style="white-space: nowrap;">&nbsp;uploaded successfully!</div>
@@ -50,12 +53,14 @@
 
         const formData = new FormData(e.target);
 
+        document.querySelector(".spinner-container").style.display = "flex";
         const res = await fetch("/intake", {
           method: "POST",
           body: formData
         });
         console.log("response: " + res);
 
+        document.querySelector(".spinner-container").style.display = "none";
         if (res.ok) {
           document.getElementById("success-message").style.display = "flex";
           document.getElementById('success-filename').textContent = document.getElementById('file-name').textContent;

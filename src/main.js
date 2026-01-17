@@ -9,6 +9,7 @@ const { exec } = require('node:child_process');
 const multer = require('multer');
 
 import Store from 'electron-store';
+import { get } from 'node:http';
 const userConfig = new Store();
 
 // red: #FF4a51
@@ -162,17 +163,32 @@ async function toggleSpecificItem(event, shouldServe, id) {
   return true;
 }
 
-function getDefaultIP() {
-  const interfaces = os.networkInterfaces();
-  for (const name in interfaces) {
-    const addrs = interfaces[name];
-    for (const addr of addrs) {
-      if (addr.family == 'IPv4' && !addr.internal && !addr.address.startsWith("169.254")) {
-        return addr.address;
-      }
-    }
+function getAnyIP() {
+  const addrs = listAddrs();
+  if (addrs.length > 0) {
+    return addrs[0];
+  } else {
+    return "0.0.0.0";
   }
-  return null;
+}
+
+function getDefaultIP() {
+  let ip = userConfig.get('lastUsedIP');
+
+  console.log("last ip: ", ip);
+  if (ip != null && listAddrs().includes(ip)) {
+    console.log(ip);
+    return ip;
+  } else {
+    console.log("ip null or not contained in ", listAddrs());
+  }
+
+  console.log("No valid saved IP, getting any available IP.");
+  return getAnyIP();
+}
+
+function setIP(newIP) {
+  userConfig.set('lastUsedIP', newIP);
 }
 
 function listAddrs() {
@@ -304,6 +320,7 @@ app.whenReady().then(() => {
   ipcMain.handle('openSpecificFile', handleFileOpen);
   ipcMain.handle('setServing', toggleSpecificItem);
   ipcMain.handle('getDefaultIP', getDefaultIP);
+  ipcMain.handle('setIP', (event, newIP) => {setIP(newIP); console.log("Set new IP to: ", newIP);});
   ipcMain.handle('listAddrs', listAddrs);
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
@@ -419,13 +436,8 @@ app.whenReady().then(() => {
     }
 
     if (parsedUrl.pathname == "/send") {
-      const filePath = path.join(projectRoot, 'src', 'clientSend.html');
-      let data = fs.readFileSync(filePath); 
-      // if (err) {
-      //   res.writeHead(500, { 'Content-Type': 'text/plain' });
-      //   res.end('Server Error: ' + err);
-      //   return;
-      // }
+      const filePath = path.join(projectRoot, 'static', 'clientSend.html');
+      let data = fs.readFileSync(filePath);
 
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(data);
@@ -434,7 +446,7 @@ app.whenReady().then(() => {
     }
     
     if (parsedUrl.pathname == "/clientSend.css") {
-      const filePath = path.join(projectRoot, 'src', 'clientSend.css');
+      const filePath = path.join(projectRoot, 'static', 'clientSend.css');
       fs.readFile(filePath, (err, data) => {
           if (err) {
               res.writeHead(500, { 'Content-Type': 'text/plain' });
