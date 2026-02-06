@@ -1,0 +1,187 @@
+import React from 'react';
+
+import ResponsiveButton from './ResponsiveButton';
+import ServedItem from './ServedItem';
+import SummaryListItem from './SummaryListItem';
+import QrComponent from './QrComponent';
+import SimpleTextHeader from './SimpleTextHeader';
+
+const icon_folder = require("../icons/icon_folder_4.png");
+
+const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocolRef, ipRef, portRef, activeSFile}) => {
+
+    console.log("Outbox renderer: hostedFiles = ", hostedFiles);
+
+    return (
+        <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
+            <div id="left-summary-panel">
+                <div>
+                    <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", paddingBottom: "4px" }}>
+                    <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
+                    <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
+                        <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} file{hostedFiles.length !== 1 ? "s" : ""}</span>
+                    </div>
+                    </div>
+                    <div style={{height: "30px", display: "flex", flexDirection: "row", padding: "0px 0px 0px 0px", width: "94%", margin: "auto", marginBottom: "6px"}}>
+                    <form onSubmit={(e) => {handleAddText(e, setHostedFiles, setSelectedSFile, addTextValue, setAddTextValue, protocolRef, ipRef, portRef);}} style={{display: "block", boxSizing: "border-box", width:"calc(100% - 30px)", height: "30px", marginRight: "6px"}}>
+                        <input type="text" value={addTextValue} onChange={(e) => setAddTextValue(e.target.value)} id="addtext" name="addtext" placeholder="Add text, press Enter to save." style={{width: "100%", height: "100%", boxSizing: "border-box", outline: "none", borderRadius: "8px", border: "none", backgroundColor: "#242424", color: "#fff", padding: "5px 12px 5px 12px"}}/>
+                    </form>
+                    <div>
+                        <ResponsiveButton 
+                        label={<img src={icon_folder} style={{width: "16px"}} />}
+                        buttonAction={() => openFile(null, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile)}
+                        selected={false}
+                        enabled={true}
+                        customStyle={{width: "30px", height: "30px", borderRadius: "8px", justifyContent: "center", alignItems: "center"}}
+                        shadeA={"#282828"}
+                        shadeB={"#303030"}
+                        shadeC={"#343434"}
+                        />
+                    </div>
+                    </div>
+                    <div style={{marginLeft: "0", marginRight: "0"}}>
+                    {hostedFiles.map((file, i) => (
+                        <ResponsiveButton
+                        key={file.id}
+                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); window.electronAPI.setServing(false, fileID); var _hostedFiles = hostedFiles.filter(f => f.id !== file.id); if (_hostedFiles.length == 0) {setSelectedSFile(null);} else {setSelectedSFile(0);} setHostedFiles(_hostedFiles);}} />}
+                        buttonAction={() => {setSelectedSFile(i);}}
+                        selected={activeSFile === i}
+                        enabled={true}
+                        customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "2px auto"}}
+                        shadeA={"#282828"}
+                        shadeB={"#303030"}
+                        shadeC={"#343434"}
+                        />
+                    ))}
+                    </div>
+                </div>
+            </div>
+            {activeSFile !== null ? (
+            <div id="right-detail-panel" style={{
+            verticalAlign: "top",
+            backgroundColor: "#303030",
+            borderRadius: "10px",
+            margin: "10px 10px 10px 0",
+            width: "200px",
+            flexGrow: 1,
+            height: "calc(100% - 20px)",
+            }}>
+                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.friendly} url={hostedFiles[activeSFile]?.url} size={hostedFiles[activeSFile]?.size} />
+            </div>
+            ) : null}
+        </div>
+    );
+}
+
+const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, handleDiscardPendingFile, recvUrl, hasCurrentFileBeenSaved, savePaths}) => {
+
+    console.log("Inbox renderer: recvUrl = ", recvUrl); 
+
+    return (
+        <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
+            <div id="left-summary-panel">
+            <div id="recv-panel">
+                <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
+                <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
+                <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
+                    <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}</span>
+                </div>
+                </div>
+
+                <div style={{marginLeft: "0", marginRight: "0"}}>
+                {pendingFiles.map((file, i) => (
+
+                    <ResponsiveButton
+                    key={file.id}
+                    label={<SummaryListItem fileName={file.filename} onCloseClick={() => handleDiscardPendingFile(pendingFiles, activeRFile, setSelectedRFile, setPendingFiles)} />}
+                    buttonAction={() => {setSelectedRFile(i)}}
+                    selected={activeRFile === i}
+                    enabled={true}
+                    customStyle={{}}
+                    shadeA={"#282828"}
+                    shadeB={"#303030"}
+                    shadeC={"#343434"}
+                    />
+                ))}
+                </div>
+            </div>
+            </div>
+            {activeRFile === null ? (
+            <div id="right-blank-panel" style={{width: "200px", flexGrow: 1}}>
+                <div style={{color: "white", fontSize: "0.9rem", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
+                <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
+                <QrComponent url={recvUrl} />
+                </div>
+            </div>
+            ) : (
+            <div id="right-detail-panel" style={{
+                verticalAlign: "top",
+                backgroundColor: "#303030",
+                borderRadius: "10px",
+                marginRight: "10px",
+                width: "200px",
+                flexGrow: 1,
+                marginTop: "10px",
+                marginBottom: "10px",
+                height: "calc(100% - 20px)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "start",
+                alignItems: "center",
+                overflowWrap: "break-word",
+                whiteSpace: "normal",
+            }}>
+                <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
+                <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
+                    <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.filename} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
+                </div>
+
+                <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
+
+                    <ResponsiveButton
+                    label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
+                    buttonAction={() => {window.recvFileAPI.saveFile(pendingFiles[activeRFile].id, ()=>{console.log("TESTING")});}}
+                    selected={false}
+                    enabled={!hasCurrentFileBeenSaved()}
+                    disabledStyle={{color: "#808080"}}
+                    customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                    shadeA={"#303030"}
+                    shadeB={"#383838"}
+                    shadeC={"#404040"}
+                    />
+
+                    <ResponsiveButton
+                    label={"Go to folder"}
+                    buttonAction={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}
+                    selected={false}
+                    enabled={hasCurrentFileBeenSaved()}
+                    customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                    disabledStyle={{color: "#808080"}}
+                    shadeA={"#303030"}
+                    shadeB={"#383838"}
+                    shadeC={"#404040"}
+                    />
+
+                    <ResponsiveButton
+                    label={"Discard"}
+                    buttonAction={() => handleDiscardPendingFile(pendingFiles, activeRFile, setSelectedRFile, setPendingFiles)}
+                    selected={false}
+                    enabled={true}
+                    customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                    shadeA={"#303030"}
+                    shadeB={"#983838"}
+                    shadeC={"#c04040"}
+                    />
+                </div>
+                </div>
+                <div style={{display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "flex-start", width: "100%", height: "40px", boxSizing: "border-box"}}>
+                <div style={{width: "18px", flexGrow: 0}} />
+                <div style={{width: "1px", flexGrow: 1, color: "#808080", fontStyle: "italic"}}>{savePaths[pendingFiles[activeRFile].id] ? "Saved to " + savePaths[pendingFiles[activeRFile].id] : ""}</div>
+                </div>
+            </div>
+            )}
+        </div>
+    );
+}
+
+export { Outbox, Inbox };

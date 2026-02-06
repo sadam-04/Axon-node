@@ -67,6 +67,7 @@ h4 {
   color: #808080;
   font-style: italic;
   cursor: pointer;
+  border-radius: 8px;
 
   white-space: normal;
 }
@@ -104,6 +105,12 @@ h4 {
 }
 
 .plus-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+
+
   margin: auto;
   margin-right: 7px;
   /* margin-top: 20px; */
@@ -114,9 +121,12 @@ h4 {
   border-radius: 5px;
   cursor: pointer;
   /* transition: background-color 0.2s; */
+  
+  /* transition: width 0.05s linear; */
 }
 .plus-btn:hover {
-  background-color: #FF4a51;
+  /* background-color: #FF4a51; */
+  width: 75px;
 }
 
 .plus-btn::before,
@@ -125,13 +135,14 @@ h4 {
   position: absolute;
   background-color: #fff;
   top: 50%;
-  left: 50%;
+  right: 50%;
   transform: translate(-50%, -50%);
+  image-rendering: crisp-edges;
 }
 
 .plus-btn::before {
-  width: 0.7rem;
   height: 2px;
+  width: 0.7rem;
 }
 
 .plus-btn::after {

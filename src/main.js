@@ -1,12 +1,14 @@
 const { app, ipcMain, dialog, shell, BrowserWindow } = require('electron');
-const path = require('node:path');
+
 // const https = require('node:https');
-const url = require('node:url');
+
+const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
 // const Store = require('electron-store');
 const { exec } = require('node:child_process');
-const multer = require('multer');
+
+const { serverBehavior } = require('./serverBehavior.js');
 
 import Store from 'electron-store';
 import { get } from 'node:http';
@@ -137,20 +139,31 @@ if (require('electron-squirrel-startup')) {
 }
 
 async function handleFileOpen(e, path) {
-  console.log("Opening specific file: ", path);
   if (path == null) {
+    console.log("openFile called with no specified path. Opening file dialog.");
     const { canceled, filePaths } = await dialog.showOpenDialog({});
     if (!canceled && filePaths.length > 0) {
       path = filePaths[0];
     } else {
       return [0, "null", 0];
     }
+  } else {
+    console.log("openFile(" + path + ") called.");
   }
 
   let uid = Math.floor(Math.random() * 1000000);
-  urlPathMappings[uid] = [path, true];
+  urlPathMappings[uid] = [path, true, 1]; // 1 indicates this is a file path, not a text buffer
   const fileSize = fs.statSync(path).size;
-  return [uid, path, fileSize]; // return to renderer
+  return [uid, path.replace(/^.*[\\/]/, ''), fileSize]; // return to renderer
+}
+
+async function addTextToOutbox(event, text) {
+  console.log("Adding text to outbox: ", text);
+  const buffer = Buffer.from(text, 'utf-8');
+
+  let uid = Math.floor(Math.random() * 1000000);
+  urlPathMappings[uid] = [buffer, true, 2]; // 2 indicates this is a text buffer, not a file path
+  return [uid, buffer.subarray(0, 128).toString('utf-8'), buffer.length]; // uid, filename, filesize
 }
 
 // toggle a file on/off
@@ -310,14 +323,14 @@ const createWindow = () => {
 //     }
 // });
 
-const upload = multer({ storage: multer.memoryStorage() });
+
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
-  ipcMain.handle('openSpecificFile', handleFileOpen);
+  ipcMain.handle('addTextToOutbox', addTextToOutbox);
   ipcMain.handle('setServing', toggleSpecificItem);
   ipcMain.handle('getDefaultIP', getDefaultIP);
   ipcMain.handle('setIP', (event, newIP) => {setIP(newIP); console.log("Set new IP to: ", newIP);});
@@ -380,13 +393,13 @@ app.whenReady().then(() => {
           cert: cert,
         };
       
-        server = require('https').createServer(SSLOptions, serverBehavior);
+        server = require('https').createServer(SSLOptions, serverBehavior(projectRoot, addPendingFile, notifyRendererOfNewFile, urlPathMappings, mainWindow));
       } catch (e) {
         console.log("Error initializing HTTPS server: ", e);
         return false;
       }
     } else {
-      server = require('http').createServer(serverBehavior);
+      server = require('http').createServer(serverBehavior(projectRoot, addPendingFile, notifyRendererOfNewFile, urlPathMappings, mainWindow));
     }
     let p = userConfig.get('port');
     if (!p || isNaN(p)) {
@@ -400,120 +413,7 @@ app.whenReady().then(() => {
     return true;
   }
 
-  const serverBehavior = async (req, res) => {
-    const parsedUrl = url.parse(req.url, true);
-    const urlFilter = /^\/get\/(\d+)$/;
 
-    if (parsedUrl.pathname == "/intake") {
-      if (req.method == 'POST') {
-        await upload.single('file')(req, res, function (err) {
-          if (!req.file) {
-            return;
-          }
-          
-          if (err) {
-            console.log("Error uploading file: ", err);
-            res.statusCode = 500;
-            res.end("Error uploading file");
-            return;
-          }
-          // console.log(req.file.buffer);
-
-          const file = req.file;
-          const uid = addPendingFile(file);
-          notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size, savedAt: ""});
-
-          res.statusCode = 200;
-          res.end("OK");
-          return;
-        });
-        return;
-      } else {
-        res.statusCode = 405;
-        res.end("Method not allowed");
-        return;
-      }
-    }
-
-    if (parsedUrl.pathname == "/send") {
-      const filePath = path.join(projectRoot, 'static', 'clientSend.html');
-      let data = fs.readFileSync(filePath);
-
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(data);
-
-      return;
-    }
-    
-    if (parsedUrl.pathname == "/clientSend.css") {
-      const filePath = path.join(projectRoot, 'static', 'clientSend.css');
-      fs.readFile(filePath, (err, data) => {
-          if (err) {
-              res.writeHead(500, { 'Content-Type': 'text/plain' });
-              res.end('Server Error: ' + err);
-              return;
-          }
-
-          res.writeHead(200, { 'Content-Type': 'text/css' });
-          res.end(data);
-      });
-
-      return;
-    }
-
-    let filePath = null;
-    let index = null;
-
-    if (urlFilter.test(parsedUrl.pathname)) {
-      const match = parsedUrl.pathname.match(urlFilter);
-
-      index = match[1];
-      filePath = urlPathMappings[index][0];
-
-      if (urlPathMappings[index][1] == false) {
-        res.statusCode = 404;
-        res.end("Not found");
-        return;
-      }
-    }
-
-    if (filePath == null) {
-      res.statusCode = 500;
-      res.end("Unknown request")
-      return;
-    }
-
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-      if (err) {
-        res.statusCode = 404;
-        res.end("Not found");
-      }
-
-      fs.stat(filePath, (err, stats) => {
-        if (err) {
-          res.statusCode = 500;
-          res.end("Server error");
-          return;
-        }
-
-        res.setHeader('Content-Length', stats.size);
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filePath)}`);
-
-        const stream = fs.createReadStream(filePath);
-
-        stream.on('error', (err) => {
-          console.error('Error reading file: ', err);
-          if (!res.headersSent) {
-            res.statusCode = 500;
-            res.end("Server error");
-          }
-        });
-
-        stream.pipe(res);
-      });
-    });
-  };
 
   initServer(protocol);
 

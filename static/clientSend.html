@@ -27,14 +27,17 @@
   <body>
     <div class="main-content">
       <form id="upload-form" method="post" enctype="multipart/form-data">
-        <span class="section-title"><strong>Upload a file</strong></span>
+        <span class="section-title"><strong>Send a file</strong></span>
         <hr style="width:100%" />
 
-        <label for="file-input" class="form-field bttn">Choose a file</label>
+        <label for="file-input" class="form-field bttn file-input">Choose a file</label>
         <input id="file-input" name="file" type="file" />
 
         <span class="file-name" id="file-name">No file chosen</span>
-        <input type="submit" class="form-field bttn" value="Upload" />
+
+        <input type="text" id="text" name="text" class="bttn form-field" placeholder="...or add text"/>
+
+        <input id="submit-button" type="submit" class="form-field bttn" value="Send" />
       </form>
       <div class="spinner-container" style="display: none;">
         <div class="spinner"></div>
@@ -65,6 +68,7 @@
           document.getElementById("success-message").style.display = "flex";
           document.getElementById('success-filename').textContent = document.getElementById('file-name').textContent;
           document.getElementById('file-name').textContent = "No file chosen";
+          document.getElementById("text").value = "";
           document.getElementById("upload-form").reset();
         }
       });

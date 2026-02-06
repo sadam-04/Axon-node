@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     setTitle: (title) => ipcRenderer.send('set-title', title),
     ping: () => ipcRenderer.invoke('ping'),
     openFile: () => ipcRenderer.invoke('openFile'),
+
     setServing: (shouldServe, id) => ipcRenderer.invoke('setServing', shouldServe, id),
     getDefaultIP: () => ipcRenderer.invoke('getDefaultIP'),
     setIP: (newIP) => ipcRenderer.invoke('setIP', newIP),
@@ -26,15 +27,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getPort: () => ipcRenderer.invoke('getPort'),
     setPort: (newPort) => ipcRenderer.invoke('setPort', newPort),
 
-    openSpecificFile (file) {
-        console.log("Preload openSpecificFile called with file: ", file);
+    openFile (file) {
+        console.log("Preload openFile called with file: ", file);
         if (file == null) {
             console.log("No file specified, opening file dialog. file = ", file);
             return ipcRenderer.invoke('openFile', null);
         }
         let path = webUtils.getPathForFile(file);
-        return ipcRenderer.invoke('openSpecificFile', path);
+        return ipcRenderer.invoke('openFile', path);
     },
+    addTextToOutbox: (text) => ipcRenderer.invoke('addTextToOutbox', text),
 });
 
 contextBridge.exposeInMainWorld('recvFileAPI', {
