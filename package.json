@@ -38,7 +38,6 @@
     "style-loader": "3.3.4"
   },
   "dependencies": {
-    "electron-forge": "5.2.4",
     "electron-squirrel-startup": "^1.0.1",
     "electron-store": "^11.0.2",
     "multer": "^2.0.2",
