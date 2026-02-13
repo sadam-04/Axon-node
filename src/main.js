@@ -67,7 +67,11 @@ function savePendingFile(event, _id, callback=null) {
     fs.mkdirSync(path.join(projectRoot, "uploads"));
   }
 
-  const filePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.originalname);
+  let filePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.originalname);
+  if (file.originalname == "text") {
+    filePath = filePath + ".txt";
+  }
+
   console.log("File found, saving as " + filePath);
 
   fs.writeFile(filePath, file.buffer, (err) => {
@@ -77,7 +81,7 @@ function savePendingFile(event, _id, callback=null) {
       return;
     }
     
-    pendingFiles.get(_id).savedPath = filePath;
+    pendingFiles.get(id).savedPath = filePath;
     
     if (callback) {
       callback();

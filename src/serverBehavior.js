@@ -39,25 +39,58 @@ module.exports = {
             const uid = addPendingFile(file);
             notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size, savedAt: ""});
 
-            res.statusCode = 200;
-            res.end("OK");
-            return;
+            // res.statusCode = 200;
+            // res.end("OK");
+            // return;
           }
 
           //process text if present
           let text = req.body.text;
           console.log("Received text: ", text);
           if (text) {
-            let uid = addPendingFile({originalname: "url", buffer: Buffer.from(text), size: text.length});
+            // check if its a url or general text
+            var uid;
+            if (URL.canParse(text)) {
+              uid = addPendingFile({originalname: "url", buffer: Buffer.from(text), size: text.length});
+            } else {
+              uid = addPendingFile({originalname: "text", buffer: Buffer.from(text), size: text.length});
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+            // TODO: indicate to frontend that this is a URL, add copy/open options in GUI
             notifyRendererOfNewFile(mainWindow, {filename: text, id: uid, size: text.length});
-            res.statusCode = 200;
-            res.end("OK");
-            return;
-          } else {
-            res.statusCode = 405;
-            res.end("Method not allowed");
-            return;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
           }
+
+          res.statusCode = 200;
+          res.end("OK");
+          return;
         });
       }
     } else if (parsedUrl.pathname == "/send") {
