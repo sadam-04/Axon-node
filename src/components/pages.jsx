@@ -81,7 +81,7 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
             <div id="left-summary-panel">
             <div id="recv-panel">
-                <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", borderBottom: "1px solid #383838", paddingBottom: "4px" }}>
+                <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", paddingBottom: "4px" }}>
                 <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
                 <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                     <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}</span>
@@ -97,7 +97,7 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
                     buttonAction={() => {setSelectedRFile(i)}}
                     selected={activeRFile === i}
                     enabled={true}
-                    customStyle={{}}
+                    customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "2px auto"}}
                     shadeA={"#282828"}
                     shadeB={"#303030"}
                     shadeC={"#343434"}
