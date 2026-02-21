@@ -3,6 +3,10 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
+    name: "Axon",
+    appCopyright: "Copyright (c) 2025-2026 Adam Saich",
+    executableName: "axon",
+    icon: 'icon/axon',
     asar: true,
     extraResource: ['static'],
   },
@@ -10,20 +14,21 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        setupIcon: 'icon/axon.ico',
+        
+      },
     },
-    {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
-    },
-    {
-      name: '@electron-forge/maker-deb',
-      config: {},
-    },
-    {
-      name: '@electron-forge/maker-rpm',
-      config: {},
-    },
+    // {
+    //   name: '@electron-forge/maker-msix',
+    //   config: {
+    //     manifestVariables: {
+    //       publisher: 'Adam Saich',
+    //       packageVersion: '0.1.0-beta',
+    //       appDisplayName: 'Axon',
+    //     },
+    //   }
+    // }
   ],
   plugins: [
     {
