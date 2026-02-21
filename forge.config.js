@@ -16,7 +16,8 @@ module.exports = {
       name: '@electron-forge/maker-squirrel',
       config: {
         setupIcon: 'icon/axon.ico',
-        
+        iconUrl: 'https://raw.githubusercontent.com/sadam-04/Axon-node/refs/heads/main/icon/axon.ico',
+        skipUpdateIcon: true
       },
     },
     // {
