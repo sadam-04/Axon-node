@@ -28,17 +28,31 @@ var protocol = 'HTTP';
 
 //recv mode pending file buffers
 const pendingFiles = new Map();
-function addPendingFile(file) {
+function addInboxItem(type, filename, url, size, buffer) {
   const uid = Math.floor(Math.random() * 1000000);
 
   pendingFiles.set(uid, {
-    buffer: file.buffer,
-    originalname: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size,
+    buffer: buffer,
+    filename: filename,
+    type: type,
+    mimetype: type == "url" ? "text/uri-list" : type == "text" ? "text/plain" : "application/octet-stream",
+    size: size,
+    url: url,
     savedPath: "",
   });
-  console.log("Added pending file with id: " + uid);
+  // console.log("Added pending file with id: " + uid);
+
+  let displayname = "item";
+  if (type === "file") {
+    displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
+  } else if (type === "url") {
+    displayname = "URL (" + URL.parse(url).hostname + ")";
+  } else if (type === "text") {
+    displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
+  }
+
+  notifyRendererOfNewFile(BrowserWindow.getAllWindows()[0], {displayname: displayname, url: url, id: uid, size: size, type: type});
+
   return uid;
 }
 
@@ -57,6 +71,7 @@ function savePendingFile(event, _id, callback=null) {
 
   const file = pendingFiles.get(id);
   
+  console.log ("File to save: ", file);
   
   if (!file) {
     console.log("File not found in pendingFiles map.");
@@ -67,29 +82,31 @@ function savePendingFile(event, _id, callback=null) {
     fs.mkdirSync(path.join(projectRoot, "uploads"));
   }
 
-  let filePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.originalname);
-  if (file.originalname == "text") {
-    filePath = filePath + ".txt";
+  let savePath = "";
+
+  if (file.type === "file") {
+    savePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.filename);
+  } else if (file.type === "text") {
+    savePath = path.join(projectRoot, "uploads", id.toString() + "-text.txt");
+  } else if (file.type === "url") {
+    savePath = path.join(projectRoot, "uploads", id.toString() + "-url.txt");
+    // console.log("Saving URL text to file: ", file.buffer.toString('utf-8'));
   }
 
-  console.log("File found, saving as " + filePath);
-
-  fs.writeFile(filePath, file.buffer, (err) => {
+  fs.writeFile(savePath, file.buffer, (err) => {
     if (err) {
       console.error("Error saving file: ", err);
       window.webContents.send('savePendingFileResult', {id: id, path: ""});
       return;
     }
     
-    pendingFiles.get(id).savedPath = filePath;
+    pendingFiles.get(id).savedPath = savePath;
     
     if (callback) {
       callback();
     }
 
-    // pendingFiles.delete(id);
-    window.webContents.send('savePendingFileResult', {id: id, path: filePath });
-    // console.log("File saved and removed from pendingFiles map.");
+    window.webContents.send('savePendingFileResult', {id: id, path: savePath });
   });
 }
 
@@ -397,13 +414,13 @@ app.whenReady().then(() => {
           cert: cert,
         };
       
-        server = require('https').createServer(SSLOptions, serverBehavior(projectRoot, addPendingFile, notifyRendererOfNewFile, urlPathMappings, mainWindow));
+        server = require('https').createServer(SSLOptions, serverBehavior(projectRoot, addInboxItem, notifyRendererOfNewFile, urlPathMappings, mainWindow));
       } catch (e) {
         console.log("Error initializing HTTPS server: ", e);
         return false;
       }
     } else {
-      server = require('http').createServer(serverBehavior(projectRoot, addPendingFile, notifyRendererOfNewFile, urlPathMappings, mainWindow));
+      server = require('http').createServer(serverBehavior(projectRoot, addInboxItem, notifyRendererOfNewFile, urlPathMappings, mainWindow));
     }
     let p = userConfig.get('port');
     if (!p || isNaN(p)) {

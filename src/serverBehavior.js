@@ -15,7 +15,7 @@ async function urlWrapper(text) {
 }
 
 module.exports = {
-  serverBehavior: (projectRoot, addPendingFile, notifyRendererOfNewFile, urlPathMappings, mainWindow) => { return async (req, res) => {
+  serverBehavior: (projectRoot, addInboxItem, notifyRendererOfNewFile, urlPathMappings, mainWindow) => { return async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/;
 
@@ -34,58 +34,30 @@ module.exports = {
               return;
             }
             
-            const file = req.file;
+            let file = req.file;
             console.log("adding pending file: ", file);
-            const uid = addPendingFile(file);
-            notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size, savedAt: ""});
+            addInboxItem("file", file.originalname, null, file.size, file.buffer);
 
-            // res.statusCode = 200;
-            // res.end("OK");
-            // return;
+            // notifyRendererOfNewFile(mainWindow, {filename: file.originalname, url: null, id: uid, size: file.size, savedAt: "", type: "file"});
           }
+
+          //addInboxItem(type, filename, URL, size, buffer)
 
           //process text if present
           let text = req.body.text;
-          console.log("Received text: ", text);
           if (text) {
+            console.log("Received text: ", text);
             // check if its a url or general text
-            var uid;
+            let uid = null;
             if (URL.canParse(text)) {
-              uid = addPendingFile({originalname: "url", buffer: Buffer.from(text), size: text.length});
+              console.log("Text is a URL");
+              uid = addInboxItem("url", "url", text, text.length, Buffer.from(text));
+              // notifyRendererOfNewFile(mainWindow, {filename: "url", url: text, id: uid, size: text.length, type: "url"});
             } else {
-              uid = addPendingFile({originalname: "text", buffer: Buffer.from(text), size: text.length});
+              console.log("Text is general text");
+              uid = addInboxItem("text", "text", null, text.length, Buffer.from(text));
+              // notifyRendererOfNewFile(mainWindow, {filename: "text", url: null, id: uid, size: text.length, type: "text"});
             }
-
-
-
-
-
-
-
-
-
-
-
-
-
-            // TODO: indicate to frontend that this is a URL, add copy/open options in GUI
-            notifyRendererOfNewFile(mainWindow, {filename: text, id: uid, size: text.length});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
           }
 
           res.statusCode = 200;

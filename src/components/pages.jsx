@@ -93,7 +93,7 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
 
                     <ResponsiveButton
                     key={file.id}
-                    label={<SummaryListItem fileName={file.filename} onCloseClick={() => handleDiscardPendingFile(pendingFiles, activeRFile, setSelectedRFile, setPendingFiles)} />}
+                    label={<SummaryListItem fileName={file.displayname} onCloseClick={() => handleDiscardPendingFile(pendingFiles, activeRFile, setSelectedRFile, setPendingFiles)} />}
                     buttonAction={() => {setSelectedRFile(i)}}
                     selected={activeRFile === i}
                     enabled={true}
@@ -132,47 +132,65 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
                 whiteSpace: "normal",
             }}>
                 <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
-                <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
-                    <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.filename} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
-                </div>
+                    <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
+                        <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.displayname} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
+                    </div>
 
-                <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
+                    <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
+                        {pendingFiles[activeRFile]?.type === "url" ? (
+                            <ResponsiveButton
+                            label={"Open URL"}
+                            buttonAction={async () => {window.location.href = pendingFiles[activeRFile].url;}}
+                            selected={false}
+                            enabled={true}
+                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            shadeA={"#303030"}
+                            shadeB={"#383838"}
+                            shadeC={"#404040"}
+                            />
+                        ) : (
+                            null
+                        )}
 
-                    <ResponsiveButton
-                    label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
-                    buttonAction={() => {window.recvFileAPI.saveFile(pendingFiles[activeRFile].id, ()=>{console.log("TESTING")});}}
-                    selected={false}
-                    enabled={!hasCurrentFileBeenSaved()}
-                    disabledStyle={{color: "#808080"}}
-                    customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                    shadeA={"#303030"}
-                    shadeB={"#383838"}
-                    shadeC={"#404040"}
-                    />
+                        {pendingFiles[activeRFile]?.type === "file" || pendingFiles[activeRFile]?.type === "text" ? (
+                            hasCurrentFileBeenSaved() ? (
+                                <ResponsiveButton
+                                label={"Go to folder"}
+                                buttonAction={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}
+                                selected={false}
+                                enabled={hasCurrentFileBeenSaved()}
+                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                                disabledStyle={{color: "#808080"}}
+                                shadeA={"#303030"}
+                                shadeB={"#383838"}
+                                shadeC={"#404040"}
+                                />
+                            ) : (
+                                <ResponsiveButton
+                                label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
+                                buttonAction={() => {window.recvFileAPI.saveFile(pendingFiles[activeRFile].id, ()=>{console.log("TESTING")});}}
+                                selected={false}
+                                enabled={!hasCurrentFileBeenSaved()}
+                                disabledStyle={{color: "#808080"}}
+                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                                shadeA={"#303030"}
+                                shadeB={"#383838"}
+                                shadeC={"#404040"}
+                                />
+                            )) : null
+                        }
 
-                    <ResponsiveButton
-                    label={"Go to folder"}
-                    buttonAction={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}
-                    selected={false}
-                    enabled={hasCurrentFileBeenSaved()}
-                    customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                    disabledStyle={{color: "#808080"}}
-                    shadeA={"#303030"}
-                    shadeB={"#383838"}
-                    shadeC={"#404040"}
-                    />
-
-                    <ResponsiveButton
-                    label={"Discard"}
-                    buttonAction={() => handleDiscardPendingFile(pendingFiles, activeRFile, setSelectedRFile, setPendingFiles)}
-                    selected={false}
-                    enabled={true}
-                    customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                    shadeA={"#303030"}
-                    shadeB={"#983838"}
-                    shadeC={"#c04040"}
-                    />
-                </div>
+                        <ResponsiveButton
+                        label={"Discard"}
+                        buttonAction={() => handleDiscardPendingFile(pendingFiles, activeRFile, setSelectedRFile, setPendingFiles)}
+                        selected={false}
+                        enabled={true}
+                        customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                        shadeA={"#303030"}
+                        shadeB={"#983838"}
+                        shadeC={"#c04040"}
+                        />
+                    </div>
                 </div>
                 <div style={{display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "flex-start", width: "100%", height: "40px", boxSizing: "border-box"}}>
                 <div style={{width: "18px", flexGrow: 0}} />
