@@ -6,7 +6,7 @@ module.exports = {
     name: "Axon",
     appCopyright: "Copyright (c) 2025-2026 Adam Saich",
     executableName: "axon",
-    icon: 'icon/axon',
+    icon: 'static/clear',
     asar: true,
     extraResource: ['static'],
   },
@@ -15,8 +15,8 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        setupIcon: 'icon/axon.ico',
-        iconUrl: 'https://raw.githubusercontent.com/sadam-04/Axon-node/refs/heads/main/icon/axon.ico',
+        setupIcon: 'static/clear.ico',
+        iconUrl: 'https://raw.githubusercontent.com/sadam-04/Axon-node/refs/heads/main/static/clear.ico',
         skipUpdateIcon: true
       },
     },

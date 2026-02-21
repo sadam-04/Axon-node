@@ -223,6 +223,7 @@ const createWindow = () => {
     minWidth: 800,
     minHeight: 310,
     frame: true,
+    icon: path.join(projectRoot, 'static/clear.ico'),
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',
     webPreferences: {
