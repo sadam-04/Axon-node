@@ -1,3 +1,5 @@
+const { app } = require('electron');
+
 const multer = require('multer');
 const url = require('node:url');
 const path = require('node:path');
@@ -5,8 +7,12 @@ const fs = require('node:fs');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+const projectRoot = app.isPackaged
+  ? process.resourcesPath
+  : app.getAppPath();
+
 async function urlWrapper(text) {
-  let page = fs.readFileSync("src/url-wrapper-2.html", "utf-8");
+  let page = fs.readFileSync(path.join(projectRoot, "static", "url-wrapper-2.html"), "utf-8");
   page = page.replace(/{{url}}/g, text);
   console.log("Returning wrapped URL page of length ", page.length);
   return page;
