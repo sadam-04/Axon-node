@@ -15,7 +15,7 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        setupIcon: 'C:/repos/Axon-node/icon/axon.ico',
+        setupIcon: 'icon/axon.ico',
         
       },
     },
