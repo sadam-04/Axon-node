@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+
+    <title>Axon</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+      body {
+          font-family: Arial, sans-serif;
+          background-color: #202020;
+          color: #eee;
+      }
+
+      .main-content {
+          position: absolute;
+          width: 25rem;
+          margin: 25px;
+          height: 150px;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+
+          margin: auto;
+      }
+
+      .section-title {
+          font-size: 20px;
+          margin-bottom: 15px;
+      }
+
+      #url-text {
+          word-break: break-all;
+          margin-bottom: 15px;
+      }
+
+      .button-wrapper {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+        gap: 10px;
+        margin: auto;
+      }
+
+      button {
+          padding: 10px;
+          font-size: 16px;
+          cursor: pointer;
+          background-color: #ccc;
+          color: #444;
+          border: 1px solid #888;
+          border-radius: 8px;
+          width: 11rem;
+      }
+
+      button:hover {
+          background-color: #c4c4c4;
+      }
+    </style>
+
+    <script>
+      function open_link() {
+          window.open('{{url}}', '_blank');
+      }
+    </script>
+
+  </head>
+  <body>
+    <div class="main-content">
+        <span class="section-title"><strong>axon</strong></span>
+
+        <div id="url-text">{{url}}</div>
+        <div class="button-wrapper">
+            <button id="open-link" onClick="open_link()">Open URL</button>
+            <button id="copy-link">Copy URL</button>
+        </div>
+    </div>
+  </body>
+</html>

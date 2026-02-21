@@ -1,45 +1,58 @@
-const { app, ipcMain, dialog, BrowserWindow } = require('electron');
+const { app, ipcMain, dialog, shell, BrowserWindow } = require('electron');
+
 const path = require('node:path');
-// const https = require('node:https');
-const url = require('node:url');
 const fs = require('node:fs');
 const os = require('node:os');
-// const Store = require('electron-store');
 const { exec } = require('node:child_process');
-const multer = require('multer');
+
+const { serverBehavior } = require('./serverBehavior.js');
 
 import Store from 'electron-store';
+import { get } from 'node:http';
 const userConfig = new Store();
 
-// red: #FF4a51
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (require('electron-squirrel-startup')) {
+  app.quit();
+}
 
 const projectRoot = app.isPackaged
   ? process.resourcesPath
   : app.getAppPath();
 
-// send mode url paths
-var urlPathMappings = {};
-
-// var protocol = userConfig.get('useHTTPS') == true ? 'HTTPS' : 'HTTP';
 var protocol = 'HTTP';
 
-//recv mode pending file buffers
-const pendingFiles = new Map();
-function addPendingFile(file) {
+var outboxItems = new Map();
+const inboxItems = new Map();
+
+function addInboxItem(type, filename, url, size, buffer) {
   const uid = Math.floor(Math.random() * 1000000);
 
-  pendingFiles.set(uid, {
-    buffer: file.buffer,
-    originalname: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size,
+  inboxItems.set(uid, {
+    buffer: buffer,
+    filename: filename,
+    type: type,
+    mimetype: type == "url" ? "text/uri-list" : type == "text" ? "text/plain" : "application/octet-stream",
+    size: size,
+    url: url,
     savedPath: "",
   });
-  console.log("Added pending file with id: " + uid);
+
+  let displayname = "item";
+  if (type === "file") {
+    displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
+  } else if (type === "url") {
+    displayname = "URL (" + URL.parse(url).hostname + ")";
+  } else if (type === "text") {
+    displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
+  }
+
+  notifyRendererOfNewFile(BrowserWindow.getAllWindows()[0], {displayname: displayname, url: url, id: uid, size: size, type: type});
+
   return uid;
 }
 
-function savePendingFile(event, _id, callback=null) {
+function savePendingFile(event, _id) {
 
   let allWindows = BrowserWindow.getAllWindows();
   if (allWindows.length === 0) {
@@ -47,16 +60,16 @@ function savePendingFile(event, _id, callback=null) {
   }
   const window = allWindows[0];
   
-
   const id = JSON.parse(_id);
 
   console.log("Saving pending file with id: " + id);
 
-  const file = pendingFiles.get(id);
+  const file = inboxItems.get(id);
   
+  console.log ("File to save: ", file);
   
   if (!file) {
-    console.log("File not found in pendingFiles map.");
+    console.log("File not found in inboxItems map.");
     return;
   }
 
@@ -64,30 +77,31 @@ function savePendingFile(event, _id, callback=null) {
     fs.mkdirSync(path.join(projectRoot, "uploads"));
   }
 
-  const filePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.originalname);
-  console.log("File found, saving as " + filePath);
+  let savePath = "";
 
-  fs.writeFile(filePath, file.buffer, (err) => {
+  if (file.type === "file") {
+    savePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.filename);
+  } else if (file.type === "text") {
+    savePath = path.join(projectRoot, "uploads", id.toString() + "-text.txt");
+  } else if (file.type === "url") {
+    savePath = path.join(projectRoot, "uploads", id.toString() + "-url.txt");
+  }
+
+  fs.writeFile(savePath, file.buffer, (err) => {
     if (err) {
       console.error("Error saving file: ", err);
       window.webContents.send('savePendingFileResult', {id: id, path: ""});
       return;
     }
     
-    pendingFiles.get(_id).savedPath = filePath;
-    
-    if (callback) {
-      callback();
-    }
+    inboxItems.get(id).savedPath = savePath;
 
-    // pendingFiles.delete(id);
-    window.webContents.send('savePendingFileResult', {id: id, path: filePath });
-    // console.log("File saved and removed from pendingFiles map.");
+    window.webContents.send('savePendingFileResult', {id: id, path: savePath });
   });
 }
 
 function revealPendingFile(event, _id) {
-  const file = pendingFiles.get(_id);
+  const file = inboxItems.get(_id);
   if (!file) return;
 
   if (!file.savedPath || file.savedPath === "") return;
@@ -102,90 +116,72 @@ function revealPendingFile(event, _id) {
     console.log(`stdout: ${stdout}`);
     console.error(`stderr: ${stderr}`);
   });
-
-  // savePendingFile(event, _id, () => {
-  //   if (file) {
-  //     // const filePath = path.join(projectRoot, "uploads", file.originalname);
-  //     const filePath = file.savedPath;
-
-  //     exec(`explorer.exe "${path.dirname(filePath)}"`, (error, stdout, stderr) => {
-  //       if (error) {
-  //         console.error(`exec error: ${error}`);
-  //         return;
-  //       }
-  //       console.log(`stdout: ${stdout}`);
-  //       console.error(`stderr: ${stderr}`);
-  //     });
-  //   }
-  // });
-
-  // console.log("Opening saved file with id: " + _id);
-
 }
 
-function discardPendingFile(event, _id) {
-  // const id = JSON.parse(_id);
-  pendingFiles.delete(_id);
-}
-
-process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
-
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require('electron-squirrel-startup')) {
-  app.quit();
-}
-
-async function handleFileOpen() {
-  const { canceled, filePaths } = await dialog.showOpenDialog({});
-  if (!canceled && filePaths.length > 0) {
-    //const data = await fs.readFile(filePaths[0], 'utf-8');
-    let uid = Math.floor(Math.random() * 1000000);
-    // const uurl = `${protocol}://localhost:3030/get/${uid}`;
-    urlPathMappings[uid] = [filePaths[0], true];
-    const fileSize = fs.statSync(filePaths[0]).size;
-    return [uid, filePaths[0], fileSize]; // return to renderer
+async function handleFileOpen(e, path) {
+  if (path == null) {
+    const { canceled, filePaths } = await dialog.showOpenDialog({});
+    if (!canceled && filePaths.length > 0) {
+      path = filePaths[0];
+    } else {
+      return [0, "null", 0];
+    }
   }
-  return [0, "null", 0];
+
+  let uid = Math.floor(Math.random() * 1000000);
+  outboxItems.set(uid, [path, "file"]);
+
+  const fileSize = fs.statSync(path).size;
+  return [uid, path.replace(/^.*[\\/]/, ''), fileSize]; // return to renderer
 }
 
-// toggle a file on/off
-async function toggleSpecificItem(event, shouldServe, id) {
-  console.log(`Set checkbox ${id} to ${shouldServe}`);
-  if (!(id in urlPathMappings)) {
-    return false;
+async function addTextToOutbox(event, text) {
+  const buffer = Buffer.from(text, 'utf-8');
+
+  let uid = Math.floor(Math.random() * 1000000);
+  outboxItems.set(uid, [buffer, "text"]);
+  return [uid, buffer.subarray(0, 128).toString('utf-8'), buffer.length]; // uid, filename, filesize
+}
+
+function getAnyIP() {
+  const addrs = listAddrs();
+  if (addrs.length > 0) {
+    return addrs[0];
+  } else {
+    return "0.0.0.0";
   }
-  urlPathMappings[id][1] = shouldServe ? true : false;
-  return true;
 }
 
 function getDefaultIP() {
-  const interfaces = os.networkInterfaces();
-  for (const name in interfaces) {
-    const addrs = interfaces[name];
-    for (const addr of addrs) {
-      if (addr.family == 'IPv4' && !addr.internal && !addr.address.startsWith("169.254")) {
-        return addr.address;
-      }
-    }
+  let ip = userConfig.get('lastUsedIP');
+
+  console.log("last ip: ", ip);
+  if (ip != null && listAddrs().includes(ip)) {
+    console.log(ip);
+    return ip;
+  } else {
+    console.log("ip null or not contained in ", listAddrs());
   }
-  return null;
+
+  console.log("No valid saved IP, getting any available IP.");
+  return getAnyIP();
+}
+
+function setIP(newIP) {
+  userConfig.set('lastUsedIP', newIP);
 }
 
 function listAddrs() {
-  // console.log("listAddrs called");
   const interfaces = os.networkInterfaces();
   let filteredAddrs = [];
   for (const name in interfaces) {
     const addrs = interfaces[name];
     for (const addr of addrs) {
-      // console.log(addr.address);
       if (addr.family == 'IPv4' && !addr.internal && !addr.address.startsWith("169.254")) {
-        // return addr.address;
         filteredAddrs.push(addr.address);
       }
     }
   }
-  // console.log("listAddrs returning:", filteredAddrs);
   return filteredAddrs;
 }
 
@@ -204,7 +200,6 @@ function attemptToggleProtocol(initServer){
         console.log("Failed to switch to HTTPS, keeping HTTP.");
         initServer('HTTP');
         // inform UI of failure
-        
       } else {
         // succeeded, update protocol
         protocol = 'HTTPS';
@@ -216,7 +211,6 @@ function attemptToggleProtocol(initServer){
     }
     console.log("Protocol updated to " + protocol);
     userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
-    // initServer();
     return [protocol, res];
   }
 }
@@ -235,6 +229,7 @@ const createWindow = () => {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
       devTools: true,
+      sandbox: true,
     },
     ...(process.platform !== 'darwin' ? { titleBarOverlay: {
       color: '#202020ff',
@@ -243,38 +238,46 @@ const createWindow = () => {
     }} : {})
   });
 
-  // and load the index.html of the app.
+  const wc = mainWindow.webContents;
+  const allowedPrefix = MAIN_WINDOW_WEBPACK_ENTRY;
+
+  wc.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+
+  wc.on("will-navigate", (event, url) => {
+    if (!url.startsWith(allowedPrefix)) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
+
+  wc.on("will-redirect", (event, url) => {
+    if (!url.startsWith(allowedPrefix)) {
+      event.preventDefault();
+    }
+  });
+
+  wc.setWindowOpenHandler(() => ({ action: "deny" }));
+  
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  console.log("Loading default view: " + MAIN_WINDOW_WEBPACK_ENTRY);
 
   return mainWindow;
 };
 
-// const multerDisk = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//         cb(null, 'uploads/'); // Specify the directory to save files
-//     },
-//     filename: function (req, file, cb) {
-//         // Customize filename to avoid conflicts
-//         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-//     }
-// });
-
-const upload = multer({ storage: multer.memoryStorage() });
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
-  ipcMain.handle('setServing', toggleSpecificItem);
+  ipcMain.handle('addTextToOutbox', addTextToOutbox);
   ipcMain.handle('getDefaultIP', getDefaultIP);
+  ipcMain.handle('setIP', (event, newIP) => {setIP(newIP); console.log("Set new IP to: ", newIP);});
   ipcMain.handle('listAddrs', listAddrs);
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
-  ipcMain.handle('discardPendingFile', discardPendingFile);
+  ipcMain.handle('discardPendingFile', (event, id) => {inboxItems.delete(id)});
+  ipcMain.handle('discardOutboxItem', (event, id) => {outboxItems.delete(id)});
   ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
   ipcMain.handle('setPort', (event, newPort) => {userConfig.set('port', newPort); initServer(protocol);});
   ipcMain.handle('getPort', () => {
@@ -296,7 +299,7 @@ app.whenReady().then(() => {
 
   console.log("Protocol: " + protocol);
 
-  const mainWindow = createWindow();
+  createWindow();
 
   function initServer(proto) {
     console.log("Initializing server with protocol: " + proto);
@@ -330,13 +333,13 @@ app.whenReady().then(() => {
           cert: cert,
         };
       
-        server = require('https').createServer(SSLOptions, serverBehavior);
+        server = require('https').createServer(SSLOptions, serverBehavior(projectRoot, addInboxItem, outboxItems));
       } catch (e) {
         console.log("Error initializing HTTPS server: ", e);
         return false;
       }
     } else {
-      server = require('http').createServer(serverBehavior);
+      server = require('http').createServer(serverBehavior(projectRoot, addInboxItem, outboxItems));
     }
     let p = userConfig.get('port');
     if (!p || isNaN(p)) {
@@ -350,118 +353,6 @@ app.whenReady().then(() => {
     return true;
   }
 
-  const serverBehavior = (req, res) => {
-    const parsedUrl = url.parse(req.url, true);
-    const urlFilter = /^\/get\/(\d+)$/;
-
-    if (parsedUrl.pathname == "/send") {
-      if (req.method == 'POST') {
-        upload.single('file')(req, res, function (err) {
-          if (!req.file) {
-            return;
-          }
-          
-          if (err) {
-            res.statusCode = 500;
-            res.end("Error uploading file");
-            return;
-          }
-          // console.log(req.file.buffer);
-
-          const file = req.file;
-          const uid = addPendingFile(file);
-          notifyRendererOfNewFile(mainWindow, {filename: file.originalname, id: uid, size: file.size, savedAt: ""});
-        });
-      }
-      
-      const filePath = path.join(projectRoot, 'src', 'clientSend.html');
-      fs.readFile(filePath, (err, data) => {
-          if (err) {
-              res.writeHead(500, { 'Content-Type': 'text/plain' });
-              res.end('Server Error: ' + err);
-              return;
-          }
-
-          res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(data);
-      });
-
-      // res.statusCode = 200;
-      // res.end("send endpoint");
-      // console.log("returning...");
-      return;
-    }
-
-    if (parsedUrl.pathname == "/clientSend.css") {
-      const filePath = path.join(projectRoot, 'src', 'clientSend.css');
-      fs.readFile(filePath, (err, data) => {
-          if (err) {
-              res.writeHead(500, { 'Content-Type': 'text/plain' });
-              res.end('Server Error: ' + err);
-              return;
-          }
-
-          res.writeHead(200, { 'Content-Type': 'text/css' });
-          res.end(data);
-      });
-
-      return;
-    }
-
-    let filePath = null;
-    let index = null;
-
-    if (urlFilter.test(parsedUrl.pathname)) {
-      const match = parsedUrl.pathname.match(urlFilter);
-
-      index = match[1];
-      filePath = urlPathMappings[index][0];
-
-      if (urlPathMappings[index][1] == false) {
-        res.statusCode = 404;
-        res.end("Not found");
-        return;
-      }
-    }
-
-    if (filePath == null) {
-      res.statusCode = 500;
-      res.end("Unknown request")
-      return;
-    }
-
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-      if (err) {
-        res.statusCode = 404;
-        res.end("Not found");
-      }
-
-      fs.stat(filePath, (err, stats) => {
-        if (err) {
-          res.statusCode = 500;
-          res.end("Server error");
-          return;
-        }
-
-        res.setHeader('Content-Length', stats.size);
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filePath)}`);
-
-        const stream = fs.createReadStream(filePath);
-
-        stream.on('error', (err) => {
-          console.error('Error reading file: ', err);
-          if (!res.headersSent) {
-            res.statusCode = 500;
-            res.end("Server error");
-          }
-        });
-
-        stream.pipe(res);
-      });
-    });
-  };
-
   initServer(protocol);
 
   // protocol is initialized to HTTP. If userconfig says it should be HTTPS, attempt a switch now
@@ -469,22 +360,6 @@ app.whenReady().then(() => {
     attemptToggleProtocol(initServer)();
   }
 
-
-  //create client web server
-
-
-  // if (userConfig.get('useHTTPS') == true) {
-  //   server = require('https').createServer(SSLOptions, serverBehavior);
-  // } else {
-  //   server = require('http').createServer(serverBehavior);
-  // }
-  
-  // server.listen(3030, () => {
-  //   console.log('Server running at http://localhost:3030/');
-  // });
-
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -492,14 +367,8 @@ app.whenReady().then(() => {
   });
 });
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.}

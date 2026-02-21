@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+
+    <title>Axon</title>
+
+    <link rel="stylesheet" type="text/css" href="/clientSend.css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script>
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('file-input');
+        fileInput.addEventListener('change', (event) => {
+          if (event.target.files.length === 0) {
+            return;
+          }
+          const fileName = event.target.files[0].name;
+          document.getElementById('file-name').textContent = fileName;
+        });
+      });
+    </script>
+
+  </head>
+  <body>
+    <div class="main-content">
+      <form id="upload-form" method="post" enctype="multipart/form-data">
+        <span class="section-title"><strong>Send a file</strong></span>
+        <hr style="width:100%" />
+
+        <label for="file-input" class="form-field bttn file-input">Choose a file</label>
+        <input id="file-input" name="file" type="file" />
+
+        <span class="file-name" id="file-name">No file chosen</span>
+
+        <input type="text" id="text" name="text" class="bttn form-field" placeholder="...or add text"/>
+
+        <input id="submit-button" type="submit" class="form-field bttn" value="Send" />
+      </form>
+      <div class="spinner-container" style="display: none;">
+        <div class="spinner"></div>
+      </div>
+      <div id="success-message" style="display:none; flex-direction: row; margin: auto; color: #808080; margin-top: 10px;">
+        <div id="success-filename" style="white-space: nowrap;"></div>
+        <div id="success-text" style="white-space: nowrap;">&nbsp;uploaded successfully!</div>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById("upload-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        console.log("Submitting form...");
+
+        const formData = new FormData(e.target);
+
+        document.querySelector(".spinner-container").style.display = "flex";
+        const res = await fetch("/intake", {
+          method: "POST",
+          body: formData
+        });
+        console.log("response: " + res);
+
+        let successMsg = document.getElementById('success-message');
+        let fileName = document.getElementById('file-name');
+        let successFilename = document.getElementById('success-filename');
+        let textInput = document.getElementById('text');
+
+        document.querySelector(".spinner-container").style.display = "none";
+        if (res.ok) {
+          successMsg.style.display = "flex";
+          if (fileName.textContent !== "No file chosen") {
+            if (textInput.value !== "") {
+              successFilename.textContent = "2 items";
+            } else {
+              successFilename.textContent = fileName.textContent;
+            }
+          } else {
+            if (textInput.value !== "") {
+              successFilename.textContent = "Text";
+            }
+          }
+          fileName.textContent = "No file chosen";
+          textInput.value = "";
+          document.getElementById('upload-form').reset();
+        }
+      });
+    </script>
+  </body>
+</html>
