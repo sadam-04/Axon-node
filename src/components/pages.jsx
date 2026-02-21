@@ -1,3 +1,5 @@
+import React from 'react';
+
 import ResponsiveButton from './ResponsiveButton';
 import ServedItem from './ServedItem';
 import SummaryListItem from './SummaryListItem';
