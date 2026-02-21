@@ -16,7 +16,7 @@ window.addEventListener("will-navigate", event => {
   return false;
 });
 
-const app_icon = require("./clear.png");
+const app_icon = require("../static/clear.png");
 
 function TitleBar() {
   return (
