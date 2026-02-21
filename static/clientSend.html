@@ -63,13 +63,28 @@
         });
         console.log("response: " + res);
 
+        let successMsg = document.getElementById('success-message');
+        let fileName = document.getElementById('file-name');
+        let successFilename = document.getElementById('success-filename');
+        let textInput = document.getElementById('text');
+
         document.querySelector(".spinner-container").style.display = "none";
         if (res.ok) {
-          document.getElementById("success-message").style.display = "flex";
-          document.getElementById('success-filename').textContent = document.getElementById('file-name').textContent;
-          document.getElementById('file-name').textContent = "No file chosen";
-          document.getElementById("text").value = "";
-          document.getElementById("upload-form").reset();
+          successMsg.style.display = "flex";
+          if (fileName.textContent !== "No file chosen") {
+            if (textInput.value !== "") {
+              successFilename.textContent = "2 items";
+            } else {
+              successFilename.textContent = fileName.textContent;
+            }
+          } else {
+            if (textInput.value !== "") {
+              successFilename.textContent = "Text";
+            }
+          }
+          fileName.textContent = "No file chosen";
+          textInput.value = "";
+          document.getElementById('upload-form').reset();
         }
       });
     </script>
