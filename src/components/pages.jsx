@@ -140,7 +140,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                         {inboxItems[activeRFile]?.type === "url" ? (
                             <ResponsiveButton
                             label={"Open URL"}
-                            buttonAction={async () => {window.location.href = inboxItems[activeRFile].url;}}
+                            buttonAction={async () => {window.location.href = inboxItems[activeRFile].string;}}
                             selected={false}
                             enabled={true}
                             customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -151,6 +151,20 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                         ) : (
                             null
                         )}
+
+                        
+                        {inboxItems[activeRFile]?.type === "text" || inboxItems[activeRFile].type === "url" ? (
+                            <ResponsiveButton
+                            label={"Copy"}
+                            buttonAction={async () => {navigator.clipboard.writeText(inboxItems[activeRFile].string);}}
+                            selected={false}
+                            enabled={true}
+                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            shadeA={"#303030"}
+                            shadeB={"#383838"}
+                            shadeC={"#404040"}
+                            />
+                        ) : null}
 
                         {inboxItems[activeRFile]?.type === "file" || inboxItems[activeRFile]?.type === "text" ? (
                             hasCurrentFileBeenSaved() ? (

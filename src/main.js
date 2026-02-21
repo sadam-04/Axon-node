@@ -32,22 +32,26 @@ function addInboxItem(type, filename, url, size, buffer) {
     buffer: buffer,
     filename: filename,
     type: type,
-    mimetype: type == "url" ? "text/uri-list" : type == "text" ? "text/plain" : "application/octet-stream",
+    mimetype: type == "url" || type == "text" ? "text/plain" : "application/octet-stream",
     size: size,
     url: url,
     savedPath: "",
   });
 
   let displayname = "item";
+  let string = "";
   if (type === "file") {
     displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
+    string = null;
   } else if (type === "url") {
     displayname = "URL (" + URL.parse(url).hostname + ")";
+    string = url;
   } else if (type === "text") {
     displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
+    string = buffer.toString('utf-8');
   }
 
-  notifyRendererOfNewFile(BrowserWindow.getAllWindows()[0], {displayname: displayname, url: url, id: uid, size: size, type: type});
+  notifyRendererOfNewFile(BrowserWindow.getAllWindows()[0], {displayname: displayname, string: string, id: uid, size: size, type: type});
 
   return uid;
 }
