@@ -3,8 +3,6 @@ const url = require('node:url');
 const path = require('node:path');
 const fs = require('node:fs');
 
-// const  = require("../icons/icon_folder_4.png");
-
 const upload = multer({ storage: multer.memoryStorage() });
 
 async function urlWrapper(text) {
@@ -15,7 +13,7 @@ async function urlWrapper(text) {
 }
 
 module.exports = {
-  serverBehavior: (projectRoot, addInboxItem, notifyRendererOfNewFile, urlPathMappings, mainWindow) => { return async (req, res) => {
+  serverBehavior: (projectRoot, addInboxItem, outboxItems) => { return async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/;
 
@@ -35,13 +33,8 @@ module.exports = {
             }
             
             let file = req.file;
-            console.log("adding pending file: ", file);
             addInboxItem("file", file.originalname, null, file.size, file.buffer);
-
-            // notifyRendererOfNewFile(mainWindow, {filename: file.originalname, url: null, id: uid, size: file.size, savedAt: "", type: "file"});
           }
-
-          //addInboxItem(type, filename, URL, size, buffer)
 
           //process text if present
           let text = req.body.text;
@@ -52,11 +45,9 @@ module.exports = {
             if (URL.canParse(text)) {
               console.log("Text is a URL");
               uid = addInboxItem("url", "url", text, text.length, Buffer.from(text));
-              // notifyRendererOfNewFile(mainWindow, {filename: "url", url: text, id: uid, size: text.length, type: "url"});
             } else {
               console.log("Text is general text");
               uid = addInboxItem("text", "text", null, text.length, Buffer.from(text));
-              // notifyRendererOfNewFile(mainWindow, {filename: "text", url: null, id: uid, size: text.length, type: "text"});
             }
           }
 
@@ -98,37 +89,30 @@ module.exports = {
     if (urlFilter.test(parsedUrl.pathname)) {
       // get the numeric id from the url
       const match = parsedUrl.pathname.match(urlFilter);
-      index = match[1];
-      
-      if (urlPathMappings[index] == null || urlPathMappings[index] == undefined) {
+      index = parseInt(match[1]);
+
+      if (outboxItems.has(index) == false) {
         res.statusCode = 404;
-        res.end("Not found (unknown index)");
+        res.end("Not found (index not contained in outbox)");
+        console.log("List of outbox keys: ", Array.from(outboxItems.keys()));
         return;
       }
 
-      payload = urlPathMappings[index][0];
-      
+      if (outboxItems.get(index) == null) {
+        res.statusCode = 404;
+        res.end("Not found (null entry)");
+        return;
+      }
+
+      payload = outboxItems.get(index)[0];
+
       if (payload == null) {
         res.statusCode = 500;
         res.end("Not found (null payload)");
         return;
       }
 
-      if (urlPathMappings[index][1] == false) {
-        res.statusCode = 404;
-        res.end("Not found (disabled)");
-        return;
-      }
-
-      console.log("urlPathMappings[index]: ", urlPathMappings[index]);
-
-      if (urlPathMappings[index] == undefined) {
-        res.statusCode = 404;
-        res.end("Not found (unknown index)");
-        return;
-      }
-
-      if (urlPathMappings[index][2] == 1) { // if this is a file object
+      if (outboxItems.get(index)[1] == "file") { // if this is a file object
         fs.access(payload, fs.constants.F_OK, (err) => {
           if (err) {
             res.statusCode = 404;
@@ -161,7 +145,7 @@ module.exports = {
             stream.pipe(res);
           });
         });
-      } else if (urlPathMappings[index][2] == 2) { // else if this is a text object
+      } else if (outboxItems.get(index)[1] == "text") { // else if this is a text object
         //check if its a url
         let dataAsUrl = null;
         try {

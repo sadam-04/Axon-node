@@ -2,7 +2,7 @@ export const handleAddText = (event, setHostedFiles, setSelectedSFile, addTextVa
   event.preventDefault();
   console.log("Received addtext event: ", event);
 
-  window.electronAPI.addTextToOutbox(addTextValue).then(([uid, filename, filesize]) => {
+  outboxAPI.addText(addTextValue).then(([uid, filename, filesize]) => {
     var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
 
     setHostedFiles(prev => {
@@ -18,14 +18,14 @@ export const handleAddText = (event, setHostedFiles, setSelectedSFile, addTextVa
 export function handleChangedIP(newIP, setPresentedIp) {
   setPresentedIp(newIP);
   // Save ip to config for next launch
-  window.electronAPI.setIP(newIP);
+  configAPI.setIP(newIP);
 }
 
 // openFile() tells main proc to open a file dialog 
 // openFile(filepath) tells main proc to load specific file
 // 
 export const openFile = (file = null, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile) => {
-  window.electronAPI.openFile(file).then(([uid, fileName, fileSize]) => {
+  outboxAPI.openFile(file).then(([uid, fileName, fileSize]) => {
     if (uid == "" || fileName == "null") {
     return;
     }
@@ -39,15 +39,15 @@ export const openFile = (file = null, protocolRef, ipRef, portRef, setHostedFile
   });
 }
 
-export const handleDiscardPendingFile = (pendingFiles, activeRFile, setSelectedRFile, setPendingFiles) => {
-  window.recvFileAPI.discardFile(pendingFiles[activeRFile].id);
-  var _pendingFiles = pendingFiles.filter(f => f.id !== pendingFiles[activeRFile].id);
-  if (_pendingFiles.length == 0) {
+export const handleDiscardPendingFile = (inboxItems, activeRFile, setSelectedRFile, setinboxItems) => {
+  inboxAPI.discard(inboxItems[activeRFile].id);
+  var _inboxItems = inboxItems.filter(f => f.id !== inboxItems[activeRFile].id);
+  if (_inboxItems.length == 0) {
     setSelectedRFile(null);
   } else {
     setSelectedRFile(0);
   }
-  setPendingFiles(_pendingFiles);
+  setinboxItems(_inboxItems);
 }
 
 // updates all front-end URLs and QRs with a given protocol, ip, and port. 
@@ -72,7 +72,7 @@ export const updateURL = async (protocol, ip, port, setRecvUrl, hostedFiles, set
 }
 
 // perform various initialization tasks
-export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setPendingFiles, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile) => {
+export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {
@@ -88,26 +88,26 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
     });
 
     // get saved IP from last session
-    let ip = await window.electronAPI.getDefaultIP();
+    let ip = await configAPI.getDefaultIP();
     console.log("Got default IP: ", ip);
     setPresentedIp(ip);
 
     // get saved protocol value from last session
-    window.electronAPI.getProtocol().then((savedProtocol) => {
+    configAPI.getProtocol().then((savedProtocol) => {
       setProtocol(savedProtocol);
     });
 
     // get all addresses available for dropdown/qrs
-    let addrs = await window.electronAPI.listAddrs();
+    let addrs = await configAPI.listAddrs();
     setAddrs(addrs);
 
     // handler for when the main proc says we have a new inbox item
-    window.recvFileAPI.onNewFile((file) => {
-      setPendingFiles((prevPendingFiles) => [...prevPendingFiles, file]);
+    inboxAPI.onNewFile((file) => {
+      setinboxItems((previnboxItems) => [...previnboxItems, file]);
     });
 
     // handler for when a save result is sent from main proc.
-    window.recvFileAPI.onSaveFileResult((result) => {
+    inboxAPI.onSaveFileResult((result) => {
       const parsed = result
 
       const id = parsed.id;
@@ -119,11 +119,11 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
     // setRecvUrl(updateURL(protocol, ip, port));
 
     // get saved values for settings fields from last session
-    let tlsKeyPath = await window.electronAPI.getTLSKeyPath();
+    let tlsKeyPath = await configAPI.getTLSKeyPath();
     setTLSKeyPath(tlsKeyPath);
-    let tlsCertPath = await window.electronAPI.getTLSCertPath();
+    let tlsCertPath = await configAPI.getTLSCertPath();
     setTLSCertPath(tlsCertPath);
-    let savedPort = await window.electronAPI.getPort();
+    let savedPort = await configAPI.getPort();
     setPort(savedPort);
 
   }

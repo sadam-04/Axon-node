@@ -1,5 +1,3 @@
-import React from 'react';
-
 import ResponsiveButton from './ResponsiveButton';
 import ServedItem from './ServedItem';
 import SummaryListItem from './SummaryListItem';
@@ -43,7 +41,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                     {hostedFiles.map((file, i) => (
                         <ResponsiveButton
                         key={file.id}
-                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); window.electronAPI.setServing(false, fileID); var _hostedFiles = hostedFiles.filter(f => f.id !== file.id); if (_hostedFiles.length == 0) {setSelectedSFile(null);} else {setSelectedSFile(0);} setHostedFiles(_hostedFiles);}} />}
+                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); outboxAPI.discard(fileID); var _hostedFiles = hostedFiles.filter(f => f.id !== file.id); if (_hostedFiles.length == 0) {setSelectedSFile(null);} else {setSelectedSFile(0);} setHostedFiles(_hostedFiles);}} />}
                         buttonAction={() => {setSelectedSFile(i);}}
                         selected={activeSFile === i}
                         enabled={true}
@@ -73,7 +71,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
     );
 }
 
-const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, handleDiscardPendingFile, recvUrl, hasCurrentFileBeenSaved, savePaths}) => {
+const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handleDiscardPendingFile, recvUrl, hasCurrentFileBeenSaved, savePaths}) => {
 
     console.log("Inbox renderer: recvUrl = ", recvUrl); 
 
@@ -84,16 +82,16 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
                 <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", paddingBottom: "4px" }}>
                 <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
                 <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
-                    <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""}</span>
+                    <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{inboxItems.length} file{inboxItems.length !== 1 ? "s" : ""}</span>
                 </div>
                 </div>
 
                 <div style={{marginLeft: "0", marginRight: "0"}}>
-                {pendingFiles.map((file, i) => (
+                {inboxItems.map((file, i) => (
 
                     <ResponsiveButton
                     key={file.id}
-                    label={<SummaryListItem fileName={file.displayname} onCloseClick={() => handleDiscardPendingFile(pendingFiles, activeRFile, setSelectedRFile, setPendingFiles)} />}
+                    label={<SummaryListItem fileName={file.displayname} onCloseClick={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)} />}
                     buttonAction={() => {setSelectedRFile(i)}}
                     selected={activeRFile === i}
                     enabled={true}
@@ -133,14 +131,14 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
             }}>
                 <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
                     <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
-                        <SimpleTextHeader primaryText={pendingFiles[activeRFile]?.displayname} secondaryText={`Size: ${pendingFiles[activeRFile]?.size < 1024 ? `${pendingFiles[activeRFile]?.size} B` : pendingFiles[activeRFile]?.size < 1048576 ? `${(pendingFiles[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(pendingFiles[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
+                        <SimpleTextHeader primaryText={inboxItems[activeRFile]?.displayname} secondaryText={`Size: ${inboxItems[activeRFile]?.size < 1024 ? `${inboxItems[activeRFile]?.size} B` : inboxItems[activeRFile]?.size < 1048576 ? `${(inboxItems[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(inboxItems[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
                     </div>
 
                     <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
-                        {pendingFiles[activeRFile]?.type === "url" ? (
+                        {inboxItems[activeRFile]?.type === "url" ? (
                             <ResponsiveButton
                             label={"Open URL"}
-                            buttonAction={async () => {window.location.href = pendingFiles[activeRFile].url;}}
+                            buttonAction={async () => {window.location.href = inboxItems[activeRFile].url;}}
                             selected={false}
                             enabled={true}
                             customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -152,11 +150,11 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
                             null
                         )}
 
-                        {pendingFiles[activeRFile]?.type === "file" || pendingFiles[activeRFile]?.type === "text" ? (
+                        {inboxItems[activeRFile]?.type === "file" || inboxItems[activeRFile]?.type === "text" ? (
                             hasCurrentFileBeenSaved() ? (
                                 <ResponsiveButton
                                 label={"Go to folder"}
-                                buttonAction={() => {window.recvFileAPI.revealFile(pendingFiles[activeRFile].id);}}
+                                buttonAction={() => {inboxAPI.reveal(inboxItems[activeRFile].id);}}
                                 selected={false}
                                 enabled={hasCurrentFileBeenSaved()}
                                 customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -168,7 +166,7 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
                             ) : (
                                 <ResponsiveButton
                                 label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
-                                buttonAction={() => {window.recvFileAPI.saveFile(pendingFiles[activeRFile].id, ()=>{console.log("TESTING")});}}
+                                buttonAction={() => {inboxAPI.save(inboxItems[activeRFile].id, ()=>{console.log("TESTING")});}}
                                 selected={false}
                                 enabled={!hasCurrentFileBeenSaved()}
                                 disabledStyle={{color: "#808080"}}
@@ -182,7 +180,7 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
 
                         <ResponsiveButton
                         label={"Discard"}
-                        buttonAction={() => handleDiscardPendingFile(pendingFiles, activeRFile, setSelectedRFile, setPendingFiles)}
+                        buttonAction={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)}
                         selected={false}
                         enabled={true}
                         customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -194,7 +192,7 @@ const Inbox = ({setSelectedRFile, pendingFiles, setPendingFiles, activeRFile, ha
                 </div>
                 <div style={{display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "flex-start", width: "100%", height: "40px", boxSizing: "border-box"}}>
                 <div style={{width: "18px", flexGrow: 0}} />
-                <div style={{width: "1px", flexGrow: 1, color: "#808080", fontStyle: "italic"}}>{savePaths[pendingFiles[activeRFile].id] ? "Saved to " + savePaths[pendingFiles[activeRFile].id] : ""}</div>
+                <div style={{width: "1px", flexGrow: 1, color: "#808080", fontStyle: "italic"}}>{savePaths[inboxItems[activeRFile].id] ? "Saved to " + savePaths[inboxItems[activeRFile].id] : ""}</div>
                 </div>
             </div>
             )}
