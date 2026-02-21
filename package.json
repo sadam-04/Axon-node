@@ -1,7 +1,7 @@
 {
   "name": "axon",
-  "productName": "axon",
-  "version": "0.1.0-beta",
+  "productName": "Axon",
+  "version": "0.1.1-beta",
   "description": "A lightweight local-network data transfer platform.",
   "main": ".webpack/main",
   "scripts": {
@@ -13,7 +13,7 @@
   },
   "keywords": [],
   "author": {
-    "name": "Adam",
+    "name": "Adam Saich",
     "email": "156256297+sadam-04@users.noreply.github.com"
   },
   "license": "MIT",
