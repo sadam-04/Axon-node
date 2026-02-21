@@ -22,7 +22,7 @@ function TitleBar() {
   return (
     <div id="titlebar" style={{"display": "flex", "flex-direction": "row", "height": "35px", "app-region": "drag", "width": "100%"}}>
       <img src={app_icon} style={{"width": "18px", "height": "18px", "border-radius": "4px", "margin-left": "7px", "margin-right": "5px", "margin-top": "7px"}} />
-      <div style={{"height": "35px", "line-height": "32px", "font-size": "12px"}}>Axon node</div>
+      <div style={{"height": "35px", "line-height": "32px", "font-size": "12px"}}>Axon</div>
     </div>
   );
 }
