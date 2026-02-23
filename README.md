@@ -1,5 +1,9 @@
 # Axon
 
+#### [Releases](https://github.com/sadam-04/Axon-node/releases) &emsp; [Main branch](https://github.com/sadam-04/Axon-node/tree/main) &emsp; [Dev branch](https://github.com/sadam-04/Axon-node/tree/dev)
+
+## Overview
+
 Axon is a lightweight data transfer utility focused on making transfers between desktop and mobile devices as easy as possible.
 
 It uses an internal HTTP/S server to send or receive data over local networks. URLs are encoded in the GUI as QR codes, allowing for easy transfers with mobile phones and tablets, though the same functionality exists for any device with a web-browser.
