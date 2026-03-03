@@ -20,9 +20,9 @@ const app_icon = require("../static/clear.png");
 
 function TitleBar() {
   return (
-    <div id="titlebar" style={{"display": "flex", "flex-direction": "row", "height": "35px", "app-region": "drag", "width": "100%"}}>
-      <img src={app_icon} style={{"width": "18px", "height": "18px", "border-radius": "4px", "margin-left": "7px", "margin-right": "5px", "margin-top": "7px"}} />
-      <div style={{"height": "35px", "line-height": "32px", "font-size": "12px"}}>Axon</div>
+    <div id="titlebar" style={{"display": "flex", "flexDirection": "row", "height": "35px", "appRegion": "drag", "width": "100%"}}>
+      <img src={app_icon} style={{"width": "17px", "height": "17px", "borderRadius": "4px", "marginLeft": "7px", "marginRight": "5px", "marginTop": "7px"}} />
+      <div style={{"height": "35px", "lineHeight": "32px", "fontSize": "12px"}}>Axon</div>
     </div>
   );
 }
