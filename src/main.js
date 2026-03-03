@@ -106,20 +106,11 @@ function savePendingFile(event, _id) {
 
 function revealPendingFile(event, _id) {
   const file = inboxItems.get(_id);
+
   if (!file) return;
-
   if (!file.savedPath || file.savedPath === "") return;
-
-  const filePath = file.savedPath;
-
-  exec(`explorer.exe "${path.dirname(filePath)}"`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
-  });
+  
+  shell.showItemInFolder(file.savedPath);
 }
 
 async function handleFileOpen(e, path) {
