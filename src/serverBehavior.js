@@ -5,7 +5,7 @@ const url = require('node:url');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage() }).array("files", 20);
 
 const projectRoot = app.isPackaged
   ? process.resourcesPath
@@ -28,18 +28,19 @@ module.exports = {
     if (parsedUrl.pathname == "/intake") {
       if (req.method == 'POST') {
         // collect and parse post data
-        await upload.single('file')(req, res, (err) => {
+        await upload(req, res, function (err) {
           // process uploaded file if present
-          if (req.file) {
-            if (err) {
-              console.log("Post handler: Error uploading file - ", err);
-              res.statusCode = 500;
-              res.end("Error uploading file");
-              return;
+          if (err) {
+            console.log("Post handler: Error uploading file - ", err);
+            res.statusCode = 500;
+            res.end("Error uploading file");
+            return;
+          }
+          if (req.files) {
+            console.log(req.files);
+            for (f of req.files) {
+              addInboxItem("file", f.originalname, null, f.size, f.buffer);
             }
-            
-            let file = req.file;
-            addInboxItem("file", file.originalname, null, file.size, file.buffer);
           }
 
           //process text if present
