@@ -119,9 +119,6 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
       console.log(`Save result for file id ${id}: ${parsed.path}`);
     });
 
-    // set recv url using current values
-    // setinboxUrl(updateURL(protocol, ip, port));
-
     // get saved values for settings fields from last session
     let tlsKeyPath = await configAPI.getTLSKeyPath();
     setTLSKeyPath(tlsKeyPath);
