@@ -40,7 +40,7 @@ function App() {
 
   const [port, setPort] = useState(2222);
 
-  const [recvUrl, setRecvUrl] = useState("");
+  const [inboxUrl, setinboxUrl] = useState("");
 
   const [savePaths, setSavePaths] = useState({});
 
@@ -91,7 +91,7 @@ function App() {
 
   //update all URLs when port, protocol or presentedIp changes
   useEffect(() => {
-    updateURL(protocol, presentedIp, port, setRecvUrl, outboxItems, setOutboxItems);
+    updateURL(protocol, presentedIp, port, setinboxUrl, outboxItems, setOutboxItems);
   }, [protocol, presentedIp, port]);
 
   function hasCurrentFileBeenSaved() {
@@ -154,7 +154,7 @@ function App() {
           {selectedNavPage === 0 ? (
             <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocolRef={protocolRef} ipRef={ipRef} portRef={portRef} activeSFile={activeSFile}/>
           ) : selectedNavPage === 1 ? (
-            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} handleDiscardPendingFile={handleDiscardPendingFile} recvUrl={recvUrl} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} />
+            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} handleDiscardPendingFile={handleDiscardPendingFile} inboxUrl={inboxUrl} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} />
           ) : selectedNavPage === -1 ? (
             <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>

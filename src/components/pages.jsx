@@ -10,8 +10,6 @@ const icon_folder = require("../icons/icon_folder_4.png");
 
 const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocolRef, ipRef, portRef, activeSFile}) => {
 
-    console.log("Outbox renderer: hostedFiles = ", hostedFiles);
-
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
             <div id="left-summary-panel">
@@ -73,9 +71,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
     );
 }
 
-const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handleDiscardPendingFile, recvUrl, hasCurrentFileBeenSaved, savePaths}) => {
-
-    console.log("Inbox renderer: recvUrl = ", recvUrl); 
+const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handleDiscardPendingFile, inboxUrl, hasCurrentFileBeenSaved, savePaths}) => {
 
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
@@ -110,7 +106,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
             <div id="right-blank-panel" style={{width: "200px", flexGrow: 1}}>
                 <div style={{color: "white", fontSize: "0.9rem", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
                 <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
-                <QrComponent url={recvUrl} />
+                <QrComponent url={inboxUrl} />
                 </div>
             </div>
             ) : (
