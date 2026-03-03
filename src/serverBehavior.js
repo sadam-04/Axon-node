@@ -63,7 +63,7 @@ module.exports = {
           return;
         });
       }
-    } else if (parsedUrl.pathname == "/send") {
+    } else if (parsedUrl.pathname == "/send" || parsedUrl.pathname == "/SEND") {
       console.log("Received request for /send endpoint");
 
       const filePath = path.join(projectRoot, 'static', 'clientSend.html');

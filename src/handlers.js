@@ -51,19 +51,23 @@ export const handleDiscardPendingFile = (inboxItems, activeRFile, setSelectedRFi
 }
 
 // updates all front-end URLs and QRs with a given protocol, ip, and port. 
-export const updateURL = async (protocol, ip, port, setRecvUrl, hostedFiles, setHostedFiles) => {
-    // update recv url
-    setRecvUrl(`${protocol}://${ip}:${port}/send`);
-
-    console.log(`Updated recvUrl to ${protocol}://${ip}:${port}/send`);
+export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, setHostedFiles) => {
     if (port == "" || isNaN(port)) {
-      setPort(2222);
+      port = 2222;
+      setPort(port);
     }
+
+    protocol = protocol.toLowerCase();
+
+    let newUrl = `${protocol}://${ip}:${port}/send`;
+  
+    // update inbox url
+    setInboxUrl(newUrl);
 
     // also update all urls of hosted files
     let newHostedFiles = hostedFiles.map((file) => {
       let urlObj = new URL(file.url);
-      urlObj.protocol = protocol.toLowerCase();
+      urlObj.protocol = protocol;
       urlObj.hostname = ip;
       urlObj.port = port.toString();
       return { ...file, url: urlObj.toString() };
@@ -114,9 +118,6 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
       setSavePaths((prev) => ({ ...prev, [id]: parsed.path }));
       console.log(`Save result for file id ${id}: ${parsed.path}`);
     });
-
-    // set recv url using current values
-    // setRecvUrl(updateURL(protocol, ip, port));
 
     // get saved values for settings fields from last session
     let tlsKeyPath = await configAPI.getTLSKeyPath();

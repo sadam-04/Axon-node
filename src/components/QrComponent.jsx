@@ -5,16 +5,11 @@ const QrComponent = ({url}) => {
   const [src, setSrc] = useState("");
   const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
 
-  // var combinedUrl = url ? url.replace("localhost", presentedHost ? presentedHost : "localhost") : "";
-
-  // console.log("QrComponent: url = " + url);
-
   useEffect(() => {
     (async () => {
       try {
-        //var combinedUrl = url.replace("localhost", presentedHost ? presentedHost : "localhost");
         console.log("Generating QR for url: " + url);
-        QRCode.toDataURL(url, {margin: 4}, (err, dataUrl) => {
+        QRCode.toDataURL(url.toUpperCase(), {margin: 4}, (err, dataUrl) => {
           setSrc(dataUrl);
         });
       } catch (err) {
@@ -25,7 +20,7 @@ const QrComponent = ({url}) => {
 
   const handleQRClick = async (e) => {
     window.focus();
-    navigator.clipboard.writeText(url).then(() => {
+    navigator.clipboard.writeText(url.toLowerCase()).then(() => {
       setQrHoverMsg("Copied!");
     })
   }
