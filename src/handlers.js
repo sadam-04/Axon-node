@@ -57,16 +57,17 @@ export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, se
       setPort(port);
     }
 
+    protocol = protocol.toLowerCase();
+
     let newUrl = `${protocol}://${ip}:${port}/send`;
   
     // update inbox url
     setInboxUrl(newUrl);
-    console.log(`Updated inboxUrl to ${newUrl}`);
 
     // also update all urls of hosted files
     let newHostedFiles = hostedFiles.map((file) => {
       let urlObj = new URL(file.url);
-      urlObj.protocol = protocol.toLowerCase();
+      urlObj.protocol = protocol;
       urlObj.hostname = ip;
       urlObj.port = port.toString();
       return { ...file, url: urlObj.toString() };
