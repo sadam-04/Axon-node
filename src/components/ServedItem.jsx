@@ -11,7 +11,7 @@ export default function ServedItem({filename, url, size}) {
 
     <SimpleTextHeader primaryText={filename} secondaryText={`Size: ${sizeString}`} />
     <div className="right-panel">
-      <QrComponent url={url} />
+      <QrComponent url={url} alignment="end" />
     </div>
   </div>
 };

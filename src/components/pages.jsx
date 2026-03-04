@@ -106,7 +106,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
             <div id="right-blank-panel" style={{width: "200px", flexGrow: 1}}>
                 <div style={{color: "white", fontSize: "0.9rem", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
                 <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
-                <QrComponent url={inboxUrl} />
+                <QrComponent url={inboxUrl} alignment="center" />
                 </div>
             </div>
             ) : (

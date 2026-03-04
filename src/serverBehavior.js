@@ -21,7 +21,7 @@ async function urlWrapper(text) {
 module.exports = {
   serverBehavior: (projectRoot, addInboxItem, outboxItems) => { return async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
-    const urlFilter = /^\/get\/(\d+)$/;
+    const urlFilter = /^\/get\/(\d+)$i/;
 
     console.log(`HTTP Server: Received request for ${parsedUrl.pathname}`);
 
