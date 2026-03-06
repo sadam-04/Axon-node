@@ -81,6 +81,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                 <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
                 <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                     <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{inboxItems.length} file{inboxItems.length !== 1 ? "s" : ""}</span>
+                    {activeRFile !== null ? (<span style={{fontSize: "0.8rem", height: "fit-content", margin: "auto 13px auto auto"}} onClick={()=>{setSelectedRFile(null)}}>show QR</span>) : null}
                 </div>
                 </div>
 
