@@ -29,14 +29,17 @@ const QrComponent = ({url, alignment, shadeA="#282828", shadeB="#303030", shadeC
   }
 
   return (
-    <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", fontSize: "0.8rem"}}>
+    <div style={{display: "flex", flexDirection: "column", alignItems: alignment , gap: "10px", fontSize: "0.8rem"}}>
       <div className="qr-code" style={{position: "relative", width: "fit-content", height: "fit-content", aspectRatio: "1/1", textAlign: "center", fontStyle: "italic", cursor: "pointer", borderRadius: "8px", whiteSpace: "normal"}} onClick={handleQRClick} onMouseLeave={() => setQrHoverMsg("Click to copy URL to clipboard")}>
         {src ? <img src={src} /> : <p>Loading QR...</p>}
         <div className="qr-overlay"><div className="qr-overlay-text">{qrHoverMsg}</div></div>
       </div>
 
-      {showUrl ? (<div style={{alignSelf: {alignment}}}>{url.toLowerCase()}</div>) : null}
-      <ResponsiveButton selected={false} enabled={true} buttonAction={()=>{setShowUrl(!showUrl)}} label={showUrl ? "Hide" : "Show"} customStyle={{borderRadius: "5px", width: "fit-content", paddingLeft: "10px", paddingRight: "10px", height: "30px"}} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", width: "132px"}}>
+        <ResponsiveButton selected={false} enabled={true} buttonAction={()=>{setShowUrl(!showUrl)}} label={showUrl ? "Hide" : "Show"} customStyle={{borderRadius: "5px", width: "3.5rem", height: "30px"}} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
+      </div>
+
+      {showUrl ? (<div style={{maxWidth: "100%"}}>{url.toLowerCase()}</div>) : null}
     </div>
   );
 }
