@@ -12,9 +12,9 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
 
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
-            <div id="left-summary-panel">
+            <div id="left-summary-panel" style={{display: "flex", flexDirection: "column"}}>
                 <div>
-                    <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", paddingBottom: "4px" }}>
+                    <div className="left-send-header" onClick={() => {setSelectedSFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", paddingBottom: "4px" }}>
                     <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
                     <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                         <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} file{hostedFiles.length !== 1 ? "s" : ""}</span>
@@ -53,6 +53,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                     ))}
                     </div>
                 </div>
+                <div style={{flexGrow: "1"}} onClick={() => {setSelectedSFile(null);}} />
             </div>
             {activeSFile !== null ? (
             <div id="right-detail-panel" style={{
@@ -76,12 +77,11 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
             <div id="left-summary-panel">
-            <div id="recv-panel">
+            <div id="recv-panel" style={{display: "flex", flexDirection: "column", height: "100%"}}>
                 <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0", paddingBottom: "4px" }}>
                 <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
                 <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                     <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{inboxItems.length} file{inboxItems.length !== 1 ? "s" : ""}</span>
-                    {activeRFile !== null ? (<span style={{fontSize: "0.8rem", height: "fit-content", margin: "auto 13px auto auto"}} onClick={()=>{setSelectedRFile(null)}}>show QR</span>) : null}
                 </div>
                 </div>
 
@@ -101,6 +101,8 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                     />
                 ))}
                 </div>
+
+                <div style={{flexGrow: "1"}} onClick={() => {setSelectedRFile(null);}} />
             </div>
             </div>
             {activeRFile === null ? (
