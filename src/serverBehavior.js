@@ -5,6 +5,8 @@ const url = require('node:url');
 const path = require('node:path');
 const fs = require('node:fs');
 
+const mime = require('mime-types');
+
 const upload = multer({ storage: multer.memoryStorage() }).array("files", 20);
 
 const projectRoot = app.isPackaged
@@ -90,7 +92,7 @@ module.exports = {
     }
 
     let index = null;
-    let payload = null;
+    let filepath = null;
 
     // Check if the url matches the pattern for a file request (send mode)
     if (urlFilter.test(parsedUrl.pathname)) {
@@ -111,34 +113,40 @@ module.exports = {
         return;
       }
 
-      payload = outboxItems.get(index)[0];
+      filepath = outboxItems.get(index)[0];
 
-      if (payload == null) {
+      if (filepath == null) {
         res.statusCode = 500;
         res.end("Not found (null payload)");
         return;
       }
 
       if (outboxItems.get(index)[1] == "file") { // if this is a file object
-        fs.access(payload, fs.constants.F_OK, (err) => {
+        fs.access(filepath, fs.constants.F_OK, (err) => {
           if (err) {
             res.statusCode = 404;
             res.end("Not found (can't open file)");
             return;
           }
 
-          fs.stat(payload, (err, stats) => {
+          fs.stat(filepath, (err, stats) => {
             if (err) {
               res.statusCode = 500;
               res.end("Server error");
               return;
             }
 
-            res.setHeader('Content-Length', stats.size);
-            res.setHeader('Content-Type', 'application/octet-stream');
-            res.setHeader('Content-Disposition', `attachment; filename=${path.basename(payload)}`);
+            let type = mime.lookup(path.extname(filepath));
+            if (type == false) {
+              type = 'application/octet-stream';
+            }
 
-            const stream = fs.createReadStream(payload);
+            res.setHeader('Content-Length', stats.size);
+            res.setHeader('Content-Type', type);
+            res.setHeader('Content-Disposition', 'inline');
+            // res.setHeader('Content-Disposition', `attachment; filename=${path.basename(payload)}`);
+
+            const stream = fs.createReadStream(filepath);
 
             stream.on('error', (err) => {
               console.error('Error reading file: ', err);
@@ -156,14 +164,14 @@ module.exports = {
         //check if its a url
         let dataAsUrl = null;
         try {
-          dataAsUrl = url.parse(payload.toString(), true);
+          dataAsUrl = url.parse(filepath.toString(), true);
         } catch (e) {
           console.log("Error parsing URL: ", e);
           dataAsUrl = null;
         }
         if (dataAsUrl && dataAsUrl.protocol && dataAsUrl.host) {
           // it's a URL
-          let page = await urlWrapper(payload);
+          let page = await urlWrapper(filepath);
           console.log("is a url. Sending wrapped page of length ", page.length);
           
           res.setHeader('Content-Length', page.length);
@@ -175,9 +183,9 @@ module.exports = {
         } else {
           console.log("is not a url");
         }
-        res.setHeader('Content-Length', payload.length);
+        res.setHeader('Content-Length', filepath.length);
         res.setHeader('Content-Type', 'text/plain');
-        res.end(payload);
+        res.end(filepath);
         res.statusCode = 200;
         return;
       }
