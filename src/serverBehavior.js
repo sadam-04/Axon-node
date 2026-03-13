@@ -20,6 +20,23 @@ async function urlWrapper(text) {
   return page;
 }
 
+function mime_lookup(ext) {
+  if (ext == ".avif") return "image/avif";
+  else if (ext == ".avi") return "video/x-msvideo";
+  else if (ext == ".bmp") return "image/bmp";
+  else if (ext == ".csv") return "text/csv";
+  else if (ext == ".doc") return "application/msword";
+  else if (ext == ".docx") return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  else if (ext == ".gif") return "image/gif";
+  else if (ext == ".ico") return "image/vnd.microsoft.icon";
+  else if (ext == ".ics") return "";
+  else if (ext == ".") return "";
+  else if (ext == ".") return "";
+  
+  else if (ext == ".avi") return "video/x-msvideo";
+  else return "application/octet-stream";
+}
+
 module.exports = {
   serverBehavior: (projectRoot, addInboxItem, outboxItems) => { return async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
@@ -136,16 +153,19 @@ module.exports = {
               return;
             }
 
-            let type = mime.lookup(path.extname(filepath));
-            if (type == false) {
-              type = 'application/octet-stream';
-            }
-
             res.setHeader('Content-Length', stats.size);
-            res.setHeader('Content-Type', type);
-            res.setHeader('Content-Disposition', 'inline');
-            // res.setHeader('Content-Disposition', `attachment; filename=${path.basename(payload)}`);
-
+            
+            let type = mime.lookup(path.extname(filepath));
+            
+            if (type == false) {
+              res.setHeader('Content-Type', 'application/octet-stream');
+              res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filepath)}`);
+            } else {
+              res.setHeader('Content-Type', type);
+              console.log(`type: ${type}`);
+              res.setHeader('Content-Disposition', `inline; filename=${path.basename(filepath)}`); // setting filename here doesn't seem to work but keeping it because I think it is technically http-supported
+            }
+            
             const stream = fs.createReadStream(filepath);
 
             stream.on('error', (err) => {
