@@ -41,6 +41,7 @@ module.exports = {
   serverBehavior: (projectRoot, addInboxItem, outboxItems) => { return async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/i;
+    const urlFilter2 = /^\/get\/(\d+)\/(\w+)\/[\w_\-.]+$/i; // format: /get/123456/inline/filename.png
 
     console.log(`HTTP Server: Received request for ${parsedUrl.pathname}`);
 
@@ -109,18 +110,16 @@ module.exports = {
     }
 
     let index = null;
-    let filepath = null;
 
-    // Check if the url matches the pattern for a file request (send mode)
+    // file landing page
     if (urlFilter.test(parsedUrl.pathname)) {
-      // get the numeric id from the url
       const match = parsedUrl.pathname.match(urlFilter);
       index = parseInt(match[1]);
+      console.log(`match: ${match}`);
 
       if (outboxItems.has(index) == false) {
         res.statusCode = 404;
         res.end("Not found (index not contained in outbox)");
-        console.log("List of outbox keys: ", Array.from(outboxItems.keys()));
         return;
       }
 
@@ -130,19 +129,89 @@ module.exports = {
         return;
       }
 
-      filepath = outboxItems.get(index)[0];
+      // TODO handle file landing page requests
+      if (outboxItems.get(index)[1] == "file") {
+        res.statusCode = 200;
+        res.end(`<div><div onclick="(function(){window.location.href = window.location.href + '/inline/file.pdf';})();">Inline</div><div onclick="(function(){window.location.href = window.location.href + '/attachment/file.pdf';})();">Attachment</div></div>`);
+      } else if (outboxItems.get(index)[1] == "text") { // else if this is a text object (text/url)
 
-      if (filepath == null) {
-        res.statusCode = 500;
-        res.end("Not found (null payload)");
+        let text = outboxItems.get(index)[0];
+
+        if (text == null) {
+          res.statusCode = 500;
+          res.end("Not found (null payload)");
+          return;
+        }
+
+        //check if its a url
+        let dataAsUrl = null;
+        try {
+          dataAsUrl = url.parse(text.toString(), true);
+        } catch (e) {
+          console.log("Error parsing URL: ", e);
+          dataAsUrl = null;
+        }
+        if (dataAsUrl && dataAsUrl.protocol && dataAsUrl.host) {
+          // it's a URL
+          let page = await urlWrapper(text);
+          
+          res.setHeader('Content-Length', page.length);
+          res.setHeader('Content-Type', 'text/html');
+          res.statusCode = 200;
+
+          res.end(page);
+          return;
+        }
+        res.setHeader('Content-Length', text.length);
+        res.setHeader('Content-Type', 'text/plain');
+        res.end(text);
+        res.statusCode = 200;
+        return;
+      }
+    }
+
+    // file download request (inline or attachment)
+    else if (urlFilter2.test(parsedUrl.pathname)) {
+      // get the numeric id from the url
+      const match = parsedUrl.pathname.match(urlFilter2);
+      index = parseInt(match[1]);
+      let dlMode = match[2];
+      // let cFilename = match[3]; // client filename (filename contained in client's request)
+
+      if (dlMode != "inline" && dlMode != "attachment") {
+        res.statusCode = 400;
+        res.end("Bad request");
+        return;
+      }
+
+      console.log(`match: ${match}`);
+
+      if (outboxItems.has(index) == false) {
+        res.statusCode = 404;
+        res.end("Not found (index not contained in outbox)");
+        return;
+      }
+
+      if (outboxItems.get(index) == null) {
+        res.statusCode = 404;
+        res.end("Not found (null entry)");
         return;
       }
 
       if (outboxItems.get(index)[1] == "file") { // if this is a file object
+
+        let filepath = outboxItems.get(index)[0];
+
+        if (filepath == null) {
+          res.statusCode = 500;
+          res.end("Not found (null payload)");
+          return;
+        }
+
         fs.access(filepath, fs.constants.F_OK, (err) => {
           if (err) {
-            res.statusCode = 404;
-            res.end("Not found (can't open file)");
+            res.statusCode = 500;
+            res.end("Server error");
             return;
           }
 
@@ -153,18 +222,23 @@ module.exports = {
               return;
             }
 
-            res.setHeader('Content-Length', stats.size);
-            
             let type = mime.lookup(path.extname(filepath));
             
             if (type == false) {
-              res.setHeader('Content-Type', 'application/octet-stream');
-              res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filepath)}`);
-            } else {
-              res.setHeader('Content-Type', type);
-              console.log(`type: ${type}`);
-              res.setHeader('Content-Disposition', `inline; filename=${path.basename(filepath)}`); // setting filename here doesn't seem to work but keeping it because I think it is technically http-supported
+              type = 'application/octet-stream';
             }
+            
+            res.setHeader('Content-Length', stats.size);
+            res.setHeader('Content-Type', type);
+            res.setHeader('Content-Disposition', `${dlMode}; filename=${path.basename(filepath)}`);
+
+            // if (type == false) {
+            //   res.setHeader('Content-Type', 'application/octet-stream');
+            //   res.setHeader('Content-Disposition', `attachment; filename=${path.basename(filepath)}`);
+            // } else {
+            //   res.setHeader('Content-Type', type);
+            //   res.setHeader('Content-Disposition', `inline; filename=${path.basename(filepath)}`); // setting filename here doesn't seem to work but keeping it because I think it is technically http-supported
+            // }
             
             const stream = fs.createReadStream(filepath);
 
@@ -180,35 +254,11 @@ module.exports = {
             stream.pipe(res);
           });
         });
-      } else if (outboxItems.get(index)[1] == "text") { // else if this is a text object
-        //check if its a url
-        let dataAsUrl = null;
-        try {
-          dataAsUrl = url.parse(filepath.toString(), true);
-        } catch (e) {
-          console.log("Error parsing URL: ", e);
-          dataAsUrl = null;
-        }
-        if (dataAsUrl && dataAsUrl.protocol && dataAsUrl.host) {
-          // it's a URL
-          let page = await urlWrapper(filepath);
-          console.log("is a url. Sending wrapped page of length ", page.length);
-          
-          res.setHeader('Content-Length', page.length);
-          res.setHeader('Content-Type', 'text/html');
-          res.statusCode = 200;
-
-          res.end(page);
-          return;
-        } else {
-          console.log("is not a url");
-        }
-        res.setHeader('Content-Length', filepath.length);
-        res.setHeader('Content-Type', 'text/plain');
-        res.end(filepath);
-        res.statusCode = 200;
+      } else {
+        res.statusCode = 400;
+        res.end("Bad request");
         return;
       }
-    }}
-  }
+    }
+  }}
 };
