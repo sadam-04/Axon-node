@@ -20,6 +20,12 @@ async function urlWrapper(text) {
   return page;
 }
 
+async function buildFileLandingPage(filename) {
+  let page = fs.readFileSync(path.join(projectRoot, "static", "file-wrapper.html"), "utf-8");
+  page = page.replace(/{{filename}}/g, filename);
+  return page;
+}
+
 function mime_lookup(ext) {
   if (ext == ".avif") return "image/avif";
   else if (ext == ".avi") return "video/x-msvideo";
@@ -131,8 +137,11 @@ module.exports = {
 
       // TODO handle file landing page requests
       if (outboxItems.get(index)[1] == "file") {
+        let filename = path.basename(outboxItems.get(index)[0]);
+        let landingPage = await buildFileLandingPage(filename);
         res.statusCode = 200;
-        res.end(`<div><div onclick="(function(){window.location.href = window.location.href + '/inline/file.pdf';})();">Inline</div><div onclick="(function(){window.location.href = window.location.href + '/attachment/file.pdf';})();">Attachment</div></div>`);
+        // res.end(`<div><div onclick="(function(){window.location.href = window.location.href + '/inline/file.pdf';})();">Inline</div><div onclick="(function(){window.location.href = window.location.href + '/attachment/file.pdf';})();">Attachment</div></div>`);
+        res.end(landingPage);
       } else if (outboxItems.get(index)[1] == "text") { // else if this is a text object (text/url)
 
         let text = outboxItems.get(index)[0];
