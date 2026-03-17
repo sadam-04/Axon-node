@@ -47,7 +47,9 @@ module.exports = {
   serverBehavior: (projectRoot, addInboxItem, outboxItems) => { return async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const urlFilter = /^\/get\/(\d+)$/i;
-    const urlFilter2 = /^\/get\/(\d+)\/(\w+)\/[\w_\-.]+$/i; // format: /get/123456/inline/filename.png
+    const urlFilter2 = /^\/get\/(\d+)\/(\w+)\/[\w_\-\s.]+$/i; // format: /get/123456/inline/filename.png
+
+    parsedUrl.pathname = decodeURIComponent(parsedUrl.pathname);
 
     console.log(`HTTP Server: Received request for ${parsedUrl.pathname}`);
 
