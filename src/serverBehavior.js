@@ -72,17 +72,22 @@ module.exports = {
           }
 
           //process text if present
-          let text = req.body.text;
-          if (text) {
-            console.log("Received text: ", text);
-            // check if its a url or general text
-            let uid = null;
-            if (URL.canParse(text)) {
-              console.log("Text is a URL");
-              uid = addInboxItem("url", "url", text, text.length, Buffer.from(text));
-            } else {
-              console.log("Text is general text");
-              uid = addInboxItem("text", "text", null, text.length, Buffer.from(text));
+          let rawText = req.body.text;
+          if (rawText != null && rawText != undefined) {
+            let texts = JSON.parse(req.body.text);
+            for (text of texts) {
+              if (text && text != "") {
+                console.log("Received text: ", text);
+                // check if its a url or general text
+                let uid = null;
+                if (URL.canParse(text)) {
+                  console.log("Text is a URL");
+                  uid = addInboxItem("url", "url", text, text.length, Buffer.from(text));
+                } else {
+                  console.log("Text is general text");
+                  uid = addInboxItem("text", "text", null, text.length, Buffer.from(text));
+                }
+              }
             }
           }
 

@@ -39,6 +39,18 @@ body {
 	flex-grow: 1; */
 }
 
+@media only screen and (max-width: 1274px) {
+	.main-content {
+		width: 40%;
+	}
+}
+
+@media only screen and (max-width: 599px) {
+	.main-content {
+		width: 80%;
+	}
+}
+
 .section-title {
 	display: block;
 	font-size: 1.2rem;
@@ -46,14 +58,14 @@ body {
 	color: white;
 }
 
-form {
+/* form {
 	display: flex;
 	flex-direction: column;
 	background-color: #282828;
 	border-radius: 8px;
 	padding: 0.8rem 0.6rem 0.6rem;
-	/* gap: 4px; */
-}
+	gap: 4px;
+} */
 
 .header-2 {
 	color: white;
@@ -61,19 +73,22 @@ form {
 	margin-left: 2px;
 }
 
-.action-bar {
+/* .action-bar {
 	display: flex;
 	flex-direction: row;
 	gap: 6px;
-}
+} */
 
-.file-input {
+/* .file-input {
 	width: fit-content;
 	flex-grow: 0;
-}
+} */
 
-#text {
-	flex-grow: 1;
+#text-form {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	gap: 6px;
 }
 
 /* @media only screen and (max-width: 768px) {
@@ -86,18 +101,48 @@ input[type="file"] {
 	display: none;
 }
 
-.form-field {
+/* .form-field {
 	border: none;
 	outline: none;
 	border-radius: 8px;
-	/* width: 100%; */
 	font-size: 0.8rem;
 	cursor: pointer;
-	/* box-sizing: border-box; */
 	padding: 8px 10px;
 	height: 14px;
 	background-color: #282828;
 	color: white;
+} */
+
+.text-field {
+	display: flex;
+	border: none;
+	outline: none;
+	align-items: center;
+	justify-content: center;
+	padding: 0 0 0 8px;
+	margin: 0;
+	border-radius: 8px;
+	font-size: 0.8rem;
+	cursor: pointer;
+	height: 30px;
+	background-color: #181818;
+	color: white;
+}
+
+.bttn {
+	display: flex;
+	border: none;
+	outline: none;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	font-size: 0.8rem;
+	height: 30px;
+	background-color: #282828;
+	color: white;
+}
+.bttn:hover {
+	background-color: #343434;
 }
 
 /* .bttn {
@@ -106,15 +151,12 @@ input[type="file"] {
     color: #fff;
 } */
 
-#text {
+/* #text {
 	background-color: #242424;
-}
+} */
 
-.bttn:hover {
-    background-color: #343434;
-}
 
-.subtext {
+#subtext {
 	word-break: break-all;
 	margin-top: 8px;
 	margin-bottom: 15px;
@@ -146,17 +188,17 @@ input[type="file"] {
 	}
 }
 
-#file-name {
+/* #file-name {
 	font-size: 0.8rem;
 	height: 34px;
 	line-height: 34px;
 	align-content: center;
-}
+} */
 
-#submit-button {
+/* #submit-button {
 	height: 30px;
 	border-radius: 8px;
 	font-weight: 400;
 	padding: 0 10px;
 	margin: 0;
-}
+} */
