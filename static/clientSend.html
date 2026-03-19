@@ -23,7 +23,7 @@
         <div class="action-bar">
           <form id="text-form" style="margin: 6px 0 0 0; padding: 0;">
             <input type="text" id="text" name="text" class="text-field" style="flex-grow: 1;" placeholder="Add text here"/>
-            <input type="submit" class="bttn" style="aspect-ratio: 1/1; flex-grow: 0;" value="~>"/>
+            <input type="submit" class="bttn" style="flex-grow: 0; padding: 0 8px;" value="Add"/>
           </form>
 
           <div style="font-size: 0.8rem; width: 100%; display: flex; align-items: center; justify-content: center; height: 20px;"><strong>or</strong></div>
@@ -32,10 +32,10 @@
           <input id="file-input" name="files" type="file" multiple/>
         </div>
 
-        <div id="queue-and-submit" style="display: none; margin-top: 10px;">
+        <div id="queue-and-submit" style="display: none; margin-top: 16px;">
           <div class="header-2"><strong>Queue</strong></div>
 
-          <ul id="send-queue" style="list-style-type: none; margin: 0 0 0 2px; padding: 0;">
+          <ul id="send-queue" style="list-style-type: none; margin: 6px 0 0 2px; padding: 0;">
           </ul>
   
           <button id="submit-button" type="submit" class="bttn" style="width: 100%; margin-top: 6px;">No items added</button>
@@ -60,13 +60,15 @@
         for (file of fileQueue) {
           const newItem = document.createElement("li");
           newItem.style.fontSize = "0.8rem";
-          newItem.textContent = file.name;
+          newItem.style.margin = "4px 4px";
+          newItem.textContent = "File - " + file.name;
           queue.appendChild(newItem);
         }
         for (text of textQueue) {
           const newItem = document.createElement("li");
           newItem.style.fontSize = "0.8rem";
-          newItem.textContent = text; // .slice(0, 10);
+          newItem.style.margin = "4px 4px";
+          newItem.textContent = "Text - " + text; // .slice(0, 10);
           queue.appendChild(newItem);
         }
 
