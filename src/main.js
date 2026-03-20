@@ -141,12 +141,31 @@ async function addTextToOutbox(event, text) {
 }
 
 function getAnyIP() {
-  const addrs = listAddrs();
-  if (addrs.length > 0) {
-    return addrs[0];
-  } else {
+  const addrs = listAddrs(true);
+
+  if (addrs.length == 0) {
     return "0.0.0.0";
   }
+
+  if (addrs.length == 1) {
+    return addrs[0][0];
+  }
+
+  for (const addr of addrs) {
+    if (addr[1].includes("Wi-Fi") || (addr[1].includes("Ethernet") && addr[1].includes("vEthernet"))) {
+      return addr[0];
+    }
+  }
+
+  console.log("goons2");
+
+  for (const addr of addrs) {
+    if (addr[0].startsWith("192.168") || addr[0].startsWith("10.1")) {
+      return addr[0];
+    }
+  }
+
+  return addrs[0][0];
 }
 
 function getDefaultIP() {
@@ -168,16 +187,21 @@ function setIP(newIP) {
   userConfig.set('lastUsedIP', newIP);
 }
 
-function listAddrs() {
+function listAddrs(includeInterfaces = false) {
   const interfaces = os.networkInterfaces();
   let filteredAddrs = [];
   for (const name in interfaces) {
     const addrs = interfaces[name];
     for (const addr of addrs) {
       if (addr.family == 'IPv4' && !addr.internal && !addr.address.startsWith("169.254")) {
-        filteredAddrs.push(addr.address);
+        if (includeInterfaces == true) {
+          filteredAddrs.push([addr.address, name]);
+        } else {
+          filteredAddrs.push(addr.address);
+        }
       }
     }
+    // console.log("interface: ", name, ": ", addrs);
   }
   return filteredAddrs;
 }
