@@ -12,8 +12,8 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
 
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
-            <div id="left-summary-panel" style={{display: "flex", flexDirection: "column"}}>
-                <div>
+            <div id="left-summary-panel" style={{display: "flex", flexDirection: "column", boxSizing: "content-box"}}>
+                <div style={{maxHeight: "100%"}}>
                     <div className="left-send-header" onClick={() => {setSelectedSFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0"}}>
                         <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
                         <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
@@ -35,7 +35,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         shadeC={"#343434"}
                         />
                     </div>
-                    <div style={{marginLeft: "0", marginRight: "0", marginTop: "6px"}}>
+                    <div style={{marginLeft: "0", marginRight: "0", marginTop: "6px", display: "block", overflowY: "auto"}}>
                     {hostedFiles.map((file, i) => (
                         <ResponsiveButton
                         key={file.id}

@@ -203,8 +203,8 @@ h4 {
   width: 263px;
   flex-grow: 0;
   color: white;
-  overflow-y: auto;
-  height: 100%;
+  /* overflow-y: auto; */
+  /* height: 100%; */
   margin-top: 8px;
   margin-left: 0;
 
