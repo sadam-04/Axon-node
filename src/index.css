@@ -24,6 +24,22 @@ body {
   user-select: none;         /* Standard syntax */
 }
 
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #202020;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #383838;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #404040;
+}
+
 h4 {
   margin: 0;
   color: white;
