@@ -9,36 +9,38 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <script>
-
-      document.addEventListener('DOMContentLoaded', function() {
-        const fileInput = document.getElementById('file-input');
-        fileInput.addEventListener('change', (event) => {
-          if (event.target.files.length === 0) {
-            return;
-          }
-          const fileName = event.target.files[0].name;
-          document.getElementById('file-name').textContent = fileName;
-        });
-      });
-    </script>
 
   </head>
   <body>
     <div class="main-content">
-      <form id="upload-form" method="post" enctype="multipart/form-data">
-        <span class="section-title"><strong>Send a file</strong></span>
-        <hr style="width:100%" />
+      <span class="section-title"><strong>Send</strong></span>
+      <div id="subtext">to x.x.x.x</div>
 
-        <label for="file-input" class="form-field bttn file-input">Choose a file</label>
-        <input id="file-input" name="files" type="file" multiple/>
+      <div id="upload-form" method="post" enctype="multipart/form-data">
+        <!-- <hr style="width:100%" /> -->
+        <div class="header-2"><strong>Add items</strong></div>
 
-        <span class="file-name" id="file-name">No file chosen</span>
+        <div class="action-bar">
+          <form id="text-form" style="margin: 6px 0 0 0; padding: 0;">
+            <input type="text" id="text" name="text" class="text-field" style="flex-grow: 1;" placeholder="Add text here"/>
+            <input type="submit" class="bttn" style="flex-grow: 0; padding: 0 8px;" value="Add"/>
+          </form>
 
-        <input type="text" id="text" name="text" class="bttn form-field" placeholder="...or add text"/>
+          <div style="font-size: 0.8rem; width: 100%; display: flex; align-items: center; justify-content: center; height: 20px;"><strong>or</strong></div>
 
-        <input id="submit-button" type="submit" class="form-field bttn" value="Send" />
-      </form>
+          <label for="file-input" class="bttn">Add Files</label>
+          <input id="file-input" name="files" type="file" multiple/>
+        </div>
+
+        <div id="queue-and-submit" style="display: none; margin-top: 16px;">
+          <div class="header-2"><strong>Queue</strong></div>
+
+          <ul id="send-queue" style="list-style-type: none; margin: 6px 0 0 2px; padding: 0;">
+          </ul>
+  
+          <button id="submit-button" type="submit" class="bttn" style="width: 100%; margin-top: 6px;">No items added</button>
+        </div>
+      </div>
       <div class="spinner-container" style="display: none;">
         <div class="spinner"></div>
       </div>
@@ -49,12 +51,81 @@
     </div>
 
     <script>
-      document.getElementById("upload-form").addEventListener("submit", async (e) => {
+      const fileQueue = [];
+      const textQueue = [];
+
+      function renderQueue() {
+        let queue = document.getElementById('send-queue');
+        queue.innerHTML = "";
+        for (file of fileQueue) {
+          const newItem = document.createElement("li");
+          newItem.style.fontSize = "0.8rem";
+          newItem.style.margin = "4px 4px";
+          newItem.textContent = "File - " + file.name;
+          queue.appendChild(newItem);
+        }
+        for (text of textQueue) {
+          const newItem = document.createElement("li");
+          newItem.style.fontSize = "0.8rem";
+          newItem.style.margin = "4px 4px";
+          newItem.textContent = "Text - " + text; // .slice(0, 10);
+          queue.appendChild(newItem);
+        }
+
+        let totalSize = fileQueue.length + textQueue.length;
+
+        if (totalSize > 0) {
+          let submitBttn = document.getElementById("submit-button");
+          submitBttn.innerText = "Send " + (totalSize).toString() + " items";
+          
+          document.getElementById("queue-and-submit").style.display = "block";
+        } else {
+          document.getElementById("queue-and-submit").style.display = "none";
+        }
+
+      }
+
+      const fileInput = document.getElementById('file-input');
+      fileInput.addEventListener('change', (event) => {
+        if (event.target.files.length === 0) {
+          return;
+        }
+        for (file of event.target.files) {
+          //add files to queue
+          fileQueue.push(file);
+
+          // re-render
+          renderQueue();
+        }
+      });
+
+      const textInput = document.getElementById('text');
+      document.getElementById("text-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        textQueue.push(textInput.value);
+        textInput.value = "";
+
+        // re-render
+        renderQueue();
+      });
+
+      document.getElementById("submit-button").addEventListener("click", async (e) => {
         e.preventDefault();
 
-        console.log("Submitting form...");
+        let textInput = document.getElementById('text');
+        let sendQueue = document.getElementById('send-queue');
+        let fileInput = document.getElementById('file-input');
+        
+        const formData = new FormData();
+        
+        // formData.append("text", textInput.value);
+        if (textQueue.length != 0) {
+          formData.append("text", JSON.stringify(textQueue));
+        }
 
-        const formData = new FormData(e.target);
+        for (file of fileQueue) {
+          formData.append("files", file);
+        }
 
         document.querySelector(".spinner-container").style.display = "flex";
         const res = await fetch("/intake", {
@@ -62,31 +133,41 @@
           body: formData
         });
         console.log("response: " + res);
-
-        let successMsg = document.getElementById('success-message');
-        let fileName = document.getElementById('file-name');
-        let successFilename = document.getElementById('success-filename');
-        let textInput = document.getElementById('text');
-
         document.querySelector(".spinner-container").style.display = "none";
+
+        // let successMsg = document.getElementById('success-message');
+        // let fileName = document.getElementById('file-name');
+        // let successFilename = document.getElementById('success-filename');
+
         if (res.ok) {
-          successMsg.style.display = "flex";
-          if (fileName.textContent !== "No file chosen") {
-            if (textInput.value !== "") {
-              successFilename.textContent = "2 items";
-            } else {
-              successFilename.textContent = fileName.textContent;
-            }
-          } else {
-            if (textInput.value !== "") {
-              successFilename.textContent = "Text";
-            }
-          }
-          fileName.textContent = "No file chosen";
+          // successMsg.style.display = "flex";
+          // if (fileName.textContent !== "No file chosen") {
+          //   if (textInput.value !== "") {
+          //     successFilename.textContent = "2 items";
+          //   } else {
+          //     successFilename.textContent = fileName.textContent;
+          //   }
+          // } else {
+          //   if (textInput.value !== "") {
+          //     successFilename.textContent = "Text";
+          //   }
+          // }
+          // fileName.textContent = "No file chosen";
           textInput.value = "";
-          document.getElementById('upload-form').reset();
+          sendQueue.innerHTML = "";
+          fileInput.value = "";
+          fileQueue.length = 0;
+          textQueue.length = 0;
+
+          renderQueue();
+
+          // document.getElementById('upload-form').reset();
         }
       });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("subtext").innerText = "to " + window.location.host;
+      })
     </script>
   </body>
 </html>

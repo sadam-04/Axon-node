@@ -49,7 +49,7 @@
           color: white;
       }
 
-      #url-text {
+      #filename-text {
           word-break: break-all;
           margin-top: 8px;
           margin-bottom: 15px;
@@ -79,6 +79,7 @@
           background-color: #282828;
           color: white;
           border-radius: 8px;
+          height: 14px;
       }
 
       .button:hover {
@@ -86,6 +87,8 @@
           /* box-shadow: 0 0 6px #303030, 2px 2px 8px -4px #000000, inset 0 0 6px #363636; */
           /* text-shadow: 0 0 8px #000; */
       }
+
+
 
       @media only screen and (max-width: 1274px) {
           .main-content {
@@ -101,28 +104,27 @@
     </style>
 
     <script>
-      function open_link() {
-          window.open('{{url}}', '_blank');
+      function open_inline_new_tab() {
+          window.open(window.location.href + "/inline/{{filename}}", '_blank');
       }
 
-      function copy_link() {
-          navigator.clipboard.writeText('{{url}}');
-          document.querySelector('#copy-link').innerText = 'Copied!';
+      function download_attachment() {
+          window.open(window.location.href + "/attachment/{{filename}}", '_blank');
       }
     </script>
 
   </head>
   <body>
     <div class="main-content">
-        <span class="section-title"><strong>URL</strong></span>
+        <span class="section-title"><strong>File</strong></span>
 
-        <div id="url-text">{{url}}</div>
+        <div id="filename-text">{{filename}}</div>
 
         <!-- <div class="inner-content"> -->
             <div id="actions"><strong>Actions</strong></div>
             <div class="button-wrapper">
-                <div class="button" id="open-link" onClick="open_link()">Open in new tab</div>
-                <div class="button" id="copy-link" onClick="copy_link()" onmouseleave="this.innerText='Copy to clipboard'">Copy to clipboard</div>
+                <div class="button" id="open-inline" onClick="open_inline_new_tab()">View in new tab</div>
+                <div class="button" id="copy-attachment" onClick="download_attachment()">Download</div>
             </div>
         <!-- </div> -->
     </div>

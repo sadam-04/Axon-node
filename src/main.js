@@ -41,13 +41,15 @@ function addInboxItem(type, filename, url, size, buffer) {
   let displayname = "item";
   let string = "";
   if (type === "file") {
-    displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
+    // displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
+    displayname = filename;
     string = null;
   } else if (type === "url") {
     displayname = "URL (" + URL.parse(url).hostname + ")";
     string = url;
   } else if (type === "text") {
-    displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
+    // displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
+    displayname = "Text (" + buffer + ")";
     string = buffer.toString('utf-8');
   }
 
