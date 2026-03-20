@@ -83,23 +83,23 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                     </div>
                 </div>
 
-                <div style={{marginLeft: "0", marginRight: "0", marginTop: "2px"}}>
-                {inboxItems.map((file, i) => (
+                <div style={{display: "flex", flexDirection: "column", maxHeight: "fit-content", overflowY: "auto", marginLeft: "0", marginRight: "0", marginTop: "2px"}}>
+                    {inboxItems.map((file, i) => (
 
-                    <ResponsiveButton
-                    key={file.id}
-                    label={<SummaryListItem fileName={file.displayname} onCloseClick={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)} />}
-                    buttonAction={() => {setSelectedRFile(i)}}
-                    selected={activeRFile === i}
-                    enabled={true}
-                    customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "2px auto 2px auto"}}
-                    shadeA={"#282828"}
-                    shadeB={"#303030"}
-                    shadeC={"#343434"}
-                    />
-                ))}
+                        <ResponsiveButton
+                        key={file.id}
+                        label={<SummaryListItem fileName={file.displayname} onCloseClick={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)} />}
+                        buttonAction={() => {setSelectedRFile(i)}}
+                        selected={activeRFile === i}
+                        enabled={true}
+                        customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "2px auto 2px auto"}}
+                        shadeA={"#282828"}
+                        shadeB={"#303030"}
+                        shadeC={"#343434"}
+                        />
+                    ))}
                 </div>
-                <div style={{flexGrow: "1"}} onClick={() => {setSelectedRFile(null);}} />
+                <div style={{flex: "1"}} onClick={() => {setSelectedRFile(null);}} />
             </div>
             </div>
             {activeRFile === null ? (
