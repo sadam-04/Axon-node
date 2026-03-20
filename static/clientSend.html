@@ -102,6 +102,9 @@
       const textInput = document.getElementById('text');
       document.getElementById("text-form").addEventListener("submit", (event) => {
         event.preventDefault();
+        if (textInput.value == "") {
+          return;
+        }
         textQueue.push(textInput.value);
         textInput.value = "";
 
