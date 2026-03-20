@@ -2,6 +2,10 @@ export const handleAddText = (event, setHostedFiles, setSelectedSFile, addTextVa
   event.preventDefault();
   console.log("Received addtext event: ", event);
 
+  if (addTextValue == undefined || addTextValue == "" || addTextValue == null) {
+    return;
+  }
+
   outboxAPI.addText(addTextValue).then(([uid, filename, filesize]) => {
     var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
 
