@@ -17,7 +17,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                     <div className="left-send-header" onClick={() => {setSelectedSFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0"}}>
                         <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
                         <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
-                            <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} file{hostedFiles.length !== 1 ? "s" : ""}</span>
+                            <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} item{hostedFiles.length !== 1 ? "s" : ""}</span>
                         </div>
                     </div>
                     <div style={{height: "30px", display: "flex", flexDirection: "row", padding: "0px 0px 0px 0px", width: "94%", margin: "auto"}}>
@@ -79,7 +79,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                 <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0" }}>
                     <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
                     <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
-                        <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{inboxItems.length} file{inboxItems.length !== 1 ? "s" : ""}</span>
+                        <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{inboxItems.length} item{inboxItems.length !== 1 ? "s" : ""}</span>
                     </div>
                 </div>
 
@@ -162,6 +162,20 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                             />
                         ) : null}
 
+                        {inboxItems[activeRFile]?.type === "file" ? (
+                            <ResponsiveButton
+                            label={"Open"}
+                            buttonAction={() => {inboxAPI.open(inboxItems[activeRFile].id);}}
+                            selected={false}
+                            enabled={true}
+                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            disabledStyle={{color: "#808080"}}
+                            shadeA={"#303030"}
+                            shadeB={"#383838"}
+                            shadeC={"#404040"}
+                            />
+                        ): null}
+
                         {inboxItems[activeRFile]?.type === "file" || inboxItems[activeRFile]?.type === "text" ? (
                             hasCurrentFileBeenSaved() ? (
                                 <ResponsiveButton
@@ -187,8 +201,8 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                                 shadeB={"#383838"}
                                 shadeC={"#404040"}
                                 />
-                            )) : null
-                        }
+                            )
+                        ) : null}
 
                         <ResponsiveButton
                         label={"Discard"}

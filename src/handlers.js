@@ -28,13 +28,15 @@ export function handleChangedIP(newIP, setPresentedIp) {
 // openFile() tells main proc to open a file dialog 
 // openFile(filepath) tells main proc to load specific file
 // 
-export const openFile = (file = null, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile) => {
+export const openFile = (file = null, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile, setSelectedNavPage) => {
   outboxAPI.openFile(file).then(([uid, fileName, fileSize]) => {
     if (uid == "" || fileName == "null") {
-    return;
+      return;
     }
     var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
     
+    setSelectedNavPage(0);
+
     setHostedFiles(prev => {
       const updated = [...prev, { id: uid, full: fileName, friendly: fileName.replace(/^.*[\\/]/, ''), url: url, size: fileSize, type: "1" }]
       setSelectedSFile(updated.length - 1);
@@ -80,7 +82,7 @@ export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, se
 }
 
 // perform various initialization tasks
-export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile) => {
+export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedNavPage) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {
@@ -91,8 +93,8 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
     window.addEventListener("drop", event => {
       event.preventDefault();
       const file = event.dataTransfer.files[0];
-      console.log("File dropped: ", file);
-      openFile(file, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile);
+      openFile(file, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile, setSelectedNavPage);
+
     });
 
     // get saved IP from last session

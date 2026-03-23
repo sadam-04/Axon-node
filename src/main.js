@@ -58,7 +58,21 @@ function addInboxItem(type, filename, url, size, buffer) {
   return uid;
 }
 
-function savePendingFile(event, _id) {
+async function openPendingFile(event, _id) {
+  const id = JSON.parse(_id);
+
+  if (inboxItems.get(id).savedPath == "") {
+    await savePendingFile(event, id, () => {
+      const targetpath = inboxItems.get(id).savedPath;
+      shell.openPath(targetpath);
+    });
+  } else {
+    const targetpath = inboxItems.get(id).savedPath;
+    shell.openPath(targetpath);
+  }
+}
+
+function savePendingFile(event, _id, cont = null) {
 
   let allWindows = BrowserWindow.getAllWindows();
   if (allWindows.length === 0) {
@@ -103,6 +117,10 @@ function savePendingFile(event, _id) {
     inboxItems.get(id).savedPath = savePath;
 
     window.webContents.send('savePendingFileResult', {id: id, path: savePath });
+
+    if (cont != null) {
+      cont();
+    }
   });
 }
 
@@ -156,8 +174,6 @@ function getAnyIP() {
       return addr[0];
     }
   }
-
-  console.log("goons2");
 
   for (const addr of addrs) {
     if (addr[0].startsWith("192.168") || addr[0].startsWith("10.1")) {
@@ -296,6 +312,7 @@ app.whenReady().then(() => {
   ipcMain.handle('getDefaultIP', getDefaultIP);
   ipcMain.handle('setIP', (event, newIP) => {setIP(newIP); console.log("Set new IP to: ", newIP);});
   ipcMain.handle('listAddrs', listAddrs);
+  ipcMain.handle('openPendingFile', openPendingFile);
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', (event, id) => {inboxItems.delete(id)});

@@ -86,7 +86,7 @@ function App() {
 
   // initialization
   useEffect(() => {
-    initialize(openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile);
+    initialize(openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedNavPage);
   }, []);
 
   //update all URLs when port, protocol or presentedIp changes
