@@ -16,11 +16,11 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                 <div style={{display: "flex", flexDirection: "column", maxHeight: "100%"}}>
                     <div className="left-send-header" onClick={() => {setSelectedSFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "0"}}>
                         <h4 style={{marginBottom: "5px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
-                        <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
+                        <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "20px", marginTop: "2px"}}>
                             <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} item{hostedFiles.length !== 1 ? "s" : ""}</span>
                         </div>
                     </div>
-                    <div style={{height: "30px", display: "flex", flexDirection: "row", padding: "0px 0px 0px 0px", width: "94%", margin: "auto"}}>
+                    <div style={{height: "30px", display: "flex", flexDirection: "row", padding: "0px 0px 0px 0px", width: "94%", margin: "auto", marginTop: "7px"}}>
                         <form onSubmit={(e) => {handleAddText(e, setHostedFiles, setSelectedSFile, addTextValue, setAddTextValue, protocolRef, ipRef, portRef);}} style={{display: "block", boxSizing: "border-box", width:"calc(100% - 30px)", height: "30px", marginRight: "6px"}}>
                             <input type="text" value={addTextValue} onChange={(e) => setAddTextValue(e.target.value)} id="addtext" name="addtext" placeholder="Add text, press Enter to save." style={{width: "100%", height: "100%", fontSize: "13px", boxSizing: "border-box", outline: "none", borderRadius: "8px", border: "none", backgroundColor: "#242424", color: "#fff", padding: "5px 12px 5px 12px"}}/>
                         </form>
