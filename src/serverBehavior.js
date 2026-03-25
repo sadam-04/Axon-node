@@ -143,45 +143,33 @@ module.exports = {
       }
 
       // TODO handle file landing page requests
-      if (outboxItems.get(index)[1] == "file") {
-        let filename = path.basename(outboxItems.get(index)[0]);
+      if (outboxItems.get(index).type == "file") {
+        let filename = path.basename(outboxItems.get(index).friendly);
         let landingPage = await buildFileLandingPage(filename);
         res.statusCode = 200;
         // res.end(`<div><div onclick="(function(){window.location.href = window.location.href + '/inline/file.pdf';})();">Inline</div><div onclick="(function(){window.location.href = window.location.href + '/attachment/file.pdf';})();">Attachment</div></div>`);
         res.end(landingPage);
-      } else if (outboxItems.get(index)[1] == "text") { // else if this is a text object (text/url)
-
-        let text = outboxItems.get(index)[0];
-
-        if (text == null) {
+      } else if (outboxItems.get(index).type == "text") { // else if this is a text object (text/url)
+        let buffer = outboxItems.get(index).buffer;
+        if (buffer == null) {
           res.statusCode = 500;
           res.end("Not found (null payload)");
           return;
         }
 
-        //check if its a url
-        let dataAsUrl = null;
-        try {
-          dataAsUrl = url.parse(text.toString(), true);
-        } catch (e) {
-          console.log("Error parsing URL: ", e);
-          dataAsUrl = null;
-        }
-        if (dataAsUrl && dataAsUrl.protocol && dataAsUrl.host) {
-          // it's a URL
-          let page = await urlWrapper(text);
-          
-          res.setHeader('Content-Length', page.length);
-          res.setHeader('Content-Type', 'text/html');
-          res.statusCode = 200;
-
-          res.end(page);
-          return;
-        }
-        res.setHeader('Content-Length', text.length);
+        res.setHeader('Content-Length', buffer.length);
         res.setHeader('Content-Type', 'text/plain');
-        res.end(text);
         res.statusCode = 200;
+        res.end(buffer);
+        return;
+      } else if (outboxItems.get(index).type == "url") {
+        let buffer = outboxItems.get(index).buffer;
+        let page = await urlWrapper(buffer);
+        
+        res.setHeader('Content-Length', page.length);
+        res.setHeader('Content-Type', 'text/html');
+        res.statusCode = 200;
+        res.end(page);
         return;
       }
     }
@@ -214,9 +202,9 @@ module.exports = {
         return;
       }
 
-      if (outboxItems.get(index)[1] == "file") { // if this is a file object
+      if (outboxItems.get(index).type == "file") { // if this is a file object
 
-        let filepath = outboxItems.get(index)[0];
+        let filepath = outboxItems.get(index).localPath;
 
         if (filepath == null) {
           res.statusCode = 500;

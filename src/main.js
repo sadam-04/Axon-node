@@ -22,58 +22,64 @@ const projectRoot = app.isPackaged
 
 var protocol = 'HTTP';
 
-var outboxItems = new Map();
+const outboxItems = new Map();
 const inboxItems = new Map();
 
 function addInboxItem(type, filename, url, size, buffer) {
   const uid = Math.floor(Math.random() * 1000000);
 
+    // type: "file",
+    // friendly: friendlyname,
+    // buffer: null,
+    // size: fs.statSync(path).size,
+    // localPath: path,
+    // internalUrl: internalUrl
+
   inboxItems.set(uid, {
-    buffer: buffer,
-    filename: filename,
     type: type,
-    mimetype: type == "url" || type == "text" ? "text/plain" : "application/octet-stream",
+    friendly: filename,
+    buffer: buffer,
     size: size,
-    url: url,
-    savedPath: "",
+    localPath: "",
+    internalUrl: url,
   });
 
-  let displayname = "item";
-  let string = "";
-  if (type === "file") {
-    // displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
-    displayname = filename;
-    string = null;
-  } else if (type === "url") {
-    displayname = "URL (" + URL.parse(url).hostname + ")";
-    string = url;
-  } else if (type === "text") {
-    // displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
-    displayname = "Text (" + buffer + ")";
-    string = buffer.toString('utf-8');
-  }
+  // let displayname = "item";
+  // let string = "";
+  // if (type === "file") {
+  //   // displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
+  //   displayname = filename;
+  //   string = null;
+  // } else if (type === "url") {
+  //   displayname = "URL (" + URL.parse(url).hostname + ")";
+  //   string = url;
+  // } else if (type === "text") {
+  //   // displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
+  //   displayname = "Text (" + buffer + ")";
+  //   string = buffer.toString('utf-8');
+  // }
 
-  notifyRendererOfNewFile(BrowserWindow.getAllWindows()[0], {displayname: displayname, string: string, id: uid, size: size, type: type});
-
+  // notifyRendererOfNewFile(BrowserWindow.getAllWindows()[0], {displayname: displayname, string: string, id: uid, size: size, type: type});
+  updateRendererInbox();
+  
   return uid;
 }
 
 async function openPendingFile(event, _id) {
   const id = JSON.parse(_id);
 
-  if (inboxItems.get(id).savedPath == "") {
+  if (inboxItems.get(id).localPath == "") {
     await savePendingFile(event, id, () => {
-      const targetpath = inboxItems.get(id).savedPath;
+      const targetpath = inboxItems.get(id).localPath;
       shell.openPath(targetpath);
     });
   } else {
-    const targetpath = inboxItems.get(id).savedPath;
+    const targetpath = inboxItems.get(id).localPath;
     shell.openPath(targetpath);
   }
 }
 
 function savePendingFile(event, _id, cont = null) {
-
   let allWindows = BrowserWindow.getAllWindows();
   if (allWindows.length === 0) {
     return;
@@ -100,7 +106,7 @@ function savePendingFile(event, _id, cont = null) {
   let savePath = "";
 
   if (file.type === "file") {
-    savePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.filename);
+    savePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.friendly);
   } else if (file.type === "text") {
     savePath = path.join(projectRoot, "uploads", id.toString() + "-text.txt");
   } else if (file.type === "url") {
@@ -144,18 +150,50 @@ async function handleFileOpen(e, path) {
   }
 
   let uid = Math.floor(Math.random() * 1000000);
-  outboxItems.set(uid, [path, "file"]);
 
-  const fileSize = fs.statSync(path).size;
-  return [uid, path.replace(/^.*[\\/]/, ''), fileSize]; // return to renderer
+  var internalUrl = `${protocol}://127.0.0.1:${userConfig.get("port")}/get/${uid}`;
+
+  let friendlyname = path.replace(/^.*[\\/]/, '');
+  console.log("adding file: ", friendlyname);
+
+  outboxItems.set(uid, {
+    type: "file",
+    friendly: friendlyname,
+    buffer: null,
+    size: fs.statSync(path).size,
+    localPath: path,
+    internalUrl: internalUrl
+  });
+
+  updateRendererOutbox();
+  // return [uid, path.replace(/^.*[\\/]/, ''), fileSize]; // return to renderer
 }
 
 async function addTextToOutbox(event, text) {
   const buffer = Buffer.from(text, 'utf-8');
 
   let uid = Math.floor(Math.random() * 1000000);
-  outboxItems.set(uid, [buffer, "text"]);
-  return [uid, buffer.subarray(0, 128).toString('utf-8'), buffer.length]; // uid, filename, filesize
+  let type = "text";
+
+  if (URL.canParse(text)) {
+    type = "url";
+  }
+
+  var internalUrl = `${protocol}://127.0.0.1:${userConfig.get("port")}/get/${uid}`;
+
+  outboxItems.set(uid, {
+    type: type,
+    friendly: "text goons",
+    buffer: buffer,
+    size: buffer.length,
+    localPath: null,
+    internalUrl: internalUrl
+  });
+
+  console.log("adding text to outbox");
+  updateRendererOutbox();
+
+  // return [uid, buffer.subarray(0, 128).toString('utf-8'), buffer.length]; // uid, filename, filesize
 }
 
 function getAnyIP() {
@@ -306,6 +344,82 @@ const createWindow = () => {
   return mainWindow;
 };
 
+function updateRendererInbox() {
+  const window = BrowserWindow.getAllWindows()[0];
+
+  let convertedItems = [];
+  for (const [uid, item] of inboxItems) {
+    let displayname = "item";
+    let string = "";
+    if (item.type === "file") {
+      displayname = item.filename;
+      string = null;
+    } else if (item.type === "url") {
+      displayname = "URL (" + URL.parse(item.url).hostname + ")";
+      string = item.url;
+    } else if (item.type === "text") {
+      displayname = "Text (" + item.buffer + ")";
+      string = item.buffer.toString('utf-8');
+    }
+
+    convertedItems.push({
+      type: item.type,
+      friendly: displayname,
+      buffer: string,
+      size: item.size,
+      id: uid,
+    });
+  }
+
+  console.log("items:", convertedItems);
+
+  window.webContents.send('update-inbox', convertedItems);
+}
+
+function updateRendererOutbox() {
+  const window = BrowserWindow.getAllWindows()[0];
+
+  let convertedItems = [];
+  for (const [uid, item] of outboxItems) {
+    // let displayname = item.friendly;
+    let string = "";
+    if (item.type === "file") {
+      // displayname = item.friendly;
+      string = null;
+    } else if (item.type === "url") {
+      // displayname = "URL (" + URL.parse(item.buffer).hostname + ")";
+      string = item.url;
+    } else if (item.type === "text") {
+      // displayname = "Text (" + item.buffer + ")";
+      string = item.buffer.toString('utf-8');
+    }
+
+    convertedItems.push({
+      type: item.type,
+      friendly: item.friendly,
+      buffer: string,
+      size: item.size,
+      id: uid,
+      internalUrl: item.internalUrl
+    });
+  }
+
+  // console.log("Sending update to outbox: ", convertedItems);
+
+  window.webContents.send('update-outbox', convertedItems);
+}
+
+function deleteInboxItem(event, id) {
+  inboxItems.delete(id);
+  updateRendererInbox();
+}
+
+function deleteOutboxItem(event, id) {
+  outboxItems.delete(id);
+  console.log("why");
+  updateRendererOutbox();
+}
+
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
   ipcMain.handle('addTextToOutbox', addTextToOutbox);
@@ -315,8 +429,8 @@ app.whenReady().then(() => {
   ipcMain.handle('openPendingFile', openPendingFile);
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
-  ipcMain.handle('discardPendingFile', (event, id) => {inboxItems.delete(id)});
-  ipcMain.handle('discardOutboxItem', (event, id) => {outboxItems.delete(id)});
+  ipcMain.handle('discardPendingFile', deleteInboxItem);
+  ipcMain.handle('discardOutboxItem', deleteOutboxItem);
   ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
   ipcMain.handle('setPort', (event, newPort) => {userConfig.set('port', newPort); initServer(protocol);});
   ipcMain.handle('getPort', () => {

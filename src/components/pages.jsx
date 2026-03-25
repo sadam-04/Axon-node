@@ -9,7 +9,6 @@ import SimpleTextHeader from './SimpleTextHeader';
 const icon_folder = require("../icons/icon_folder_4.png");
 
 const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocolRef, ipRef, portRef, activeSFile}) => {
-
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
             <div id="left-summary-panel" style={{display: "flex", flexDirection: "column", boxSizing: "content-box"}}>
@@ -26,7 +25,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         </form>
                         <ResponsiveButton 
                         label={<img src={icon_folder} style={{width: "16px"}} />}
-                        buttonAction={() => openFile(null, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile)}
+                        buttonAction={() => openFile(null, setSelectedSFile)}
                         selected={false}
                         enabled={true}
                         customStyle={{width: "30px", height: "30px", borderRadius: "8px", justifyContent: "center", alignItems: "center"}}
@@ -36,10 +35,10 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         />
                     </div>
                     <div style={{display: "flex", flexDirection: "column", flexShrink: "1", height: "fit-content", marginLeft: "0", marginRight: "0", marginTop: "2px", overflowY: "auto"}}>
-                    {hostedFiles.map((file, i) => (
+                    {hostedFiles != null ? hostedFiles.map((file, i) => (
                         <ResponsiveButton
                         key={file.id}
-                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {var fileID = new URL(file.url).pathname.split("/").filter(Boolean).pop(); outboxAPI.discard(fileID); var _hostedFiles = hostedFiles.filter(f => f.id !== file.id); if (_hostedFiles.length == 0) {setSelectedSFile(null);} else {setSelectedSFile(0);} setHostedFiles(_hostedFiles);}} />}
+                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {outboxAPI.discard(file.id);}} />}
                         buttonAction={() => {setSelectedSFile(i);}}
                         selected={activeSFile === i}
                         enabled={true}
@@ -48,7 +47,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         shadeB={"#303030"}
                         shadeC={"#343434"}
                         />
-                    ))}
+                    )) : null}
                     </div>
                 </div>
                 <div style={{flexGrow: "1"}} onClick={() => {setSelectedSFile(null);}} />
@@ -63,7 +62,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
             flexGrow: 1,
             height: "calc(100% - 20px)",
             }}>
-                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.friendly} url={hostedFiles[activeSFile]?.url} size={hostedFiles[activeSFile]?.size} />
+                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.friendly} url={hostedFiles[activeSFile]?.internalUrl} size={hostedFiles[activeSFile]?.size} />
             </div>
             ) : null}
         </div>
@@ -88,7 +87,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
 
                         <ResponsiveButton
                         key={file.id}
-                        label={<SummaryListItem fileName={file.displayname} onCloseClick={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)} />}
+                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)} />}
                         buttonAction={() => {setSelectedRFile(i)}}
                         selected={activeRFile === i}
                         enabled={true}
@@ -129,14 +128,14 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
             }}>
                 <div style={{display: "flex", flexDirection: "row", width: "calc(100% - 10px)", marginRight: "10px"}}>
                     <div style={{display: "flex", flexGrow: 1, margin: "10px", width: "calc(100% - 270px - 20px)"}}>
-                        <SimpleTextHeader primaryText={inboxItems[activeRFile]?.displayname} secondaryText={`Size: ${inboxItems[activeRFile]?.size < 1024 ? `${inboxItems[activeRFile]?.size} B` : inboxItems[activeRFile]?.size < 1048576 ? `${(inboxItems[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(inboxItems[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
+                        <SimpleTextHeader primaryText={inboxItems[activeRFile]?.friendly} secondaryText={`Size: ${inboxItems[activeRFile]?.size < 1024 ? `${inboxItems[activeRFile]?.size} B` : inboxItems[activeRFile]?.size < 1048576 ? `${(inboxItems[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(inboxItems[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
                     </div>
 
                     <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
                         {inboxItems[activeRFile]?.type === "url" ? (
                             <ResponsiveButton
                             label={"Open URL"}
-                            buttonAction={async () => {window.location.href = inboxItems[activeRFile].string;}}
+                            buttonAction={async () => {window.location.href = inboxItems[activeRFile].buffer;}}
                             selected={false}
                             enabled={true}
                             customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -149,10 +148,10 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                         )}
 
                         
-                        {inboxItems[activeRFile]?.type === "text" || inboxItems[activeRFile].type === "url" ? (
+                        {inboxItems[activeRFile]?.type === "text" || inboxItems[activeRFile]?.type === "url" ? (
                             <ResponsiveButton
                             label={"Copy"}
-                            buttonAction={async () => {navigator.clipboard.writeText(inboxItems[activeRFile].string);}}
+                            buttonAction={async () => {navigator.clipboard.writeText(inboxItems[activeRFile].buffer);}}
                             selected={false}
                             enabled={true}
                             customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
@@ -218,7 +217,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                 </div>
                 <div style={{display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "flex-start", width: "100%", height: "40px", boxSizing: "border-box"}}>
                 <div style={{width: "18px", flexGrow: 0}} />
-                <div style={{width: "1px", flexGrow: 1, color: "#808080", fontStyle: "italic"}}>{savePaths[inboxItems[activeRFile].id] ? "Saved to " + savePaths[inboxItems[activeRFile].id] : ""}</div>
+                <div style={{width: "1px", flexGrow: 1, color: "#808080", fontStyle: "italic"}}>{savePaths[inboxItems[activeRFile]?.id] ? "Saved to " + savePaths[inboxItems[activeRFile]?.id] : ""}</div>
                 </div>
             </div>
             )}

@@ -77,6 +77,22 @@ function App() {
   }, [port]);
 
   useEffect(() => {
+    if (outboxItems.length == 0) {
+      setSelectedSFile(null);
+    } else if (activeSFile >= outboxItems.length) {
+      setSelectedSFile(outboxItems.length - 1);
+    }
+  }, [outboxItems]);
+
+  useEffect(() => {
+    if (inboxItems.length == 0) {
+      setSelectedRFile(null);
+    } else if (activeRFile >= inboxItems.length) {
+      setSelectedRFile(inboxItems.length - 1);
+    }
+  }, [inboxItems]);
+
+  useEffect(() => {
     // In send mode:
     //  when a file is selected, exit writing mode
     if (activeSFile !== null) {

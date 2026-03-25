@@ -19,7 +19,7 @@ contextBridge.exposeInMainWorld('configAPI', {
 
 contextBridge.exposeInMainWorld('inboxAPI', {
     onNewFile: (callback) => ipcRenderer.on('new-uploaded-file', (e, file) => callback(file)),
-    
+    onUpdate: (callback) => ipcRenderer.on('update-inbox', (e, items) => callback(items)),
     onSaveFileResult: (callback) => ipcRenderer.on('savePendingFileResult', (e, result) => callback(result)),
     
     open: (id) => ipcRenderer.invoke('openPendingFile', id),
@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('outboxAPI', {
         let path = webUtils.getPathForFile(file);
         return ipcRenderer.invoke('openFile', path);
     },
+    onUpdate: (callback) => ipcRenderer.on('update-outbox', (e, items) => callback(items)),
     addText: (text) => ipcRenderer.invoke('addTextToOutbox', text),
     discard: (id) => ipcRenderer.invoke('discardOutboxItem', id),
 });
