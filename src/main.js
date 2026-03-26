@@ -25,7 +25,7 @@ var protocol = 'HTTP';
 const outboxItems = new Map();
 const inboxItems = new Map();
 
-function addInboxItem(type, filename, url, size, buffer) {
+function addInboxItem(type, friendly, size, buffer) {
   const uid = Math.floor(Math.random() * 1000000);
 
     // type: "file",
@@ -37,11 +37,10 @@ function addInboxItem(type, filename, url, size, buffer) {
 
   inboxItems.set(uid, {
     type: type,
-    friendly: filename,
+    friendly: friendly,
     buffer: buffer,
     size: size,
     localPath: "",
-    internalUrl: url,
   });
 
   // let displayname = "item";
@@ -349,22 +348,22 @@ function updateRendererInbox() {
 
   let convertedItems = [];
   for (const [uid, item] of inboxItems) {
-    let displayname = "item";
+    // let displayname = "item";
     let string = "";
     if (item.type === "file") {
-      displayname = item.filename;
+      // displayname = item.filename;
       string = null;
     } else if (item.type === "url") {
-      displayname = "URL (" + URL.parse(item.url).hostname + ")";
+      // displayname = "URL (" + URL.parse(item.url).hostname + ")";
       string = item.url;
     } else if (item.type === "text") {
-      displayname = "Text (" + item.buffer + ")";
+      // displayname = "Text (" + item.buffer + ")";
       string = item.buffer.toString('utf-8');
     }
 
     convertedItems.push({
       type: item.type,
-      friendly: displayname,
+      friendly: item.friendly,
       buffer: string,
       size: item.size,
       id: uid,
@@ -404,8 +403,6 @@ function updateRendererOutbox() {
     });
   }
 
-  // console.log("Sending update to outbox: ", convertedItems);
-
   window.webContents.send('update-outbox', convertedItems);
 }
 
@@ -416,7 +413,6 @@ function deleteInboxItem(event, id) {
 
 function deleteOutboxItem(event, id) {
   outboxItems.delete(id);
-  console.log("why");
   updateRendererOutbox();
 }
 

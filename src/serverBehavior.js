@@ -67,7 +67,7 @@ module.exports = {
           if (req.files) {
             console.log(req.files);
             for (f of req.files) {
-              addInboxItem("file", f.originalname, null, f.size, f.buffer);
+              addInboxItem("file", f.originalname, f.size, f.buffer);
             }
           }
 
@@ -82,10 +82,10 @@ module.exports = {
                 let uid = null;
                 if (URL.canParse(text)) {
                   console.log("Text is a URL");
-                  uid = addInboxItem("url", "url", text, text.length, Buffer.from(text));
+                  uid = addInboxItem("url", text, text.length, Buffer.from(text));
                 } else {
                   console.log("Text is general text");
-                  uid = addInboxItem("text", "text", null, text.length, Buffer.from(text));
+                  uid = addInboxItem("text", text, text.length, Buffer.from(text));
                 }
               }
             }
