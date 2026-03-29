@@ -68,12 +68,15 @@ async function openPendingFile(event, _id) {
   const id = JSON.parse(_id);
 
   if (inboxItems.get(id).localPath == "") {
+    console.log("file has not yet been saved. saving now.");
     await savePendingFile(event, id, () => {
       const targetpath = inboxItems.get(id).localPath;
+      console.log("opening file: ", targetpath);
       shell.openPath(targetpath);
     });
   } else {
     const targetpath = inboxItems.get(id).localPath;
+    console.log("opening file: ", targetpath);
     shell.openPath(targetpath);
   }
 }
@@ -87,11 +90,11 @@ function savePendingFile(event, _id, cont = null) {
   
   const id = JSON.parse(_id);
 
-  console.log("Saving pending file with id: " + id);
+  // console.log("Saving pending file with id: " + id);
 
   const file = inboxItems.get(id);
   
-  console.log ("File to save: ", file);
+  // console.log ("File to save: ", file);
   
   if (!file) {
     console.log("File not found in inboxItems map.");
@@ -119,7 +122,7 @@ function savePendingFile(event, _id, cont = null) {
       return;
     }
     
-    inboxItems.get(id).savedPath = savePath;
+    inboxItems.get(id).localPath = savePath;
 
     window.webContents.send('savePendingFileResult', {id: id, path: savePath });
 
@@ -133,9 +136,9 @@ function revealPendingFile(event, _id) {
   const file = inboxItems.get(_id);
 
   if (!file) return;
-  if (!file.savedPath || file.savedPath === "") return;
+  if (!file.localPath || file.localPath === "") return;
   
-  shell.showItemInFolder(file.savedPath);
+  shell.showItemInFolder(file.localPath);
 }
 
 async function handleFileOpen(e, path) {

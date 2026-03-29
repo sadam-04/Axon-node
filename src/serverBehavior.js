@@ -82,10 +82,10 @@ module.exports = {
                 let uid = null;
                 if (URL.canParse(text)) {
                   console.log("Text is a URL");
-                  uid = addInboxItem("url", text, text.length, Buffer.from(text));
+                  uid = addInboxItem("url", text.slice(0, 99), text.length, Buffer.from(text));
                 } else {
                   console.log("Text is general text");
-                  uid = addInboxItem("text", text, text.length, Buffer.from(text));
+                  uid = addInboxItem("text", text.slice(0, 99), text.length, Buffer.from(text));
                 }
               }
             }
