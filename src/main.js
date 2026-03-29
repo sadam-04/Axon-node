@@ -182,7 +182,7 @@ async function addTextToOutbox(event, text) {
 
   outboxItems.set(uid, {
     type: type,
-    friendly: "text goons",
+    friendly: buffer.toString().slice(0, 99),
     buffer: buffer,
     size: buffer.length,
     localPath: null,
