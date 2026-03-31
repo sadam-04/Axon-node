@@ -38,8 +38,9 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                     {hostedFiles != null ? hostedFiles.map((file, i) => (
                         <ResponsiveButton
                         key={file.id}
-                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {outboxAPI.discard(file.id);}} />}
-                        buttonAction={() => {setSelectedSFile(i);}}
+                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {console.log("close button pressed"); outboxAPI.discard(file.id);}} />}
+                        passHoverToLabel={true}
+                        buttonAction={() => {console.log("main button pressed"); setSelectedSFile(i);}}
                         selected={activeSFile === i}
                         enabled={true}
                         customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "2px auto 2px auto"}}
@@ -88,6 +89,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
                         <ResponsiveButton
                         key={file.id}
                         label={<SummaryListItem fileName={file.friendly} onCloseClick={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)} />}
+                        passHoverToLabel={true}
                         buttonAction={() => {setSelectedRFile(i)}}
                         selected={activeRFile === i}
                         enabled={true}
