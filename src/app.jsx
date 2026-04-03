@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import { handleAddText, handleChangedIP, openFile, handleDiscardPendingFile, initialize, updateURL } from "./handlers";
 import { Outbox, Inbox } from "./components/pages";
@@ -53,7 +53,7 @@ function App() {
 
   const [activeSFile, setSelectedSFile] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
-  const [writingNewText, setWritingNewText] = useState(false);
+  // const [writingNewText, setWritingNewText] = useState(false);
 
   const [tlsKeyPath, setTLSKeyPath] = useState("");
   const [tlsCertPath, setTLSCertPath] = useState("");
@@ -76,7 +76,7 @@ function App() {
     portRef.current = port;
   }, [port]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (outboxItems.length == 0) {
       setSelectedSFile(null);
     } else if (activeSFile >= outboxItems.length) {
@@ -84,7 +84,7 @@ function App() {
     }
   }, [outboxItems]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (inboxItems.length == 0) {
       setSelectedRFile(null);
     } else if (activeRFile >= inboxItems.length) {
@@ -92,13 +92,13 @@ function App() {
     }
   }, [inboxItems]);
 
-  useEffect(() => {
-    // In send mode:
-    //  when a file is selected, exit writing mode
-    if (activeSFile !== null) {
-      setWritingNewText(false);
-    }
-  }, [activeSFile]);
+  // useEffect(() => {
+  //   // In send mode:
+  //   //  when a file is selected, exit writing mode
+  //   if (activeSFile !== null) {
+  //     setWritingNewText(false);
+  //   }
+  // }, [activeSFile]);
 
   // initialization
   useEffect(() => {
@@ -106,7 +106,7 @@ function App() {
   }, []);
 
   //update all URLs when port, protocol or presentedIp changes
-  useEffect(() => {
+  useLayoutEffect(() => {
     updateURL(protocol, presentedIp, port, setinboxUrl, outboxItems, setOutboxItems);
   }, [protocol, presentedIp, port]);
 
