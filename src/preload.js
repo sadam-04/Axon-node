@@ -19,13 +19,13 @@ contextBridge.exposeInMainWorld('configAPI', {
 
 contextBridge.exposeInMainWorld('inboxAPI', {
     onNewFile: (callback) => ipcRenderer.on('new-uploaded-file', (e, file) => callback(file)),
-    onUpdate: (callback) => ipcRenderer.on('update-inbox', (e, items) => callback(items)),
+    onUpdate: (callback) => ipcRenderer.on('update-inbox', (e, items, ctx) => callback(items, ctx)),
     onSaveFileResult: (callback) => ipcRenderer.on('savePendingFileResult', (e, result) => callback(result)),
     
     open: (id) => ipcRenderer.invoke('openPendingFile', id),
     save: (id) => ipcRenderer.invoke('savePendingFile', id),
     reveal: (id) => ipcRenderer.invoke('revealPendingFile', id),
-    discard: (id) => ipcRenderer.invoke('discardPendingFile', id),
+    discard: (id, ctx) => ipcRenderer.invoke('discardPendingFile', id, ctx),
 });
 
 contextBridge.exposeInMainWorld('outboxAPI', {
@@ -36,7 +36,9 @@ contextBridge.exposeInMainWorld('outboxAPI', {
         let path = webUtils.getPathForFile(file);
         return ipcRenderer.invoke('openFile', path);
     },
-    onUpdate: (callback) => ipcRenderer.on('update-outbox', (e, items) => callback(items)),
+    onUpdate: (callback) => ipcRenderer.on('update-outbox', (e, items, ctx) => callback(items, ctx)),
     addText: (text) => ipcRenderer.invoke('addTextToOutbox', text),
-    discard: (id) => ipcRenderer.invoke('discardOutboxItem', id),
+
+    // argument 2 is only needed so it can be passed back to the renderer with the resulting update, for handling selection changes on discard for example
+    discard: (id, ctx) => ipcRenderer.invoke('discardOutboxItem', id, ctx),
 });

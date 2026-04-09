@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
-import { handleAddText, handleChangedIP, openFile, handleDiscardPendingFile, initialize, updateURL } from "./handlers";
+import { handleAddText, handleChangedIP, openFile, initialize, updateURL } from "./handlers";
 import { Outbox, Inbox } from "./components/pages";
 import ResponsiveButton from "./components/ResponsiveButton";
 
@@ -52,7 +52,13 @@ function App() {
   ]);
 
   const [activeSFile, setSelectedSFile] = useState(null);
+  // const [activeSFileUid, setSelectedSFileUid] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
+  // const [activeRFileUid, setSelectedRFileUid] = useState(null);
+  
+  var activeSFileUid = null;
+  var activeRFileUid = null;
+
   // const [writingNewText, setWritingNewText] = useState(false);
 
   const [tlsKeyPath, setTLSKeyPath] = useState("");
@@ -76,13 +82,13 @@ function App() {
     portRef.current = port;
   }, [port]);
 
-  useLayoutEffect(() => {
-    if (outboxItems.length == 0) {
-      setSelectedSFile(null);
-    } else if (activeSFile >= outboxItems.length) {
-      setSelectedSFile(outboxItems.length - 1);
-    }
-  }, [outboxItems]);
+  // useLayoutEffect(() => {
+  //   if (outboxItems.length == 0) {
+  //     setSelectedSFile(null);
+  //   } else if (activeSFile >= outboxItems.length) {
+  //     setSelectedSFile(outboxItems.length - 1);
+  //   }
+  // }, [outboxItems]);
 
   useLayoutEffect(() => {
     if (inboxItems.length == 0) {
@@ -102,7 +108,7 @@ function App() {
 
   // initialization
   useEffect(() => {
-    initialize(openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedNavPage);
+    initialize(openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
   }, []);
 
   //update all URLs when port, protocol or presentedIp changes
@@ -170,7 +176,7 @@ function App() {
           {selectedNavPage === 0 ? (
             <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocolRef={protocolRef} ipRef={ipRef} portRef={portRef} activeSFile={activeSFile}/>
           ) : selectedNavPage === 1 ? (
-            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} handleDiscardPendingFile={handleDiscardPendingFile} inboxUrl={inboxUrl} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} />
+            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} inboxUrl={inboxUrl} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} />
           ) : selectedNavPage === -1 ? (
             <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>

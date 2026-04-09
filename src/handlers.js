@@ -31,17 +31,6 @@ export const openFile = (file = null, setSelectedNavPage) => {
   });
 }
 
-export const handleDiscardPendingFile = (inboxItems, activeRFile, setSelectedRFile, setinboxItems) => {
-  inboxAPI.discard(inboxItems[activeRFile].id);
-  // var _inboxItems = inboxItems.filter(f => f.id !== inboxItems[activeRFile].id);
-  // if (_inboxItems.length == 0) {
-  //   setSelectedRFile(null);
-  // } else {
-  //   setSelectedRFile(0);
-  // }
-  // setinboxItems(_inboxItems);
-}
-
 // updates all front-end URLs and QRs with a given protocol, ip, and port. 
 export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, setHostedFiles) => {
     if (port == "" || isNaN(port)) {
@@ -68,7 +57,7 @@ export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, se
 }
 
 // perform various initialization tasks
-export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedNavPage) => {
+export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {
@@ -96,12 +85,30 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
     let addrs = await configAPI.listAddrs();
     setAddrs(addrs);
 
-    outboxAPI.onUpdate((items) => {
+    outboxAPI.onUpdate((items, ctx) => {
       setHostedFiles(items);
+      if (ctx != null && ctx.selIdx != null) {
+        if (ctx.delIdx == ctx.selIdx) {
+          setSelectedSFile(null);
+        } else if (ctx.delIdx < ctx.selIdx) {
+          setSelectedSFile((old)=>{
+            return old - 1;
+          })
+        }
+      }
     });
 
-    inboxAPI.onUpdate((items) => {
+    inboxAPI.onUpdate((items, ctx) => {
       setinboxItems(items);
+      if (ctx != null && ctx.selIdx != null) {
+        if (ctx.delIdx == ctx.selIdx) {
+          setSelectedRFile(null);
+        } else if (ctx.delIdx < ctx.selIdx) {
+          setSelectedRFile((old)=>{
+            return old - 1;
+          })
+        }
+      }
     });
 
     // handler for when the main proc says we have a new inbox item

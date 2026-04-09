@@ -38,7 +38,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                     {hostedFiles != null ? hostedFiles.map((file, i) => (
                         <ResponsiveButton
                         key={file.id}
-                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {console.log("close button pressed"); outboxAPI.discard(file.id);}} />}
+                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {outboxAPI.discard(file.id, {delIdx: i, selIdx: activeSFile});}} />}
                         passHoverToLabel={true}
                         buttonAction={() => {console.log("main button pressed"); setSelectedSFile(i);}}
                         selected={activeSFile === i}
@@ -63,14 +63,14 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
             flexGrow: 1,
             height: "calc(100% - 20px)",
             }}>
-                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.friendly} url={hostedFiles[activeSFile]?.internalUrl} size={hostedFiles[activeSFile]?.size} />
+                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.friendly} url={`${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${hostedFiles[activeSFile]?.id}`} size={hostedFiles[activeSFile]?.size} />
             </div>
             ) : null}
         </div>
     );
 }
 
-const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handleDiscardPendingFile, inboxUrl, hasCurrentFileBeenSaved, savePaths}) => {
+const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, inboxUrl, hasCurrentFileBeenSaved, savePaths}) => {
 
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
@@ -85,10 +85,9 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
 
                 <div style={{display: "flex", flexDirection: "column", maxHeight: "fit-content", overflowY: "auto", marginLeft: "0", marginRight: "0", marginTop: "0"}}>
                     {inboxItems.map((file, i) => (
-
                         <ResponsiveButton
                         key={file.id}
-                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)} />}
+                        label={<SummaryListItem fileName={file.friendly} onCloseClick={() => inboxAPI.discard(file.id, {delIdx: i, selIdx: activeRFile})} />}
                         passHoverToLabel={true}
                         buttonAction={() => {setSelectedRFile(i)}}
                         selected={activeRFile === i}
@@ -207,7 +206,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, handle
 
                         <ResponsiveButton
                         label={"Discard"}
-                        buttonAction={() => handleDiscardPendingFile(inboxItems, activeRFile, setSelectedRFile, setinboxItems)}
+                        buttonAction={() => inboxAPI.discard(inboxItems[activeRFile].id, {delIdx: activeRFile, selIdx: activeRFile})}
                         selected={false}
                         enabled={true}
                         customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}

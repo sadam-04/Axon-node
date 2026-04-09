@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ShadedButton from './ShadedButton';
 
 export default function ResponsiveButton({selected, enabled, buttonAction, onHover = null, label, passHoverToLabel = false, customStyle = null, disabledStyle = null, shadeA, shadeB, shadeC}) {
@@ -12,7 +12,7 @@ export default function ResponsiveButton({selected, enabled, buttonAction, onHov
   }
 
   return (
-  <div className="ResponsiveButton" onMouseEnter={() => {setHovered(true); if (onHover) onHover();}} onMouseLeave={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setClicked(false);}} onClick={()=>{if (enabled) {buttonAction();}}}>
+  <div className="ResponsiveButton" onMouseOver={() => {setHovered(true); if (onHover) onHover();}} onMouseOut={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setClicked(false);}} onClick={()=>{if (enabled) {buttonAction();}}}>
     <ShadedButton selected={selected} hovered={hovered} pressed={clicked} enabled={enabled} icon={hoverLabel} customStyle={customStyle} disabledStyle={disabledStyle} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
   </div>
   );

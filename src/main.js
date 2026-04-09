@@ -153,7 +153,7 @@ async function handleFileOpen(e, path) {
 
   let uid = Math.floor(Math.random() * 1000000);
 
-  var internalUrl = `${protocol}://127.0.0.1:${userConfig.get("port")}/get/${uid}`;
+  // var internalUrl = `${protocol}://127.0.0.1:${userConfig.get("port")}/get/${uid}`;
 
   let friendlyname = path.replace(/^.*[\\/]/, '');
   console.log("adding file: ", friendlyname);
@@ -163,8 +163,8 @@ async function handleFileOpen(e, path) {
     friendly: friendlyname,
     buffer: null,
     size: fs.statSync(path).size,
-    localPath: path,
-    internalUrl: internalUrl
+    localPath: path
+    // internalUrl: internalUrl
   });
 
   updateRendererOutbox();
@@ -181,15 +181,17 @@ async function addTextToOutbox(event, text) {
     type = "url";
   }
 
-  var internalUrl = `${protocol}://127.0.0.1:${userConfig.get("port")}/get/${uid}`;
+  // let ip = await getDefaultIP();
+
+  // var internalUrl = `${protocol}://${ip}:${userConfig.get("port")}/get/${uid}`;
 
   outboxItems.set(uid, {
     type: type,
     friendly: buffer.toString().slice(0, 99),
     buffer: buffer,
     size: buffer.length,
-    localPath: null,
-    internalUrl: internalUrl
+    localPath: null
+    // internalUrl: internalUrl
   });
 
   console.log("adding text to outbox");
@@ -346,7 +348,7 @@ const createWindow = () => {
   return mainWindow;
 };
 
-function updateRendererInbox() {
+function updateRendererInbox(ctx = null) {
   const window = BrowserWindow.getAllWindows()[0];
 
   let convertedItems = [];
@@ -375,10 +377,10 @@ function updateRendererInbox() {
 
   console.log("items:", convertedItems);
 
-  window.webContents.send('update-inbox', convertedItems);
+  window.webContents.send('update-inbox', convertedItems, ctx);
 }
 
-function updateRendererOutbox() {
+function updateRendererOutbox(ctx = null) {
   const window = BrowserWindow.getAllWindows()[0];
 
   let convertedItems = [];
@@ -402,21 +404,21 @@ function updateRendererOutbox() {
       buffer: string,
       size: item.size,
       id: uid,
-      internalUrl: item.internalUrl
+      // internalUrl: item.internalUrl
     });
   }
 
-  window.webContents.send('update-outbox', convertedItems);
+  window.webContents.send('update-outbox', convertedItems, ctx);
 }
 
-function deleteInboxItem(event, id) {
+function deleteInboxItem(event, id, ctx) {
   inboxItems.delete(id);
-  updateRendererInbox();
+  updateRendererInbox(ctx);
 }
 
-function deleteOutboxItem(event, id) {
+function deleteOutboxItem(event, id, ctx) {
   outboxItems.delete(id);
-  updateRendererOutbox();
+  updateRendererOutbox(ctx);
 }
 
 app.whenReady().then(() => {
