@@ -94,7 +94,11 @@ function savePendingFile(event, _id, cont = null) {
   }
 
   // let saveDir = path.join(projectRoot, "uploads");
-  let saveDir = userConfig.get('saveDir', app.getPath('downloads'));
+  let saveDir = userConfig.get('saveDir', null);
+  if (saveDir == null || saveDir == "") {
+    saveDir = app.getPath('downloads');
+    userConfig.set('saveDir', saveDir);
+  }
 
   if (!fs.existsSync(saveDir)) {
     fs.mkdirSync(saveDir);
@@ -335,6 +339,27 @@ app.whenReady().then(() => {
   ipcMain.handle('setTLSCertPath', (event, path) => {console.log("received tlsCertPath: ", path); userConfig.set('tlsCertPath', path);});
   ipcMain.handle('getTLSCertPath', () => {
     return userConfig.get('tlsCertPath');
+  });
+  ipcMain.handle('getSaveDir', (event) => {
+    let savedVal = userConfig.get('saveDir', null);
+    if (savedVal == null || savedVal == "") {
+      savedVal = app.getPath('downloads');
+      userConfig.set('saveDir', savedVal);
+    }
+    return savedVal;
+  });
+  ipcMain.handle('setSaveDir', (event, newSaveDir) => {userConfig.set('saveDir', newSaveDir);});
+  ipcMain.handle('browseForSaveDir', async (event, fallback) => {
+    let result = await dialog.showOpenDialog({properties: ['openDirectory', 'createDirectory']});
+    
+    if (result.canceled) {
+      return fallback;
+    }
+    if (!fs.existsSync(result.filePaths[0])) {
+      return fallback;
+    }
+    userConfig.set('saveDir', result.filePaths[0]);
+    return result.filePaths[0];
   });
 
   let server = null;

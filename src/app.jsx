@@ -37,9 +37,9 @@ function App() {
   const [protocol, setProtocol] = useState("");
 
   const [protocolMessage, setProtocolMessage] = useState("");
-
-  const [port, setPort] = useState(2222);
-
+  
+  const [port, setPort] = useState(null);
+  
   const [inboxUrl, setinboxUrl] = useState("");
 
   const [savePaths, setSavePaths] = useState({});
@@ -62,6 +62,8 @@ function App() {
   const ipRef = useRef(presentedIp);
   const portRef = useRef(port);
 
+  const [saveDir, setSaveDir] = useState(null);
+  
   const [addTextValue, setAddTextValue] = useState("");
 
   useEffect(() => {
@@ -86,7 +88,7 @@ function App() {
 
   // initialization
   useEffect(() => {
-    initialize(openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedNavPage);
+    initialize(openFile, protocolRef, ipRef, portRef, setPort, setSaveDir, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedNavPage);
   }, []);
 
   //update all URLs when port, protocol or presentedIp changes
@@ -169,6 +171,13 @@ function App() {
                 <strong>Server port</strong>
                 <span>Specify the port number the server will listen on. Default is 2222.</span>
                 <input type="number" style={{marginTop: "5px", width: "300px"}} defaultValue={port} onBlur={(e) => {setPort(e.target.value); configAPI.setPort(e.target.value);}} placeholder="Enter server port" />
+              </div>
+            <br />
+              <div style={{flexDirection: "column", display: "flex"}}>
+                <strong>Saving files</strong>
+                <span>Specify the directory where files will be saved when the "Save" option is used in the inbox. Default is the user's Downloads folder.</span>
+                <div style={{marginTop: "5px", width: "300px"}}>{saveDir}</div>
+                <button onClick={()=>{console.log(saveDir); configAPI.browseForSaveDir(saveDir).then((result)=>{setSaveDir(result)});}}>browse</button>
               </div>
             </div>
           ) : null}

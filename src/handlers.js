@@ -82,7 +82,7 @@ export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, se
 }
 
 // perform various initialization tasks
-export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedNavPage) => {
+export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setSaveDir, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedNavPage) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {
@@ -132,5 +132,6 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
     setTLSCertPath(tlsCertPath);
     let savedPort = await configAPI.getPort();
     setPort(savedPort);
-
+    let savedSaveDir = await configAPI.getSaveDir();
+    setSaveDir(savedSaveDir);
   }

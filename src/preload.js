@@ -15,6 +15,9 @@ contextBridge.exposeInMainWorld('configAPI', {
     setTLSCertPath: (path) => ipcRenderer.invoke('setTLSCertPath', path),
     getPort: () => ipcRenderer.invoke('getPort'),
     setPort: (newPort) => ipcRenderer.invoke('setPort', newPort),
+    getSaveDir: () => ipcRenderer.invoke('getSaveDir'),
+    setSaveDir: (newSaveDir) => ipcRenderer.invoke('setSaveDir', newSaveDir),
+    browseForSaveDir: (fallback) => ipcRenderer.invoke('browseForSaveDir', fallback),
 });
 
 contextBridge.exposeInMainWorld('inboxAPI', {
