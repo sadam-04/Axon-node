@@ -8,7 +8,7 @@ import SimpleTextHeader from './SimpleTextHeader';
 
 const icon_folder = require("../icons/icon_folder_4.png");
 
-const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocolRef, ipRef, portRef, activeSFile}) => {
+const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocol, ip, port, activeSFile}) => {
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
             <div id="left-summary-panel" style={{display: "flex", flexDirection: "column", boxSizing: "content-box"}}>
@@ -20,7 +20,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         </div>
                     </div>
                     <div style={{height: "30px", display: "flex", flexDirection: "row", padding: "0px 0px 0px 0px", width: "94%", margin: "auto"}}>
-                        <form onSubmit={(e) => {handleAddText(e, setHostedFiles, setSelectedSFile, addTextValue, setAddTextValue, protocolRef, ipRef, portRef);}} style={{display: "block", boxSizing: "border-box", width:"calc(100% - 30px)", height: "30px", marginRight: "6px"}}>
+                        <form onSubmit={(e) => {handleAddText(e, setHostedFiles, setSelectedSFile, addTextValue, setAddTextValue, protocol, ip, port);}} style={{display: "block", boxSizing: "border-box", width:"calc(100% - 30px)", height: "30px", marginRight: "6px"}}>
                             <input type="text" value={addTextValue} onChange={(e) => setAddTextValue(e.target.value)} id="addtext" name="addtext" placeholder="Add text, press Enter to save." style={{width: "100%", height: "100%", fontSize: "13px", boxSizing: "border-box", outline: "none", borderRadius: "8px", border: "none", backgroundColor: "#242424", color: "#fff", padding: "5px 12px 5px 12px"}}/>
                         </form>
                         <ResponsiveButton 
@@ -63,14 +63,14 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
             flexGrow: 1,
             height: "calc(100% - 20px)",
             }}>
-                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.friendly} url={`${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${hostedFiles[activeSFile]?.id}`} size={hostedFiles[activeSFile]?.size} />
+                <ServedItem key={hostedFiles[activeSFile]?.id} filename={hostedFiles[activeSFile]?.friendly} url={`${protocol}://${ip}:${port}/get/${hostedFiles[activeSFile]?.id}`} size={hostedFiles[activeSFile]?.size} />
             </div>
             ) : null}
         </div>
     );
 }
 
-const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, inboxUrl, hasCurrentFileBeenSaved, savePaths}) => {
+const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCurrentFileBeenSaved, savePaths, protocol, ip, port}) => {
 
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
@@ -106,7 +106,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, inboxU
             <div id="right-blank-panel" style={{width: "200px", flexGrow: 1}}>
                 <div style={{color: "white", fontSize: "0.9rem", margin: "0 auto", width: "100%", textAlign: "center"}}>Share this QR code to allow others to send you files:</div>
                 <div style={{width: "fit-content", margin: "0 auto", marginTop: "20px"}}>
-                <QrComponent url={inboxUrl} alignment="center" shadeA="#282828" shadeB="#303030" shadeC="#383838" />
+                <QrComponent url={`${protocol}://${ip}:${port}/send`} alignment="center" shadeA="#282828" shadeB="#303030" shadeC="#383838" />
                 </div>
             </div>
             ) : (

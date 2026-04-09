@@ -32,32 +32,32 @@ export const openFile = (file = null, setSelectedNavPage) => {
 }
 
 // updates all front-end URLs and QRs with a given protocol, ip, and port. 
-export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, setHostedFiles) => {
-    if (port == "" || isNaN(port)) {
-      port = 2222;
-      setPort(port);
-    }
+// export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, setHostedFiles) => {
+//     if (port == "" || isNaN(port)) {
+//       port = 2222;
+//       setPort(port);
+//     }
 
-    protocol = protocol.toLowerCase();
+//     protocol = protocol.toLowerCase();
 
-    let newUrl = `${protocol}://${ip}:${port}/send`;
+//     let newUrl = `${protocol}://${ip}:${port}/send`;
   
-    // update inbox url
-    setInboxUrl(newUrl);
+//     // update inbox url
+//     setInboxUrl(newUrl);
 
-    // // also update all urls of hosted files
-    // let newHostedFiles = hostedFiles.map((file) => {
-    //   let urlObj = new URL(file.url);
-    //   urlObj.protocol = protocol;
-    //   urlObj.hostname = ip;
-    //   urlObj.port = port.toString();
-    //   return { ...file, url: urlObj.toString() };
-    // });
-    // setHostedFiles(newHostedFiles);
-}
+//     // // also update all urls of hosted files
+//     // let newHostedFiles = hostedFiles.map((file) => {
+//     //   let urlObj = new URL(file.url);
+//     //   urlObj.protocol = protocol;
+//     //   urlObj.hostname = ip;
+//     //   urlObj.port = port.toString();
+//     //   return { ...file, url: urlObj.toString() };
+//     // });
+//     // setHostedFiles(newHostedFiles);
+// }
 
 // perform various initialization tasks
-export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
+export const initialize = async (openFile, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {

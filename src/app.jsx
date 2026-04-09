@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
-import { handleAddText, handleChangedIP, openFile, initialize, updateURL } from "./handlers";
+import { handleAddText, handleChangedIP, openFile, initialize } from "./handlers";
 import { Outbox, Inbox } from "./components/pages";
 import ResponsiveButton from "./components/ResponsiveButton";
 
@@ -40,8 +40,6 @@ function App() {
 
   const [port, setPort] = useState(2222);
 
-  const [inboxUrl, setinboxUrl] = useState("");
-
   const [savePaths, setSavePaths] = useState({});
 
   const [selectedNavPage, setSelectedNavPage] = useState(0);
@@ -64,23 +62,23 @@ function App() {
   const [tlsKeyPath, setTLSKeyPath] = useState("");
   const [tlsCertPath, setTLSCertPath] = useState("");
 
-  const protocolRef = useRef(protocol);
-  const ipRef = useRef(presentedIp);
-  const portRef = useRef(port);
+  // const protocolRef = useRef(protocol);
+  // const ipRef = useRef(presentedIp);
+  // const portRef = useRef(port);
 
   const [addTextValue, setAddTextValue] = useState("");
 
-  useEffect(() => {
-    protocolRef.current = protocol;
-  }, [protocol]);
+  // useEffect(() => {
+  //   protocolRef.current = protocol;
+  // }, [protocol]);
 
-  useEffect(() => {
-    ipRef.current = presentedIp;
-  }, [presentedIp]);
+  // useEffect(() => {
+  //   ipRef.current = presentedIp;
+  // }, [presentedIp]);
 
-  useEffect(() => {
-    portRef.current = port;
-  }, [port]);
+  // useEffect(() => {
+  //   portRef.current = port;
+  // }, [port]);
 
   // useLayoutEffect(() => {
   //   if (outboxItems.length == 0) {
@@ -108,13 +106,8 @@ function App() {
 
   // initialization
   useEffect(() => {
-    initialize(openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
+    initialize(openFile, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
   }, []);
-
-  //update all URLs when port, protocol or presentedIp changes
-  useLayoutEffect(() => {
-    updateURL(protocol, presentedIp, port, setinboxUrl, outboxItems, setOutboxItems);
-  }, [protocol, presentedIp, port]);
 
   function hasCurrentFileBeenSaved() {
     let current = inboxItems[activeRFile];
@@ -174,9 +167,9 @@ function App() {
         </div>
         <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1, borderRadius: "8px"}}>
           {selectedNavPage === 0 ? (
-            <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocolRef={protocolRef} ipRef={ipRef} portRef={portRef} activeSFile={activeSFile}/>
+            <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocol={protocol} ip={presentedIp} port={port} activeSFile={activeSFile}/>
           ) : selectedNavPage === 1 ? (
-            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} inboxUrl={inboxUrl} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} />
+            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} protocol={protocol} ip={presentedIp} port={port} />
           ) : selectedNavPage === -1 ? (
             <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
@@ -190,7 +183,7 @@ function App() {
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>Server port</strong>
                 <span>Specify the port number the server will listen on. Default is 2222.</span>
-                <input type="number" style={{marginTop: "5px", width: "300px"}} defaultValue={port} onBlur={(e) => {setPort(e.target.value); configAPI.setPort(e.target.value);}} placeholder="Enter server port" />
+                <input type="number" style={{marginTop: "5px", width: "300px"}} defaultValue={port} onBlur={(e) => {configAPI.setPort(e.target.value).then((result) => {setPort(result);});}} placeholder="Enter server port" />
               </div>
             </div>
           ) : null}

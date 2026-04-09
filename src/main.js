@@ -379,7 +379,7 @@ app.whenReady().then(() => {
   ipcMain.handle('discardPendingFile', deleteInboxItem);
   ipcMain.handle('discardOutboxItem', deleteOutboxItem);
   ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
-  ipcMain.handle('setPort', (event, newPort) => {userConfig.set('port', newPort); initServer(protocol);});
+  ipcMain.handle('setPort', async (event, newPort) => {if (newPort == null || newPort <= 0 || newPort > 65535 || isNaN(newPort)) {return await userConfig.get('port');} else {await userConfig.set('port', newPort); initServer(protocol); return newPort;}});
   ipcMain.handle('getPort', () => {
     return userConfig.get('port');
   });
