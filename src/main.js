@@ -28,13 +28,6 @@ const inboxItems = new Map();
 function addInboxItem(type, friendly, size, buffer) {
   const uid = Math.floor(Math.random() * 1000000);
 
-    // type: "file",
-    // friendly: friendlyname,
-    // buffer: null,
-    // size: fs.statSync(path).size,
-    // localPath: path,
-    // internalUrl: internalUrl
-
   inboxItems.set(uid, {
     type: type,
     friendly: friendly,
@@ -43,22 +36,6 @@ function addInboxItem(type, friendly, size, buffer) {
     localPath: "",
   });
 
-  // let displayname = "item";
-  // let string = "";
-  // if (type === "file") {
-  //   // displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
-  //   displayname = filename;
-  //   string = null;
-  // } else if (type === "url") {
-  //   displayname = "URL (" + URL.parse(url).hostname + ")";
-  //   string = url;
-  // } else if (type === "text") {
-  //   // displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
-  //   displayname = "Text (" + buffer + ")";
-  //   string = buffer.toString('utf-8');
-  // }
-
-  // notifyRendererOfNewFile(BrowserWindow.getAllWindows()[0], {displayname: displayname, string: string, id: uid, size: size, type: type});
   updateRendererInbox();
   
   return uid;
@@ -87,15 +64,9 @@ function savePendingFile(event, _id, cont = null) {
     return;
   }
   const window = allWindows[0];
-  
   const id = JSON.parse(_id);
-
-  // console.log("Saving pending file with id: " + id);
-
   const file = inboxItems.get(id);
-  
-  // console.log ("File to save: ", file);
-  
+    
   if (!file) {
     console.log("File not found in inboxItems map.");
     return;
@@ -153,8 +124,6 @@ async function handleFileOpen(e, path) {
 
   let uid = Math.floor(Math.random() * 1000000);
 
-  // var internalUrl = `${protocol}://127.0.0.1:${userConfig.get("port")}/get/${uid}`;
-
   let friendlyname = path.replace(/^.*[\\/]/, '');
   console.log("adding file: ", friendlyname);
 
@@ -164,11 +133,9 @@ async function handleFileOpen(e, path) {
     buffer: null,
     size: fs.statSync(path).size,
     localPath: path
-    // internalUrl: internalUrl
   });
 
   updateRendererOutbox();
-  // return [uid, path.replace(/^.*[\\/]/, ''), fileSize]; // return to renderer
 }
 
 async function addTextToOutbox(event, text) {
@@ -181,23 +148,16 @@ async function addTextToOutbox(event, text) {
     type = "url";
   }
 
-  // let ip = await getDefaultIP();
-
-  // var internalUrl = `${protocol}://${ip}:${userConfig.get("port")}/get/${uid}`;
-
   outboxItems.set(uid, {
     type: type,
     friendly: buffer.toString().slice(0, 99),
     buffer: buffer,
     size: buffer.length,
     localPath: null
-    // internalUrl: internalUrl
   });
 
   console.log("adding text to outbox");
   updateRendererOutbox();
-
-  // return [uid, buffer.subarray(0, 128).toString('utf-8'), buffer.length]; // uid, filename, filesize
 }
 
 function getAnyIP() {
@@ -259,13 +219,8 @@ function listAddrs(includeInterfaces = false) {
         }
       }
     }
-    // console.log("interface: ", name, ": ", addrs);
   }
   return filteredAddrs;
-}
-
-function notifyRendererOfNewFile(window, file) {
-  window.webContents.send('new-uploaded-file', file);
 }
 
 function attemptToggleProtocol(initServer){
@@ -353,16 +308,12 @@ function updateRendererInbox(ctx = null) {
 
   let convertedItems = [];
   for (const [uid, item] of inboxItems) {
-    // let displayname = "item";
     let string = "";
     if (item.type === "file") {
-      // displayname = item.filename;
       string = null;
     } else if (item.type === "url") {
-      // displayname = "URL (" + URL.parse(item.url).hostname + ")";
       string = item.url;
     } else if (item.type === "text") {
-      // displayname = "Text (" + item.buffer + ")";
       string = item.buffer.toString('utf-8');
     }
 
@@ -385,16 +336,12 @@ function updateRendererOutbox(ctx = null) {
 
   let convertedItems = [];
   for (const [uid, item] of outboxItems) {
-    // let displayname = item.friendly;
     let string = "";
     if (item.type === "file") {
-      // displayname = item.friendly;
       string = null;
     } else if (item.type === "url") {
-      // displayname = "URL (" + URL.parse(item.buffer).hostname + ")";
       string = item.url;
     } else if (item.type === "text") {
-      // displayname = "Text (" + item.buffer + ")";
       string = item.buffer.toString('utf-8');
     }
 
@@ -404,7 +351,6 @@ function updateRendererOutbox(ctx = null) {
       buffer: string,
       size: item.size,
       id: uid,
-      // internalUrl: item.internalUrl
     });
   }
 
