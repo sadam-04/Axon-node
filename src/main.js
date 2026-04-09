@@ -93,18 +93,21 @@ function savePendingFile(event, _id, cont = null) {
     return;
   }
 
-  if (!fs.existsSync(path.join(projectRoot, "uploads"))) {
-    fs.mkdirSync(path.join(projectRoot, "uploads"));
+  // let saveDir = path.join(projectRoot, "uploads");
+  let saveDir = userConfig.get('saveDir', app.getPath('downloads'));
+
+  if (!fs.existsSync(saveDir)) {
+    fs.mkdirSync(saveDir);
   }
 
   let savePath = "";
 
   if (file.type === "file") {
-    savePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.filename);
+    savePath = path.join(saveDir, id.toString() + "-" + file.filename);
   } else if (file.type === "text") {
-    savePath = path.join(projectRoot, "uploads", id.toString() + "-text.txt");
+    savePath = path.join(saveDir, id.toString() + "-text.txt");
   } else if (file.type === "url") {
-    savePath = path.join(projectRoot, "uploads", id.toString() + "-url.txt");
+    savePath = path.join(saveDir, id.toString() + "-url.txt");
   }
 
   fs.writeFile(savePath, file.buffer, (err) => {
