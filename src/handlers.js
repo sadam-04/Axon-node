@@ -87,13 +87,18 @@ export const initialize = async (openFile, setPort, setPresentedIp, setAddrs, se
 
     outboxAPI.onUpdate((items, ctx) => {
       setHostedFiles(items);
-      if (ctx != null && ctx.selIdx != null) {
-        if (ctx.delIdx == ctx.selIdx) {
-          setSelectedSFile(null);
-        } else if (ctx.delIdx < ctx.selIdx) {
-          setSelectedSFile((old)=>{
-            return old - 1;
-          })
+      if (ctx != null) {
+        if (ctx.newIdx != null) {
+          console.log(ctx);
+          setSelectedSFile(ctx.newIdx);
+        } else if (ctx.selIdx != null) {
+          if (ctx.delIdx == ctx.selIdx) {
+            setSelectedSFile(null);
+          } else if (ctx.delIdx < ctx.selIdx) {
+            setSelectedSFile((old)=>{
+              return old - 1;
+            })
+          }
         }
       }
     });

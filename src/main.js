@@ -135,7 +135,9 @@ async function handleFileOpen(e, path) {
     localPath: path
   });
 
-  updateRendererOutbox();
+  let ctx = {newIdx: outboxItems.length - 1};
+
+  updateRendererOutbox(ctx);
 }
 
 async function addTextToOutbox(event, text) {
@@ -156,8 +158,10 @@ async function addTextToOutbox(event, text) {
     localPath: null
   });
 
-  console.log("adding text to outbox");
-  updateRendererOutbox();
+  let ctx = {newIdx: outboxItems.size - 1};
+  console.log(ctx);
+
+  updateRendererOutbox(ctx);
 }
 
 function getAnyIP() {
@@ -353,6 +357,8 @@ function updateRendererOutbox(ctx = null) {
       id: uid,
     });
   }
+
+  // console.log(ctx);
 
   window.webContents.send('update-outbox', convertedItems, ctx);
 }
