@@ -16,13 +16,19 @@ const projectRoot = app.isPackaged
 async function urlWrapper(text) {
   let page = fs.readFileSync(path.join(projectRoot, "static", "url-wrapper-2.html"), "utf-8");
   page = page.replace(/{{url}}/g, text);
-  console.log("Returning wrapped URL page of length ", page.length);
   return page;
 }
 
 async function buildFileLandingPage(filename) {
   let page = fs.readFileSync(path.join(projectRoot, "static", "file-wrapper.html"), "utf-8");
   page = page.replace(/{{filename}}/g, filename);
+  return page;
+}
+
+async function buildTextWrapper(text) {
+  let page = fs.readFileSync(path.join(projectRoot, "static", "text-wrapper.html"), "utf-8");
+  page = page.replace(/{{text}}/g, text);
+  page = page.replace(/{{filename}}/g, "text.txt");
   return page;
 }
 
@@ -150,17 +156,19 @@ module.exports = {
         // res.end(`<div><div onclick="(function(){window.location.href = window.location.href + '/inline/file.pdf';})();">Inline</div><div onclick="(function(){window.location.href = window.location.href + '/attachment/file.pdf';})();">Attachment</div></div>`);
         res.end(landingPage);
       } else if (outboxItems.get(index).type == "text") { // else if this is a text object (text/url)
-        let buffer = outboxItems.get(index).buffer;
+        let buffer = outboxItems.get(index).buffer;      
         if (buffer == null) {
           res.statusCode = 500;
           res.end("Not found (null payload)");
           return;
         }
+  
+        let page = await buildTextWrapper(buffer);
 
-        res.setHeader('Content-Length', buffer.length);
-        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Length', page.length);
+        res.setHeader('Content-Type', 'text/html');
         res.statusCode = 200;
-        res.end(buffer);
+        res.end(page);
         return;
       } else if (outboxItems.get(index).type == "url") {
         let buffer = outboxItems.get(index).buffer;
@@ -258,6 +266,13 @@ module.exports = {
             stream.pipe(res);
           });
         });
+      } else if (outboxItems.get(index).type == "text") {
+        res.setHeader('Content-Length', outboxItems.get(index).size);
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Disposition', `${dlMode}; filename=text.txt`);
+
+        res.statusCode = 200;
+        res.end(outboxItems.get(index).buffer);
       } else {
         res.statusCode = 400;
         res.end("Bad request");
