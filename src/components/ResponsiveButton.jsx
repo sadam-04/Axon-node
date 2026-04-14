@@ -12,7 +12,7 @@ export default function ResponsiveButton({selected, enabled, buttonAction, onHov
   }
 
   return (
-  <div className="ResponsiveButton" onMouseOver={() => {setHovered(true); if (onHover) onHover();}} onMouseOut={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setClicked(false);}} onClick={()=>{if (enabled) {buttonAction();}}}>
+  <div className="ResponsiveButton" onMouseOver={() => {setHovered(true); if (onHover) onHover();}} onMouseOut={() => {setHovered(false); setClicked(false);}} onMouseDown={() => {setClicked(true)}} onMouseUp={() => {setClicked(false);}} onClick={(e)=>{if (enabled) {buttonAction();} e.stopPropagation();}}>
     <ShadedButton selected={selected} hovered={hovered} pressed={clicked} enabled={enabled} icon={hoverLabel} customStyle={customStyle} disabledStyle={disabledStyle} shadeA={shadeA} shadeB={shadeB} shadeC={shadeC} />
   </div>
   );

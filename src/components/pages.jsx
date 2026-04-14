@@ -11,9 +11,9 @@ const icon_folder = require("../icons/icon_folder_4.png");
 const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocol, ip, port, activeSFile}) => {
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
-            <div id="left-summary-panel" style={{display: "flex", flexDirection: "column", boxSizing: "content-box"}}>
+            <div id="left-summary-panel" onClick={()=>{setSelectedSFile(null);}} style={{display: "flex", flexDirection: "column", boxSizing: "content-box"}}>
                 <div style={{display: "flex", flexDirection: "column", maxHeight: "100%"}}>
-                    <div className="left-send-header" onClick={() => {setSelectedSFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "4px"}}>
+                    <div className="left-send-header" style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "4px"}}>
                         <h4 style={{marginBottom: "3px", marginTop: "5px", marginLeft: "12px"}}>Outbox</h4>
                         <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                             <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{hostedFiles.length} item{hostedFiles.length !== 1 ? "s" : ""}</span>
@@ -21,7 +21,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                     </div>
                     <div style={{height: "30px", display: "flex", flexDirection: "row", padding: "0px 0px 0px 0px", width: "94%", margin: "auto"}}>
                         <form onSubmit={(e) => {handleAddText(e, setHostedFiles, setSelectedSFile, addTextValue, setAddTextValue, protocol, ip, port);}} style={{display: "block", boxSizing: "border-box", width:"calc(100% - 30px)", height: "30px", marginRight: "6px"}}>
-                            <input type="text" value={addTextValue} onChange={(e) => setAddTextValue(e.target.value)} id="addtext" name="addtext" placeholder="Add text, press Enter to save." style={{width: "100%", height: "100%", fontSize: "13px", boxSizing: "border-box", outline: "none", borderRadius: "8px", border: "none", backgroundColor: "#242424", color: "#fff", padding: "5px 12px 5px 12px"}}/>
+                            <input type="text" onClick={(e)=>{e.stopPropagation();}} value={addTextValue} onChange={(e) => setAddTextValue(e.target.value)} id="addtext" name="addtext" placeholder="Add text, press Enter to save." style={{width: "100%", height: "100%", fontSize: "13px", boxSizing: "border-box", outline: "none", borderRadius: "8px", border: "none", backgroundColor: "#242424", color: "#fff", padding: "5px 12px 5px 12px"}}/>
                         </form>
                         <ResponsiveButton 
                         label={<img src={icon_folder} style={{width: "16px"}} />}
@@ -34,16 +34,16 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         shadeC={"#343434"}
                         />
                     </div>
-                    <div style={{display: "flex", flexDirection: "column", flexShrink: "1", height: "fit-content", marginLeft: "0", marginRight: "0", marginTop: "2px", overflowY: "auto"}}>
+                    <div style={{display: "flex", flexDirection: "column", flexShrink: "1", gap: "4px", height: "fit-content", marginLeft: "0", marginRight: "0", marginTop: "4px", overflowY: "auto"}}>
                     {hostedFiles != null ? hostedFiles.map((file, i) => (
                         <ResponsiveButton
                         key={file.id}
                         label={<SummaryListItem fileName={file.friendly} onCloseClick={() => {outboxAPI.discard(file.id, {delIdx: i, selIdx: activeSFile});}} />}
                         passHoverToLabel={true}
-                        buttonAction={() => {console.log("main button pressed"); setSelectedSFile(i);}}
+                        buttonAction={() => {setSelectedSFile(i);}}
                         selected={activeSFile === i}
                         enabled={true}
-                        customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "2px auto 2px auto"}}
+                        customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "0 auto 0 auto"}}
                         shadeA={"#282828"}
                         shadeB={"#303030"}
                         shadeC={"#343434"}
@@ -74,16 +74,16 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
 
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
-            <div id="left-summary-panel">
+            <div id="left-summary-panel" onClick={()=>{setSelectedRFile(null);}}>
             <div id="recv-panel" style={{display: "flex", flexDirection: "column", height: "100%"}}>
-                <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column", marginBottom: "2px" }}>
+                <div className="left-recv-header" onClick={() => {setSelectedRFile(null);}} style={{ display: "flex", justifyItems: "space-between", flexDirection: "column" }}>
                     <h4 style={{marginBottom: "3px", marginTop: "5px", marginLeft: "12px" }}>Inbox</h4>
                     <div style={{display: "flex", flexDirection: "row", alignItems: "space-between", height: "25px"}}>
                         <span className="simple-text" style={{margin: "auto", marginLeft: "13px", fontSize: "0.8rem", height: "fit-content"}}>{inboxItems.length} item{inboxItems.length !== 1 ? "s" : ""}</span>
                     </div>
                 </div>
 
-                <div style={{display: "flex", flexDirection: "column", maxHeight: "fit-content", overflowY: "auto", marginLeft: "0", marginRight: "0", marginTop: "0"}}>
+                <div style={{display: "flex", flexDirection: "column", gap: "4px", maxHeight: "fit-content", overflowY: "auto", marginLeft: "0", marginRight: "0", marginTop: "4px"}}>
                     {inboxItems.map((file, i) => (
                         <ResponsiveButton
                         key={file.id}
@@ -92,7 +92,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                         buttonAction={() => {setSelectedRFile(i)}}
                         selected={activeRFile === i}
                         enabled={true}
-                        customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "2px auto 2px auto"}}
+                        customStyle={{borderRadius: "8px", width: "94%", height: "30px", margin: "0 auto 0 auto"}}
                         shadeA={"#282828"}
                         shadeB={"#303030"}
                         shadeC={"#343434"}
