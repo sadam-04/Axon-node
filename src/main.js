@@ -336,9 +336,33 @@ app.whenReady().then(() => {
   ipcMain.handle('getTLSKeyPath', () => {
     return userConfig.get('tlsKeyPath');
   });
+  ipcMain.handle('browseForTlsKey', async (event, fallback) => {
+    let result = await dialog.showOpenDialog();
+    if (result.canceled) {
+      return fallback;
+    }
+    if (!fs.existsSync(result.filePaths[0])) {
+      return fallback;
+    }
+
+    userConfig.set('tlsKeyPath', result.filePaths[0]);
+    return result.filePaths[0];
+  });
   ipcMain.handle('setTLSCertPath', (event, path) => {console.log("received tlsCertPath: ", path); userConfig.set('tlsCertPath', path);});
   ipcMain.handle('getTLSCertPath', () => {
     return userConfig.get('tlsCertPath');
+  });
+  ipcMain.handle('browseForTlsCert', async (event, fallback) => {
+    let result = await dialog.showOpenDialog();
+    if (result.canceled) {
+      return fallback;
+    }
+    if (!fs.existsSync(result.filePaths[0])) {
+      return fallback;
+    }
+
+    userConfig.set('tlsCertPath', result.filePaths[0]);
+    return result.filePaths[0];
   });
   ipcMain.handle('getSaveDir', (event) => {
     let savedVal = userConfig.get('saveDir', null);

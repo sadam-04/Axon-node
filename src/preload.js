@@ -9,15 +9,21 @@ contextBridge.exposeInMainWorld('configAPI', {
     setIP: (newIP) => ipcRenderer.invoke('setIP', newIP),
     attemptToggleProtocol: () => ipcRenderer.invoke('attemptToggleProtocol'),
     getProtocol: () => ipcRenderer.invoke('getProtocol'),
+
     getTLSKeyPath: () => ipcRenderer.invoke('getTLSKeyPath'),
     setTLSKeyPath: (path) => ipcRenderer.invoke('setTLSKeyPath', path),
+    browseForTlsKey: (fallback) => ipcRenderer.invoke('browseForTlsKey', fallback),
     getTLSCertPath: () => ipcRenderer.invoke('getTLSCertPath'),
     setTLSCertPath: (path) => ipcRenderer.invoke('setTLSCertPath', path),
+    browseForTlsCert: (fallback) => ipcRenderer.invoke('browseForTlsCert', fallback),
+
     getPort: () => ipcRenderer.invoke('getPort'),
     setPort: (newPort) => ipcRenderer.invoke('setPort', newPort),
+
     getSaveDir: () => ipcRenderer.invoke('getSaveDir'),
     setSaveDir: (newSaveDir) => ipcRenderer.invoke('setSaveDir', newSaveDir),
     browseForSaveDir: (fallback) => ipcRenderer.invoke('browseForSaveDir', fallback),
+
 });
 
 contextBridge.exposeInMainWorld('inboxAPI', {
