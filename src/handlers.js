@@ -6,14 +6,8 @@ export const handleAddText = (event, setHostedFiles, setSelectedSFile, addTextVa
     return;
   }
 
-  outboxAPI.addText(addTextValue).then(([uid, filename, filesize]) => {
-    var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
-
-    setHostedFiles(prev => {
-      const updated = [...prev, { id: uid, full: filename, friendly: filename.slice(0, 128), url: url, size: filesize, type: "2" }]
-      setSelectedSFile(updated.length - 1);
-      return updated;
-    });
+  outboxAPI.addText(addTextValue).then(() => {
+    // setSelectedSFile(updated.length - 1);
   });
 
   setAddTextValue("");
@@ -28,61 +22,42 @@ export function handleChangedIP(newIP, setPresentedIp) {
 // openFile() tells main proc to open a file dialog 
 // openFile(filepath) tells main proc to load specific file
 // 
-export const openFile = (file = null, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile, setSelectedNavPage) => {
-  outboxAPI.openFile(file).then(([uid, fileName, fileSize]) => {
-    if (uid == "" || fileName == "null") {
-      return;
-    }
-    var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
+export const openFile = (file = null, setSelectedNavPage) => {
+  outboxAPI.openFile(file).then(() => {
+    // var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
     
     setSelectedNavPage(0);
-
-    setHostedFiles(prev => {
-      const updated = [...prev, { id: uid, full: fileName, friendly: fileName.replace(/^.*[\\/]/, ''), url: url, size: fileSize, type: "1" }]
-      setSelectedSFile(updated.length - 1);
-      return updated;
-    });
+    // setSelectedSFile(updated.length - 1);
   });
 }
 
-export const handleDiscardPendingFile = (inboxItems, activeRFile, setSelectedRFile, setinboxItems) => {
-  inboxAPI.discard(inboxItems[activeRFile].id);
-  var _inboxItems = inboxItems.filter(f => f.id !== inboxItems[activeRFile].id);
-  if (_inboxItems.length == 0) {
-    setSelectedRFile(null);
-  } else {
-    setSelectedRFile(0);
-  }
-  setinboxItems(_inboxItems);
-}
-
 // updates all front-end URLs and QRs with a given protocol, ip, and port. 
-export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, setHostedFiles) => {
-    if (port == "" || isNaN(port)) {
-      port = 2222;
-      setPort(port);
-    }
+// export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, setHostedFiles) => {
+//     if (port == "" || isNaN(port)) {
+//       port = 2222;
+//       setPort(port);
+//     }
 
-    protocol = protocol.toLowerCase();
+//     protocol = protocol.toLowerCase();
 
-    let newUrl = `${protocol}://${ip}:${port}/send`;
+//     let newUrl = `${protocol}://${ip}:${port}/send`;
   
-    // update inbox url
-    setInboxUrl(newUrl);
+//     // update inbox url
+//     setInboxUrl(newUrl);
 
-    // also update all urls of hosted files
-    let newHostedFiles = hostedFiles.map((file) => {
-      let urlObj = new URL(file.url);
-      urlObj.protocol = protocol;
-      urlObj.hostname = ip;
-      urlObj.port = port.toString();
-      return { ...file, url: urlObj.toString() };
-    });
-    setHostedFiles(newHostedFiles);
-}
+//     // // also update all urls of hosted files
+//     // let newHostedFiles = hostedFiles.map((file) => {
+//     //   let urlObj = new URL(file.url);
+//     //   urlObj.protocol = protocol;
+//     //   urlObj.hostname = ip;
+//     //   urlObj.port = port.toString();
+//     //   return { ...file, url: urlObj.toString() };
+//     // });
+//     // setHostedFiles(newHostedFiles);
+// }
 
 // perform various initialization tasks
-export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedNavPage) => {
+export const initialize = async (openFile, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {
@@ -93,8 +68,7 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
     window.addEventListener("drop", event => {
       event.preventDefault();
       const file = event.dataTransfer.files[0];
-      openFile(file, protocolRef, ipRef, portRef, setHostedFiles, setSelectedSFile, setSelectedNavPage);
-
+      openFile(file, setSelectedNavPage);
     });
 
     // get saved IP from last session
@@ -110,6 +84,37 @@ export const initialize = async (openFile, protocolRef, ipRef, portRef, setPort,
     // get all addresses available for dropdown/qrs
     let addrs = await configAPI.listAddrs();
     setAddrs(addrs);
+
+    outboxAPI.onUpdate((items, ctx) => {
+      setHostedFiles(items);
+      if (ctx != null) {
+        if (ctx.newIdx != null) {
+          console.log(ctx);
+          setSelectedSFile(ctx.newIdx);
+        } else if (ctx.selIdx != null) {
+          if (ctx.delIdx == ctx.selIdx) {
+            setSelectedSFile(null);
+          } else if (ctx.delIdx < ctx.selIdx) {
+            setSelectedSFile((old)=>{
+              return old - 1;
+            })
+          }
+        }
+      }
+    });
+
+    inboxAPI.onUpdate((items, ctx) => {
+      setinboxItems(items);
+      if (ctx != null && ctx.selIdx != null) {
+        if (ctx.delIdx == ctx.selIdx) {
+          setSelectedRFile(null);
+        } else if (ctx.delIdx < ctx.selIdx) {
+          setSelectedRFile((old)=>{
+            return old - 1;
+          })
+        }
+      }
+    });
 
     // handler for when the main proc says we have a new inbox item
     inboxAPI.onNewFile((file) => {

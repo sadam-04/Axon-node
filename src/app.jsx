@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
-import { handleAddText, handleChangedIP, openFile, handleDiscardPendingFile, initialize, updateURL } from "./handlers";
+import { handleAddText, handleChangedIP, openFile, initialize } from "./handlers";
 import { Outbox, Inbox } from "./components/pages";
 import ResponsiveButton from "./components/ResponsiveButton";
 
@@ -40,8 +40,6 @@ function App() {
 
   const [port, setPort] = useState(2222);
 
-  const [inboxUrl, setinboxUrl] = useState("");
-
   const [savePaths, setSavePaths] = useState({});
 
   const [selectedNavPage, setSelectedNavPage] = useState(0);
@@ -52,47 +50,64 @@ function App() {
   ]);
 
   const [activeSFile, setSelectedSFile] = useState(null);
+  // const [activeSFileUid, setSelectedSFileUid] = useState(null);
   const [activeRFile, setSelectedRFile] = useState(null);
-  const [writingNewText, setWritingNewText] = useState(false);
+  // const [activeRFileUid, setSelectedRFileUid] = useState(null);
+  
+  var activeSFileUid = null;
+  var activeRFileUid = null;
+
+  // const [writingNewText, setWritingNewText] = useState(false);
 
   const [tlsKeyPath, setTLSKeyPath] = useState("");
   const [tlsCertPath, setTLSCertPath] = useState("");
 
-  const protocolRef = useRef(protocol);
-  const ipRef = useRef(presentedIp);
-  const portRef = useRef(port);
+  // const protocolRef = useRef(protocol);
+  // const ipRef = useRef(presentedIp);
+  // const portRef = useRef(port);
 
   const [addTextValue, setAddTextValue] = useState("");
 
-  useEffect(() => {
-    protocolRef.current = protocol;
-  }, [protocol]);
+  // useEffect(() => {
+  //   protocolRef.current = protocol;
+  // }, [protocol]);
 
-  useEffect(() => {
-    ipRef.current = presentedIp;
-  }, [presentedIp]);
+  // useEffect(() => {
+  //   ipRef.current = presentedIp;
+  // }, [presentedIp]);
 
-  useEffect(() => {
-    portRef.current = port;
-  }, [port]);
+  // useEffect(() => {
+  //   portRef.current = port;
+  // }, [port]);
 
-  useEffect(() => {
-    // In send mode:
-    //  when a file is selected, exit writing mode
-    if (activeSFile !== null) {
-      setWritingNewText(false);
+  // useLayoutEffect(() => {
+  //   if (outboxItems.length == 0) {
+  //     setSelectedSFile(null);
+  //   } else if (activeSFile >= outboxItems.length) {
+  //     setSelectedSFile(outboxItems.length - 1);
+  //   }
+  // }, [outboxItems]);
+
+  useLayoutEffect(() => {
+    if (inboxItems.length == 0) {
+      setSelectedRFile(null);
+    } else if (activeRFile >= inboxItems.length) {
+      setSelectedRFile(inboxItems.length - 1);
     }
-  }, [activeSFile]);
+  }, [inboxItems]);
+
+  // useEffect(() => {
+  //   // In send mode:
+  //   //  when a file is selected, exit writing mode
+  //   if (activeSFile !== null) {
+  //     setWritingNewText(false);
+  //   }
+  // }, [activeSFile]);
 
   // initialization
   useEffect(() => {
-    initialize(openFile, protocolRef, ipRef, portRef, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedNavPage);
+    initialize(openFile, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
   }, []);
-
-  //update all URLs when port, protocol or presentedIp changes
-  useEffect(() => {
-    updateURL(protocol, presentedIp, port, setinboxUrl, outboxItems, setOutboxItems);
-  }, [protocol, presentedIp, port]);
 
   function hasCurrentFileBeenSaved() {
     let current = inboxItems[activeRFile];
@@ -152,9 +167,9 @@ function App() {
         </div>
         <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1, borderRadius: "8px"}}>
           {selectedNavPage === 0 ? (
-            <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocolRef={protocolRef} ipRef={ipRef} portRef={portRef} activeSFile={activeSFile}/>
+            <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocol={protocol} ip={presentedIp} port={port} activeSFile={activeSFile}/>
           ) : selectedNavPage === 1 ? (
-            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} handleDiscardPendingFile={handleDiscardPendingFile} inboxUrl={inboxUrl} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} />
+            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} protocol={protocol} ip={presentedIp} port={port} />
           ) : selectedNavPage === -1 ? (
             <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
@@ -168,7 +183,7 @@ function App() {
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>Server port</strong>
                 <span>Specify the port number the server will listen on. Default is 2222.</span>
-                <input type="number" style={{marginTop: "5px", width: "300px"}} defaultValue={port} onBlur={(e) => {setPort(e.target.value); configAPI.setPort(e.target.value);}} placeholder="Enter server port" />
+                <input type="number" style={{marginTop: "5px", width: "300px"}} defaultValue={port} onBlur={(e) => {configAPI.setPort(e.target.value).then((result) => {setPort(result);});}} placeholder="Enter server port" />
               </div>
             </div>
           ) : null}
