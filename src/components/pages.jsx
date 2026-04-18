@@ -57,7 +57,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
             <div id="right-detail-panel" style={{
             verticalAlign: "top",
             backgroundColor: "#303030",
-            borderRadius: "10px",
+            borderRadius: "8px",
             margin: "10px 10px 10px 0",
             width: "200px",
             flexGrow: 1,
@@ -113,7 +113,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
             <div id="right-detail-panel" style={{
                 verticalAlign: "top",
                 backgroundColor: "#303030",
-                borderRadius: "10px",
+                borderRadius: "8px",
                 marginRight: "10px",
                 width: "200px",
                 flexGrow: 1,
@@ -139,7 +139,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                             buttonAction={async () => {window.location.href = inboxItems[activeRFile].buffer;}}
                             selected={false}
                             enabled={true}
-                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                             shadeA={"#303030"}
                             shadeB={"#383838"}
                             shadeC={"#404040"}
@@ -155,7 +155,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                             buttonAction={async () => {navigator.clipboard.writeText(inboxItems[activeRFile].buffer);}}
                             selected={false}
                             enabled={true}
-                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                             shadeA={"#303030"}
                             shadeB={"#383838"}
                             shadeC={"#404040"}
@@ -168,7 +168,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                             buttonAction={() => {inboxAPI.open(inboxItems[activeRFile].id);}}
                             selected={false}
                             enabled={true}
-                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                             disabledStyle={{color: "#808080"}}
                             shadeA={"#303030"}
                             shadeB={"#383838"}
@@ -183,7 +183,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                                 buttonAction={() => {inboxAPI.reveal(inboxItems[activeRFile].id);}}
                                 selected={false}
                                 enabled={hasCurrentFileBeenSaved()}
-                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                                 disabledStyle={{color: "#808080"}}
                                 shadeA={"#303030"}
                                 shadeB={"#383838"}
@@ -196,7 +196,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                                 selected={false}
                                 enabled={!hasCurrentFileBeenSaved()}
                                 disabledStyle={{color: "#808080"}}
-                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                                 shadeA={"#303030"}
                                 shadeB={"#383838"}
                                 shadeC={"#404040"}
@@ -209,7 +209,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                         buttonAction={() => inboxAPI.discard(inboxItems[activeRFile].id, {delIdx: activeRFile, selIdx: activeRFile})}
                         selected={false}
                         enabled={true}
-                        customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "5px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                        customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                         shadeA={"#303030"}
                         shadeB={"#983838"}
                         shadeC={"#c04040"}

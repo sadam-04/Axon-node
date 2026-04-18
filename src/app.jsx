@@ -161,13 +161,13 @@ function App() {
             buttonAction={() => setSelectedNavPage(-1)}
             selected={selectedNavPage === -1}
             enabled={true}
-            customStyle={{display: "flex", width: "100%",  height: "45px", fontWeight: "regular", fontSize: "0.6rem", marginBottom: "3px", borderRadius: "8px", justifyContent: "center", alignItems: "center"}}
+            customStyle={{display: "flex", width: "100%",  height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "8px", justifyContent: "center", alignItems: "center"}}
             shadeA={"#202020"}
             shadeB={"#282828"}
             shadeC={"#2c2c2c"}
           />
         </div>
-        <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1, borderRadius: "8px"}}>
+        <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1, borderRadius: "8px 0 0 0"}}>
           {selectedNavPage === 0 ? (
             <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocol={protocol} ip={presentedIp} port={port} activeSFile={activeSFile}/>
           ) : selectedNavPage === 1 ? (
@@ -216,7 +216,7 @@ function App() {
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>Server port</strong>
                 <span>Specify the port number the server will listen on. Default is 2222.</span>
-                <input type="number" className="theme-text-input" style={{marginTop: "2px", backgroundColor: "#202020", width: "150px"}} defaultValue={port} onBlur={(e) => {configAPI.setPort(e.target.value).then((result) => {setPort(result);});}} placeholder="Enter server port" />
+                <input type="number" className="theme-text-input" style={{marginTop: "2px", backgroundColor: "#222222", width: "150px"}} defaultValue={port} onBlur={(e) => {configAPI.setPort(e.target.value).then((result) => {setPort(result);});}} placeholder="Enter server port" />
               </div>
             <br />
               <div style={{flexDirection: "column", display: "flex"}}>
