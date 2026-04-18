@@ -85,8 +85,12 @@ function savePendingFile(event, _id, cont = null) {
 
   let savePath = "";
 
+  //
+  console.log("saving file:", file);
+  //
+
   if (file.type === "file") {
-    savePath = path.join(saveDir, id.toString() + "-" + file.filename);
+    savePath = path.join(saveDir, id.toString() + "-" + file.friendly);
   } else if (file.type === "text") {
     savePath = path.join(saveDir, id.toString() + "-text.txt");
   } else if (file.type === "url") {
@@ -125,7 +129,7 @@ async function handleFileOpen(e, path) {
     if (!canceled && filePaths.length > 0) {
       path = filePaths[0];
     } else {
-      return [0, "null", 0];
+      return;
     }
   }
 

@@ -20,8 +20,8 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         </div>
                     </div>
                     <div style={{display: "flex", flexDirection: "row", padding: "0px 0px 0px 0px", width: "94%", margin: "auto"}}>
-                        <form onSubmit={(e) => {handleAddText(e, setHostedFiles, setSelectedSFile, addTextValue, setAddTextValue, protocol, ip, port);}} style={{display: "block", boxSizing: "border-box", width:"calc(100% - 30px)", height: "30px", marginRight: "6px"}}>
-                            <input type="text" onClick={(e)=>{e.stopPropagation();}} value={addTextValue} onChange={(e) => setAddTextValue(e.target.value)} id="addtext" name="addtext" placeholder="Add text, press Enter to save." style={{width: "100%", height: "100%", fontSize: "13px", boxSizing: "border-box", outline: "none", borderRadius: "8px", border: "none", backgroundColor: "#242424", color: "#fff", padding: "5px 12px 5px 12px"}}/>
+                        <form onSubmit={(e) => {handleAddText(e, setHostedFiles, setSelectedSFile, addTextValue, setAddTextValue, protocol, ip, port);}} style={{display: "block", boxSizing: "border-box", width:"calc(100% - 30px)", height: "30px", marginRight: "4px"}}>
+                            <input type="text" className="theme-text-input" onClick={(e)=>{e.stopPropagation();}} value={addTextValue} onChange={(e) => setAddTextValue(e.target.value)} id="addtext" name="addtext" placeholder="Add text here ..." style={{width: "100%", boxSizing: "border-box", borderRadius: "6px", backgroundColor: "#222222"}}/>
                         </form>
                         <ResponsiveButton 
                         label={<img src={icon_folder} style={{width: "16px"}} />}
@@ -43,7 +43,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         buttonAction={() => {setSelectedSFile(i);}}
                         selected={activeSFile === i}
                         enabled={true}
-                        customStyle={{borderRadius: "6px", width: "94%", height: "30px", margin: "2px auto 2px auto"}}
+                        customStyle={{borderRadius: "6px", width: "94%", height: "30px", margin: "0 auto 0 auto"}}
                         shadeA={"#282828"}
                         shadeB={"#303030"}
                         shadeC={"#343434"}
@@ -92,7 +92,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                         buttonAction={() => {setSelectedRFile(i)}}
                         selected={activeRFile === i}
                         enabled={true}
-                        customStyle={{borderRadius: "6px", width: "94%", height: "30px", margin: "2px auto 2px auto"}}
+                        customStyle={{borderRadius: "6px", width: "94%", height: "30px", margin: "0 auto 0 auto"}}
                         shadeA={"#282828"}
                         shadeB={"#303030"}
                         shadeC={"#343434"}
