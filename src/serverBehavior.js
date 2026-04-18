@@ -16,13 +16,19 @@ const projectRoot = app.isPackaged
 async function urlWrapper(text) {
   let page = fs.readFileSync(path.join(projectRoot, "static", "url-wrapper-2.html"), "utf-8");
   page = page.replace(/{{url}}/g, text);
-  console.log("Returning wrapped URL page of length ", page.length);
   return page;
 }
 
 async function buildFileLandingPage(filename) {
   let page = fs.readFileSync(path.join(projectRoot, "static", "file-wrapper.html"), "utf-8");
   page = page.replace(/{{filename}}/g, filename);
+  return page;
+}
+
+async function buildTextWrapper(text) {
+  let page = fs.readFileSync(path.join(projectRoot, "static", "text-wrapper.html"), "utf-8");
+  page = page.replace(/{{text}}/g, text);
+  page = page.replace(/{{filename}}/g, "text.txt");
   return page;
 }
 
@@ -67,7 +73,7 @@ module.exports = {
           if (req.files) {
             console.log(req.files);
             for (f of req.files) {
-              addInboxItem("file", f.originalname, null, f.size, f.buffer);
+              addInboxItem("file", f.originalname, f.size, f.buffer);
             }
           }
 
@@ -82,10 +88,10 @@ module.exports = {
                 let uid = null;
                 if (URL.canParse(text)) {
                   console.log("Text is a URL");
-                  uid = addInboxItem("url", "url", text, text.length, Buffer.from(text));
+                  uid = addInboxItem("url", text.slice(0, 99), text.length, Buffer.from(text));
                 } else {
                   console.log("Text is general text");
-                  uid = addInboxItem("text", "text", null, text.length, Buffer.from(text));
+                  uid = addInboxItem("text", text.slice(0, 99), text.length, Buffer.from(text));
                 }
               }
             }
@@ -143,45 +149,35 @@ module.exports = {
       }
 
       // TODO handle file landing page requests
-      if (outboxItems.get(index)[1] == "file") {
-        let filename = path.basename(outboxItems.get(index)[0]);
+      if (outboxItems.get(index).type == "file") {
+        let filename = path.basename(outboxItems.get(index).friendly);
         let landingPage = await buildFileLandingPage(filename);
         res.statusCode = 200;
         // res.end(`<div><div onclick="(function(){window.location.href = window.location.href + '/inline/file.pdf';})();">Inline</div><div onclick="(function(){window.location.href = window.location.href + '/attachment/file.pdf';})();">Attachment</div></div>`);
         res.end(landingPage);
-      } else if (outboxItems.get(index)[1] == "text") { // else if this is a text object (text/url)
-
-        let text = outboxItems.get(index)[0];
-
-        if (text == null) {
+      } else if (outboxItems.get(index).type == "text") { // else if this is a text object (text/url)
+        let buffer = outboxItems.get(index).buffer;      
+        if (buffer == null) {
           res.statusCode = 500;
           res.end("Not found (null payload)");
           return;
         }
+  
+        let page = await buildTextWrapper(buffer);
 
-        //check if its a url
-        let dataAsUrl = null;
-        try {
-          dataAsUrl = url.parse(text.toString(), true);
-        } catch (e) {
-          console.log("Error parsing URL: ", e);
-          dataAsUrl = null;
-        }
-        if (dataAsUrl && dataAsUrl.protocol && dataAsUrl.host) {
-          // it's a URL
-          let page = await urlWrapper(text);
-          
-          res.setHeader('Content-Length', page.length);
-          res.setHeader('Content-Type', 'text/html');
-          res.statusCode = 200;
-
-          res.end(page);
-          return;
-        }
-        res.setHeader('Content-Length', text.length);
-        res.setHeader('Content-Type', 'text/plain');
-        res.end(text);
+        res.setHeader('Content-Length', page.length);
+        res.setHeader('Content-Type', 'text/html');
         res.statusCode = 200;
+        res.end(page);
+        return;
+      } else if (outboxItems.get(index).type == "url") {
+        let buffer = outboxItems.get(index).buffer;
+        let page = await urlWrapper(buffer);
+        
+        res.setHeader('Content-Length', page.length);
+        res.setHeader('Content-Type', 'text/html');
+        res.statusCode = 200;
+        res.end(page);
         return;
       }
     }
@@ -214,9 +210,9 @@ module.exports = {
         return;
       }
 
-      if (outboxItems.get(index)[1] == "file") { // if this is a file object
+      if (outboxItems.get(index).type == "file") { // if this is a file object
 
-        let filepath = outboxItems.get(index)[0];
+        let filepath = outboxItems.get(index).localPath;
 
         if (filepath == null) {
           res.statusCode = 500;
@@ -270,6 +266,13 @@ module.exports = {
             stream.pipe(res);
           });
         });
+      } else if (outboxItems.get(index).type == "text") {
+        res.setHeader('Content-Length', outboxItems.get(index).size);
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Disposition', `${dlMode}; filename=text.txt`);
+
+        res.statusCode = 200;
+        res.end(outboxItems.get(index).buffer);
       } else {
         res.statusCode = 400;
         res.end("Bad request");

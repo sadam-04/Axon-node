@@ -22,72 +22,51 @@ const projectRoot = app.isPackaged
 
 var protocol = 'HTTP';
 
-var outboxItems = new Map();
+const outboxItems = new Map();
 const inboxItems = new Map();
 
-function addInboxItem(type, filename, url, size, buffer) {
+function addInboxItem(type, friendly, size, buffer) {
   const uid = Math.floor(Math.random() * 1000000);
 
   inboxItems.set(uid, {
-    buffer: buffer,
-    filename: filename,
     type: type,
-    mimetype: type == "url" || type == "text" ? "text/plain" : "application/octet-stream",
+    friendly: friendly,
+    buffer: buffer,
     size: size,
-    url: url,
-    savedPath: "",
+    localPath: "",
   });
 
-  let displayname = "item";
-  let string = "";
-  if (type === "file") {
-    // displayname = filename.length > 20 ? filename.slice(0, 17) + "..." : filename;
-    displayname = filename;
-    string = null;
-  } else if (type === "url") {
-    displayname = "URL (" + URL.parse(url).hostname + ")";
-    string = url;
-  } else if (type === "text") {
-    // displayname = "Text (" + (size > 20 ? buffer.slice(0, 17) + "..." : buffer) + ")";
-    displayname = "Text (" + buffer + ")";
-    string = buffer.toString('utf-8');
-  }
-
-  notifyRendererOfNewFile(BrowserWindow.getAllWindows()[0], {displayname: displayname, string: string, id: uid, size: size, type: type});
-
+  updateRendererInbox();
+  
   return uid;
 }
 
 async function openPendingFile(event, _id) {
   const id = JSON.parse(_id);
 
-  if (inboxItems.get(id).savedPath == "") {
+  if (inboxItems.get(id).localPath == "") {
+    console.log("file has not yet been saved. saving now.");
     await savePendingFile(event, id, () => {
-      const targetpath = inboxItems.get(id).savedPath;
+      const targetpath = inboxItems.get(id).localPath;
+      console.log("opening file: ", targetpath);
       shell.openPath(targetpath);
     });
   } else {
-    const targetpath = inboxItems.get(id).savedPath;
+    const targetpath = inboxItems.get(id).localPath;
+    console.log("opening file: ", targetpath);
     shell.openPath(targetpath);
   }
 }
 
 function savePendingFile(event, _id, cont = null) {
-
   let allWindows = BrowserWindow.getAllWindows();
   if (allWindows.length === 0) {
     return;
   }
   const window = allWindows[0];
-  
   const id = JSON.parse(_id);
-
-  console.log("Saving pending file with id: " + id);
-
   const file = inboxItems.get(id);
-  
-  console.log ("File to save: ", file);
-  
+    
   if (!file) {
     console.log("File not found in inboxItems map.");
     return;
@@ -121,7 +100,7 @@ function savePendingFile(event, _id, cont = null) {
       return;
     }
     
-    inboxItems.get(id).savedPath = savePath;
+    inboxItems.get(id).localPath = savePath;
 
     window.webContents.send('savePendingFileResult', {id: id, path: savePath });
 
@@ -135,9 +114,9 @@ function revealPendingFile(event, _id) {
   const file = inboxItems.get(_id);
 
   if (!file) return;
-  if (!file.savedPath || file.savedPath === "") return;
+  if (!file.localPath || file.localPath === "") return;
   
-  shell.showItemInFolder(file.savedPath);
+  shell.showItemInFolder(file.localPath);
 }
 
 async function handleFileOpen(e, path) {
@@ -151,18 +130,45 @@ async function handleFileOpen(e, path) {
   }
 
   let uid = Math.floor(Math.random() * 1000000);
-  outboxItems.set(uid, [path, "file"]);
 
-  const fileSize = fs.statSync(path).size;
-  return [uid, path.replace(/^.*[\\/]/, ''), fileSize]; // return to renderer
+  let friendlyname = path.replace(/^.*[\\/]/, '');
+  console.log("adding file: ", friendlyname);
+
+  outboxItems.set(uid, {
+    type: "file",
+    friendly: friendlyname,
+    buffer: null,
+    size: fs.statSync(path).size,
+    localPath: path
+  });
+
+  let ctx = {newIdx: outboxItems.length - 1};
+
+  updateRendererOutbox(ctx);
 }
 
 async function addTextToOutbox(event, text) {
   const buffer = Buffer.from(text, 'utf-8');
 
   let uid = Math.floor(Math.random() * 1000000);
-  outboxItems.set(uid, [buffer, "text"]);
-  return [uid, buffer.subarray(0, 128).toString('utf-8'), buffer.length]; // uid, filename, filesize
+  let type = "text";
+
+  if (URL.canParse(text)) {
+    type = "url";
+  }
+
+  outboxItems.set(uid, {
+    type: type,
+    friendly: buffer.toString().slice(0, 99),
+    buffer: buffer,
+    size: buffer.length,
+    localPath: null
+  });
+
+  let ctx = {newIdx: outboxItems.size - 1};
+  console.log(ctx);
+
+  updateRendererOutbox(ctx);
 }
 
 function getAnyIP() {
@@ -224,13 +230,8 @@ function listAddrs(includeInterfaces = false) {
         }
       }
     }
-    // console.log("interface: ", name, ": ", addrs);
   }
   return filteredAddrs;
-}
-
-function notifyRendererOfNewFile(window, file) {
-  window.webContents.send('new-uploaded-file', file);
 }
 
 function attemptToggleProtocol(initServer){
@@ -313,6 +314,72 @@ const createWindow = () => {
   return mainWindow;
 };
 
+function updateRendererInbox(ctx = null) {
+  const window = BrowserWindow.getAllWindows()[0];
+
+  let convertedItems = [];
+  for (const [uid, item] of inboxItems) {
+    let string = "";
+    if (item.type === "file") {
+      string = null;
+    } else if (item.type === "url") {
+      string = item.url;
+    } else if (item.type === "text") {
+      string = item.buffer.toString('utf-8');
+    }
+
+    convertedItems.push({
+      type: item.type,
+      friendly: item.friendly,
+      buffer: string,
+      size: item.size,
+      id: uid,
+    });
+  }
+
+  console.log("items:", convertedItems);
+
+  window.webContents.send('update-inbox', convertedItems, ctx);
+}
+
+function updateRendererOutbox(ctx = null) {
+  const window = BrowserWindow.getAllWindows()[0];
+
+  let convertedItems = [];
+  for (const [uid, item] of outboxItems) {
+    let string = "";
+    if (item.type === "file") {
+      string = null;
+    } else if (item.type === "url") {
+      string = item.url;
+    } else if (item.type === "text") {
+      string = item.buffer.toString('utf-8');
+    }
+
+    convertedItems.push({
+      type: item.type,
+      friendly: item.friendly,
+      buffer: string,
+      size: item.size,
+      id: uid,
+    });
+  }
+
+  // console.log(ctx);
+
+  window.webContents.send('update-outbox', convertedItems, ctx);
+}
+
+function deleteInboxItem(event, id, ctx) {
+  inboxItems.delete(id);
+  updateRendererInbox(ctx);
+}
+
+function deleteOutboxItem(event, id, ctx) {
+  outboxItems.delete(id);
+  updateRendererOutbox(ctx);
+}
+
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
   ipcMain.handle('addTextToOutbox', addTextToOutbox);
@@ -322,10 +389,10 @@ app.whenReady().then(() => {
   ipcMain.handle('openPendingFile', openPendingFile);
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
-  ipcMain.handle('discardPendingFile', (event, id) => {inboxItems.delete(id)});
-  ipcMain.handle('discardOutboxItem', (event, id) => {outboxItems.delete(id)});
+  ipcMain.handle('discardPendingFile', deleteInboxItem);
+  ipcMain.handle('discardOutboxItem', deleteOutboxItem);
   ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
-  ipcMain.handle('setPort', (event, newPort) => {userConfig.set('port', newPort); initServer(protocol);});
+  ipcMain.handle('setPort', async (event, newPort) => {if (newPort == null || newPort <= 0 || newPort > 65535 || isNaN(newPort)) {return await userConfig.get('port');} else {await userConfig.set('port', newPort); initServer(protocol); return newPort;}});
   ipcMain.handle('getPort', () => {
     return userConfig.get('port');
   });
