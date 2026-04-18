@@ -23,12 +23,7 @@ export function handleChangedIP(newIP, setPresentedIp) {
 // openFile(filepath) tells main proc to load specific file
 // 
 export const openFile = (file = null, setSelectedNavPage) => {
-  outboxAPI.openFile(file).then(() => {
-    // var url = `${protocolRef.current}://${ipRef.current}:${portRef.current}/get/${uid}`;
-    
-    setSelectedNavPage(0);
-    // setSelectedSFile(updated.length - 1);
-  });
+  outboxAPI.openFile(file);
 }
 
 // updates all front-end URLs and QRs with a given protocol, ip, and port. 
@@ -57,7 +52,7 @@ export const openFile = (file = null, setSelectedNavPage) => {
 // }
 
 // perform various initialization tasks
-export const initialize = async (openFile, setPort, setPresentedIp, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
+export const initialize = async (openFile, setPort, setPresentedIp, setSaveDir, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {
@@ -137,5 +132,6 @@ export const initialize = async (openFile, setPort, setPresentedIp, setAddrs, se
     setTLSCertPath(tlsCertPath);
     let savedPort = await configAPI.getPort();
     setPort(savedPort);
-
+    let savedSaveDir = await configAPI.getSaveDir();
+    setSaveDir(savedSaveDir);
   }

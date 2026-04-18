@@ -72,18 +72,29 @@ function savePendingFile(event, _id, cont = null) {
     return;
   }
 
-  if (!fs.existsSync(path.join(projectRoot, "uploads"))) {
-    fs.mkdirSync(path.join(projectRoot, "uploads"));
+  // let saveDir = path.join(projectRoot, "uploads");
+  let saveDir = userConfig.get('saveDir', null);
+  if (saveDir == null || saveDir == "") {
+    saveDir = app.getPath('downloads');
+    userConfig.set('saveDir', saveDir);
+  }
+
+  if (!fs.existsSync(saveDir)) {
+    fs.mkdirSync(saveDir);
   }
 
   let savePath = "";
 
+  //
+  console.log("saving file:", file);
+  //
+
   if (file.type === "file") {
-    savePath = path.join(projectRoot, "uploads", id.toString() + "-" + file.friendly);
+    savePath = path.join(saveDir, id.toString() + "-" + file.friendly);
   } else if (file.type === "text") {
-    savePath = path.join(projectRoot, "uploads", id.toString() + "-text.txt");
+    savePath = path.join(saveDir, id.toString() + "-text.txt");
   } else if (file.type === "url") {
-    savePath = path.join(projectRoot, "uploads", id.toString() + "-url.txt");
+    savePath = path.join(saveDir, id.toString() + "-url.txt");
   }
 
   fs.writeFile(savePath, file.buffer, (err) => {
@@ -118,7 +129,7 @@ async function handleFileOpen(e, path) {
     if (!canceled && filePaths.length > 0) {
       path = filePaths[0];
     } else {
-      return [0, "null", 0];
+      return;
     }
   }
 
@@ -396,9 +407,54 @@ app.whenReady().then(() => {
   ipcMain.handle('getTLSKeyPath', () => {
     return userConfig.get('tlsKeyPath');
   });
+  ipcMain.handle('browseForTlsKey', async (event, fallback) => {
+    let result = await dialog.showOpenDialog();
+    if (result.canceled) {
+      return fallback;
+    }
+    if (!fs.existsSync(result.filePaths[0])) {
+      return fallback;
+    }
+
+    userConfig.set('tlsKeyPath', result.filePaths[0]);
+    return result.filePaths[0];
+  });
   ipcMain.handle('setTLSCertPath', (event, path) => {console.log("received tlsCertPath: ", path); userConfig.set('tlsCertPath', path);});
   ipcMain.handle('getTLSCertPath', () => {
     return userConfig.get('tlsCertPath');
+  });
+  ipcMain.handle('browseForTlsCert', async (event, fallback) => {
+    let result = await dialog.showOpenDialog();
+    if (result.canceled) {
+      return fallback;
+    }
+    if (!fs.existsSync(result.filePaths[0])) {
+      return fallback;
+    }
+
+    userConfig.set('tlsCertPath', result.filePaths[0]);
+    return result.filePaths[0];
+  });
+  ipcMain.handle('getSaveDir', (event) => {
+    let savedVal = userConfig.get('saveDir', null);
+    if (savedVal == null || savedVal == "") {
+      savedVal = app.getPath('downloads');
+      userConfig.set('saveDir', savedVal);
+    }
+    return savedVal;
+  });
+  ipcMain.handle('setSaveDir', (event, newSaveDir) => {userConfig.set('saveDir', newSaveDir);});
+  ipcMain.handle('browseForSaveDir', async (event, fallback) => {
+    let result = await dialog.showOpenDialog({properties: ['openDirectory', 'createDirectory']});
+    
+    if (result.canceled) {
+      return fallback;
+    }
+    if (!fs.existsSync(result.filePaths[0])) {
+      return fallback;
+    }
+    userConfig.set('saveDir', result.filePaths[0]);
+    return result.filePaths[0];
   });
 
   let server = null;

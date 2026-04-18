@@ -66,6 +66,8 @@ function App() {
   // const ipRef = useRef(presentedIp);
   // const portRef = useRef(port);
 
+  const [saveDir, setSaveDir] = useState(null);
+  
   const [addTextValue, setAddTextValue] = useState("");
 
   // useEffect(() => {
@@ -106,7 +108,7 @@ function App() {
 
   // initialization
   useEffect(() => {
-    initialize(openFile, setPort, setPresentedIp, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
+    initialize(openFile, setPort, setPresentedIp, setSaveDir, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
   }, []);
 
   function hasCurrentFileBeenSaved() {
@@ -159,31 +161,88 @@ function App() {
             buttonAction={() => setSelectedNavPage(-1)}
             selected={selectedNavPage === -1}
             enabled={true}
-            customStyle={{display: "flex", width: "100%",  height: "45px", fontWeight: "regular", fontSize: "0.6rem", marginBottom: "3px", borderRadius: "8px", justifyContent: "center", alignItems: "center"}}
+            customStyle={{display: "flex", width: "100%",  height: "45px", fontWeight: "regular", fontSize: "0.6rem", borderRadius: "8px", justifyContent: "center", alignItems: "center"}}
             shadeA={"#202020"}
             shadeB={"#282828"}
             shadeC={"#2c2c2c"}
           />
         </div>
-        <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1, borderRadius: "8px"}}>
+        <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1, borderRadius: "8px 0 0 0"}}>
           {selectedNavPage === 0 ? (
             <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocol={protocol} ip={presentedIp} port={port} activeSFile={activeSFile}/>
           ) : selectedNavPage === 1 ? (
             <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} protocol={protocol} ip={presentedIp} port={port} />
           ) : selectedNavPage === -1 ? (
-            <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px"}}>
+            <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px", overflow: "hidden"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>TLS key/certificate locations</strong>
                 <span>Specify a custom directory for the TLS key and certificate files. If left blank, defaults to the application directory.</span>
-                <input type="text" style={{marginTop: "5px", width: "300px"}} defaultValue={tlsKeyPath} onBlur={(e) => {setTLSKeyPath(e.target.value); configAPI.setTLSKeyPath(e.target.value);}} placeholder="Enter path to TLS key file" />
-                <input type="text" style={{marginTop: "5px", width: "300px"}} defaultValue={tlsCertPath} onBlur={(e) => {setTLSCertPath(e.target.value); configAPI.setTLSCertPath(e.target.value);}} placeholder="Enter path to TLS certificate file" />
+                <div style={{display: "flex", flexDirection: "row", marginTop: "6px"}}>
+                  <div style={{display: "flex", flex: "0 0 27px", alignItems: "center", justifyContent: "start", marginRight: "10px"}}>Key: </div>
+                  <div style={{display: "flex", flex: "1 1 0", minWidth: "0"}}>
+                    <ResponsiveButton
+                      label={<div style={{whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{tlsKeyPath}</div>}
+                      buttonAction={()=>{configAPI.browseForTlsKey(tlsKeyPath).then((result)=>{setTLSKeyPath(result)});}}
+                      selected={false}
+                      enabled={true}
+                      styleClass="theme-box"
+                      customStyle={{whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}
+                      shadeA="#343434"
+                      shadeB="#3a3a3a"
+                      shadeC="#404040"
+                    />
+                  </div>
+                </div>
+
+                <div style={{display: "flex", flexDirection: "row", marginTop: "3px"}}>
+                  <div style={{display: "flex", flex: "0 0 27px", alignItems: "center", justifyContent: "start", marginRight: "10px"}}>Cert: </div>
+                  <div style={{display: "flex", flex: "1 1 0", minWidth: "0"}}>
+                    <ResponsiveButton
+                      label={<div style={{whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{tlsCertPath}</div>}
+                      buttonAction={()=>{configAPI.browseForTlsCert(tlsCertPath).then((result)=>{setTLSCertPath(result)});}}
+                      selected={false}
+                      enabled={true}
+                      styleClass="theme-box"
+                      customStyle={{whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}
+                      shadeA="#343434"
+                      shadeB="#3a3a3a"
+                      shadeC="#404040"
+                    />
+                  </div>
+                </div>
               </div>
               <br />
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>Server port</strong>
                 <span>Specify the port number the server will listen on. Default is 2222.</span>
-                <input type="number" style={{marginTop: "5px", width: "300px"}} defaultValue={port} onBlur={(e) => {configAPI.setPort(e.target.value).then((result) => {setPort(result);});}} placeholder="Enter server port" />
+                <input type="number" className="theme-text-input" style={{marginTop: "2px", backgroundColor: "#222222", width: "150px"}} defaultValue={port} onBlur={(e) => {configAPI.setPort(e.target.value).then((result) => {setPort(result);});}} placeholder="Enter server port" />
+              </div>
+            <br />
+              <div style={{flexDirection: "column", display: "flex"}}>
+                <strong>Save directory</strong>
+                <span>Specify the directory where files will be saved when the "Save" option is used in the inbox. Default is the user's Downloads folder.</span>
+                
+                
+                <div style={{display: "flex", flex: "1 1 0", minWidth: "0", marginTop: "6px"}}>
+                  <ResponsiveButton
+                    label={<div style={{whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{saveDir}</div>}
+                    buttonAction={()=>{configAPI.browseForSaveDir(saveDir).then((result)=>{setSaveDir(result)});}}
+                    selected={false}
+                    enabled={true}
+                    styleClass="theme-box"
+                    customStyle={{whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}
+                    shadeA="#343434"
+                    shadeB="#3a3a3a"
+                    shadeC="#404040"
+                  />
+                </div>
+
+
+                {/* <div style={{display: "flex", marginTop: "5px", flexDirection: "row"}}>
+                  <div style={{width: "300px", height: "20px", backgroundColor: "#202020", border: "none", borderRadius: "4px"}}>{saveDir}</div>
+                  <button style={{height: "18px", padding: "0", border: "none", borderRadius: "8px"}} onClick={()=>{configAPI.browseForSaveDir(saveDir).then((result)=>{setSaveDir(result)});}}>browse</button>
+                </div> */}
               </div>
             </div>
           ) : null}
@@ -199,7 +258,7 @@ function App() {
             </select>
           </div>
 
-          <div style={{margin: "0 2px", width: "50px", height: footerHeight, overflow: "hidden"}}>
+          <div style={{margin: "auto 2px", width: "50px", height: footerHeight, overflow: "hidden"}}>
               <ResponsiveButton
                 label={protocol}
                 buttonAction={async () => {
@@ -215,7 +274,7 @@ function App() {
                 selected={false}
                 setSelected={() => {}}
                 enabled={true}
-                customStyle={{height: footerHeight, fontSize: "12px", fontWeight: "regular", color: "#a0a0a0"}}
+                customStyle={{height: footerHeight, width: "100%", fontSize: "12px", fontWeight: "regular", color: "#a0a0a0"}}
                 shadeA={"#202020"}
                 shadeB={"#282828"}
                 shadeC={"#303030"}
@@ -227,7 +286,7 @@ function App() {
           </div>
         </div>
         <div id="right-footer" style={{display: "flex", alignItems: "center"}}>
-          <div style={{width: "115px",height: footerHeight, overflow: "hidden"}}>
+          <div style={{width: "120px",height: footerHeight, overflow: "hidden"}}>
             <ResponsiveButton
               label={"Axon-node © 2026"}
               buttonAction={async () => {
@@ -235,7 +294,7 @@ function App() {
               }}
               selected={false}
               enabled={true}
-              customStyle={{height: footerHeight, fontSize: "12px", color: "#a0a0a0"}}
+              customStyle={{height: footerHeight, width: "120px", fontSize: "12px", color: "#a0a0a0"}}
               shadeA={"#202020"}
               shadeB={"#282828"}
               shadeC={"#303030"}

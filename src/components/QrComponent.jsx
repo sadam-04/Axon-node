@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useLayoutEffect} from 'react';
 import QRCode from 'qrcode';
 
 import ResponsiveButton from './ResponsiveButton';
@@ -8,7 +8,7 @@ const QrComponent = ({url, alignment, shadeA="#282828", shadeB="#303030", shadeC
   const [qrHoverMsg, setQrHoverMsg] = useState("Click to copy URL to clipboard");
   const [showUrl, setShowUrl] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     (async () => {
       try {
         console.log("Generating QR for url: " + url);

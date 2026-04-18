@@ -42,6 +42,7 @@ body {
 @media only screen and (max-width: 1274px) {
 	.main-content {
 		width: 40%;
+		font-size: 20px;
 	}
 }
 
@@ -53,7 +54,7 @@ body {
 
 .section-title {
 	display: block;
-	font-size: 1.2rem;
+	font-size: 1.2em;
 	margin-bottom: 8px;
 	color: white;
 }
@@ -122,7 +123,7 @@ input[type="file"] {
 	padding: 0 0 0 8px;
 	margin: 0;
 	border-radius: 8px;
-	font-size: 0.8rem;
+	font-size: 0.8em;
 	cursor: pointer;
 	height: 30px;
 	background-color: #181818;
@@ -136,7 +137,7 @@ input[type="file"] {
 	align-items: center;
 	justify-content: center;
 	border-radius: 8px;
-	font-size: 0.8rem;
+	font-size: 0.8em;
 	height: 30px;
 	background-color: #282828;
 	color: white;
@@ -160,7 +161,7 @@ input[type="file"] {
 	word-break: break-all;
 	margin-top: 8px;
 	margin-bottom: 15px;
-	font-size: 0.8rem;
+	font-size: 0.8em;
 }
 
 .spinner-container {

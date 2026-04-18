@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ShadedButton({ selected, hovered, pressed, enabled, customStyle = null, disabledStyle = null, icon, shadeA, shadeB, shadeC }) {
+export default function ShadedButton({ selected, hovered, pressed, enabled, customStyle = null, styleClass = null, disabledStyle = null, icon, shadeA, shadeB, shadeC }) {
   let shadeValue = shadeA;
 
   if (enabled) {
@@ -12,7 +12,7 @@ export default function ShadedButton({ selected, hovered, pressed, enabled, cust
   }
 
   return (
-    <div className="button-icon" style={{ ...customStyle, ...(enabled ? { backgroundColor: shadeValue } : disabledStyle) }}>
+    <div className={styleClass} style={{...customStyle, ...(enabled ? { backgroundColor: shadeValue } : disabledStyle), display: "flex", alignItems: "center", justifyContent: "center" }}>
       {icon}
     </div>
   );
