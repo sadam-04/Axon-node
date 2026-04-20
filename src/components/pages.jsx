@@ -190,17 +190,31 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                                 shadeC={"#404040"}
                                 />
                             ) : (
-                                <ResponsiveButton
-                                label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
-                                buttonAction={() => {inboxAPI.save(inboxItems[activeRFile].id, ()=>{console.log("TESTING")});}}
-                                selected={false}
-                                enabled={!hasCurrentFileBeenSaved()}
-                                disabledStyle={{color: "#808080"}}
-                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                                shadeA={"#303030"}
-                                shadeB={"#383838"}
-                                shadeC={"#404040"}
-                                />
+                                <div style={{display: "flex", flexDirection: "row"}}>
+                                    <ResponsiveButton
+                                    label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
+                                    buttonAction={() => {inboxAPI.save(inboxItems[activeRFile].id);}}
+                                    selected={false}
+                                    enabled={!hasCurrentFileBeenSaved()}
+                                    disabledStyle={{color: "#808080"}}
+                                    customStyle={{display: "flex", width: "50px", height: "35px", borderRadius: "6px 0 0 6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                                    shadeA={"#303030"}
+                                    shadeB={"#383838"}
+                                    shadeC={"#404040"}
+                                    />
+
+                                    <ResponsiveButton
+                                    label={"as..."}
+                                    buttonAction={() => {inboxAPI.save(inboxItems[activeRFile].id, "manual");}}
+                                    selected={false}
+                                    enabled={!hasCurrentFileBeenSaved()}
+                                    disabledStyle={{color: "#808080"}}
+                                    customStyle={{display: "flex", width: "30px", height: "35px", borderRadius: "0 6px 6px 0", justifyContent: "center", alignItems: "center", marginTop: "20px"}}
+                                    shadeA={"#303030"}
+                                    shadeB={"#383838"}
+                                    shadeC={"#404040"}
+                                    />
+                                </div>
                             )
                         ) : null}
 

@@ -46,7 +46,7 @@ async function openPendingFile(event, _id) {
 
   if (inboxItems.get(id).localPath == "") {
     console.log("file has not yet been saved. saving now.");
-    await savePendingFile(event, id, () => {
+    await savePendingFile(event, id, "auto", () => {
       const targetpath = inboxItems.get(id).localPath;
       console.log("opening file: ", targetpath);
       shell.openPath(targetpath);
@@ -58,7 +58,7 @@ async function openPendingFile(event, _id) {
   }
 }
 
-function savePendingFile(event, _id, cont = null) {
+async function savePendingFile(event, _id, pathMode, cont = null) {
   let allWindows = BrowserWindow.getAllWindows();
   if (allWindows.length === 0) {
     return;
@@ -84,17 +84,22 @@ function savePendingFile(event, _id, cont = null) {
   }
 
   let savePath = "";
-
-  //
-  console.log("saving file:", file);
-  //
-
-  if (file.type === "file") {
-    savePath = path.join(saveDir, id.toString() + "-" + file.friendly);
-  } else if (file.type === "text") {
-    savePath = path.join(saveDir, id.toString() + "-text.txt");
-  } else if (file.type === "url") {
-    savePath = path.join(saveDir, id.toString() + "-url.txt");
+  if (pathMode == "auto") {
+    if (file.type === "file") {
+      savePath = path.join(saveDir, id.toString() + "-" + file.friendly);
+    } else if (file.type === "text") {
+      savePath = path.join(saveDir, id.toString() + "-text.txt");
+    } else if (file.type === "url") {
+      savePath = path.join(saveDir, id.toString() + "-url.txt");
+    }
+  } else if (pathMode == "manual") {
+    let result = await dialog.showSaveDialog();
+    if (result.canceled || result.filePath == null || result.filePath == undefined) {
+      return;
+    }
+    savePath = result.filePath;
+  } else {
+    return;
   }
 
   fs.writeFile(savePath, file.buffer, (err) => {
