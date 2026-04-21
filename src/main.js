@@ -46,7 +46,7 @@ async function openPendingFile(event, _id) {
 
   if (inboxItems.get(id).localPath == "") {
     console.log("file has not yet been saved. saving now.");
-    await savePendingFile(event, id, () => {
+    await savePendingFile(event, id, "auto", () => {
       const targetpath = inboxItems.get(id).localPath;
       console.log("opening file: ", targetpath);
       shell.openPath(targetpath);

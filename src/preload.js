@@ -32,7 +32,7 @@ contextBridge.exposeInMainWorld('inboxAPI', {
     onSaveFileResult: (callback) => ipcRenderer.on('savePendingFileResult', (e, result) => callback(result)),
     
     open: (id) => ipcRenderer.invoke('openPendingFile', id),
-    save: (id) => ipcRenderer.invoke('savePendingFile', id),
+    save: (id, pathMode) => ipcRenderer.invoke('savePendingFile', id, pathMode),
     reveal: (id) => ipcRenderer.invoke('revealPendingFile', id),
     discard: (id, ctx) => ipcRenderer.invoke('discardPendingFile', id, ctx),
 });
