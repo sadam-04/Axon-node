@@ -179,7 +179,7 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                         {inboxItems[activeRFile]?.type === "file" || inboxItems[activeRFile]?.type === "text" ? (
                             hasCurrentFileBeenSaved() ? (
                                 <ResponsiveButton
-                                label={"Go to folder"}
+                                label={"Reveal"}
                                 buttonAction={() => {inboxAPI.reveal(inboxItems[activeRFile].id);}}
                                 selected={false}
                                 enabled={hasCurrentFileBeenSaved()}

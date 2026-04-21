@@ -58,7 +58,16 @@ async function openPendingFile(event, _id) {
   }
 }
 
-function savePendingFile(event, _id, cont = null) {
+function getExtension(str) {
+  const lastDotIndex = str.lastIndexOf('.');
+  if (lastDotIndex === -1 || lastDotIndex === 0) {
+    return "";
+  }
+  
+  return str.substring(lastDotIndex + 1);
+}
+
+async function savePendingFile(event, _id, pathMode = "auto", cont = null) {
   let allWindows = BrowserWindow.getAllWindows();
   if (allWindows.length === 0) {
     return;
@@ -84,17 +93,48 @@ function savePendingFile(event, _id, cont = null) {
   }
 
   let savePath = "";
+  let fileName = "";
 
-  //
-  console.log("saving file:", file);
-  //
+  if (pathMode == "auto") {
+    if (file.type === "file") {
+      fileName = id.toString() + "-" + file.friendly;
+      // savePath = path.join(saveDir, id.toString() + "-" + file.friendly);
+    } else if (file.type === "text") {
+      fileName = id.toString() + "-text.txt";
+      // savePath = path.join(saveDir, id.toString() + "-text.txt");
+    } else if (file.type === "url") {
+      fileName = id.toString() + "-url.txt";
+      // savePath = path.join(saveDir, id.toString() + "-url.txt");
+    }
+  } else if (pathMode == "manual") {
+    if (file.type === "file") {
+      fileName = file.friendly;
+    } else if (file.type === "text") {
+      fileName = "text.txt";
+    } else if (file.type === "url") {
+      fileName = "url.txt";
+    }
+  }
 
-  if (file.type === "file") {
-    savePath = path.join(saveDir, id.toString() + "-" + file.friendly);
-  } else if (file.type === "text") {
-    savePath = path.join(saveDir, id.toString() + "-text.txt");
-  } else if (file.type === "url") {
-    savePath = path.join(saveDir, id.toString() + "-url.txt");
+  let ext = getExtension(fileName);
+
+  if (pathMode == "auto") {
+    savePath = path.join(saveDir, fileName);
+  } else if (pathMode == "manual") {
+    let result = await dialog.showSaveDialog({
+      defaultPath: fileName,
+      buttonLabel: 'Save',
+      filters: [
+        { name: `${ext.toUpperCase()} files`, extensions: [ext.toLowerCase()] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    if (result.canceled || result.filePath == null || result.filePath == undefined) {
+      return;
+    }
+    savePath = result.filePath;
+  } else {
+    return;
   }
 
   fs.writeFile(savePath, file.buffer, (err) => {
@@ -340,8 +380,6 @@ function updateRendererInbox(ctx = null) {
       id: uid,
     });
   }
-
-  console.log("items:", convertedItems);
 
   window.webContents.send('update-inbox', convertedItems, ctx);
 }
