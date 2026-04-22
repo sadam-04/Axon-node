@@ -186,7 +186,7 @@ async function handleFileOpen(e, path) {
     localPath: path
   });
 
-  let ctx = {newIdx: outboxItems.length - 1};
+  let ctx = {newIdx: outboxItems.size - 1};
 
   updateRendererOutbox(ctx);
 }
