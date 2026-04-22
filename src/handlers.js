@@ -19,13 +19,6 @@ export function handleChangedIP(newIP, setPresentedIp) {
   configAPI.setIP(newIP);
 }
 
-// openFile() tells main proc to open a file dialog 
-// openFile(filepath) tells main proc to load specific file
-// 
-export const openFile = (file = null, setSelectedNavPage) => {
-  outboxAPI.openFile(file);
-}
-
 // updates all front-end URLs and QRs with a given protocol, ip, and port. 
 // export const updateURL = async (protocol, ip, port, setInboxUrl, hostedFiles, setHostedFiles) => {
 //     if (port == "" || isNaN(port)) {
@@ -52,7 +45,7 @@ export const openFile = (file = null, setSelectedNavPage) => {
 // }
 
 // perform various initialization tasks
-export const initialize = async (openFile, setPort, setPresentedIp, setSaveDir, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
+export const initialize = async (setPort, setPresentedIp, setSaveDir, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {
@@ -62,8 +55,11 @@ export const initialize = async (openFile, setPort, setPresentedIp, setSaveDir, 
     // handle file drops as outbox items
     window.addEventListener("drop", event => {
       event.preventDefault();
-      const file = event.dataTransfer.files[0];
-      openFile(file, setSelectedNavPage);
+      const files = event.dataTransfer.files;
+      for (const f of files) {
+        outboxAPI.openFile(f);
+      }
+      setSelectedNavPage(0);
     });
 
     // get saved IP from last session

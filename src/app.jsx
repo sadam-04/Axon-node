@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
-import { handleAddText, handleChangedIP, openFile, initialize } from "./handlers";
+import { handleAddText, handleChangedIP, initialize } from "./handlers";
 import { Outbox, Inbox } from "./components/pages";
 import ResponsiveButton from "./components/ResponsiveButton";
 
@@ -108,7 +108,7 @@ function App() {
 
   // initialization
   useEffect(() => {
-    initialize(openFile, setPort, setPresentedIp, setSaveDir, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
+    initialize(setPort, setPresentedIp, setSaveDir, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
   }, []);
 
   function hasCurrentFileBeenSaved() {
@@ -169,9 +169,9 @@ function App() {
         </div>
         <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1, borderRadius: "8px 0 0 0"}}>
           {selectedNavPage === 0 ? (
-            <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} openFile={openFile} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocol={protocol} ip={presentedIp} port={port} activeSFile={activeSFile}/>
+            <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocol={protocol} ip={presentedIp} port={port} activeSFile={activeSFile}/>
           ) : selectedNavPage === 1 ? (
-            <Inbox setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} protocol={protocol} ip={presentedIp} port={port} />
+            <Inbox setSelectedNavPage={setSelectedNavPage} setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} protocol={protocol} ip={presentedIp} port={port} />
           ) : selectedNavPage === -1 ? (
             <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px", overflow: "hidden"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>

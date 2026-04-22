@@ -8,7 +8,7 @@ import SimpleTextHeader from './SimpleTextHeader';
 
 const icon_folder = require("../icons/icon_folder_4.png");
 
-const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocol, ip, port, activeSFile}) => {
+const Outbox = ({hostedFiles, setHostedFiles, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocol, ip, port, activeSFile}) => {
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
             <div id="left-summary-panel" onClick={()=>{setSelectedSFile(null);}} style={{display: "flex", flexDirection: "column", boxSizing: "content-box"}}>
@@ -25,7 +25,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
                         </form>
                         <ResponsiveButton 
                         label={<img src={icon_folder} style={{width: "16px"}} />}
-                        buttonAction={() => openFile(null, setSelectedSFile)}
+                        buttonAction={() => outboxAPI.openFile(null)}
                         selected={false}
                         enabled={true}
                         customStyle={{width: "30px", height: "30px", borderRadius: "6px", justifyContent: "center", alignItems: "center"}}
@@ -70,7 +70,7 @@ const Outbox = ({hostedFiles, setHostedFiles, openFile, handleAddText, addTextVa
     );
 }
 
-const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCurrentFileBeenSaved, savePaths, protocol, ip, port}) => {
+const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCurrentFileBeenSaved, savePaths, protocol, ip, port}) => {
 
     return (
         <div style={{display: "flex", flexDirection: "row", height: "100%", width: "100%"}}>
@@ -132,102 +132,116 @@ const Inbox = ({setSelectedRFile, inboxItems, setinboxItems, activeRFile, hasCur
                         <SimpleTextHeader primaryText={inboxItems[activeRFile]?.friendly} secondaryText={`Size: ${inboxItems[activeRFile]?.size < 1024 ? `${inboxItems[activeRFile]?.size} B` : inboxItems[activeRFile]?.size < 1048576 ? `${(inboxItems[activeRFile]?.size / 1024).toFixed(2)} KB` : `${(inboxItems[activeRFile]?.size / 1048576).toFixed(2)} MB`}`} />
                     </div>
 
-                    <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
-                        {inboxItems[activeRFile]?.type === "url" ? (
-                            <ResponsiveButton
-                            label={"Open URL"}
-                            buttonAction={async () => {window.location.href = inboxItems[activeRFile].buffer;}}
-                            selected={false}
-                            enabled={true}
-                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                            shadeA={"#303030"}
-                            shadeB={"#383838"}
-                            shadeC={"#404040"}
-                            />
-                        ) : (
-                            null
-                        )}
-
-                        
-                        {inboxItems[activeRFile]?.type === "text" || inboxItems[activeRFile]?.type === "url" ? (
-                            <ResponsiveButton
-                            label={"Copy"}
-                            buttonAction={async () => {navigator.clipboard.writeText(inboxItems[activeRFile].buffer);}}
-                            selected={false}
-                            enabled={true}
-                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                            shadeA={"#303030"}
-                            shadeB={"#383838"}
-                            shadeC={"#404040"}
-                            />
-                        ) : null}
-
-                        {inboxItems[activeRFile]?.type === "file" ? (
-                            <ResponsiveButton
-                            label={"Open"}
-                            buttonAction={() => {inboxAPI.open(inboxItems[activeRFile].id);}}
-                            selected={false}
-                            enabled={true}
-                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                            disabledStyle={{color: "#808080"}}
-                            shadeA={"#303030"}
-                            shadeB={"#383838"}
-                            shadeC={"#404040"}
-                            />
-                        ): null}
-
-                        {inboxItems[activeRFile]?.type === "file" || inboxItems[activeRFile]?.type === "text" ? (
-                            hasCurrentFileBeenSaved() ? (
+                    <div style={{display: "flex", flexDirection: "column"}}>
+                        <div style={{width: "270px", display: "flex", flexDirection: "row", alignItems: "start", justifyContent: "space-around", fontSize: "13px"}}>
+                            {inboxItems[activeRFile]?.type === "url" ? (
                                 <ResponsiveButton
-                                label={"Reveal"}
-                                buttonAction={() => {inboxAPI.reveal(inboxItems[activeRFile].id);}}
+                                label={"Open URL"}
+                                buttonAction={async () => {window.location.href = inboxItems[activeRFile].buffer;}}
                                 selected={false}
-                                enabled={hasCurrentFileBeenSaved()}
+                                enabled={true}
+                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                                shadeA={"#303030"}
+                                shadeB={"#383838"}
+                                shadeC={"#404040"}
+                                />
+                            ) : (
+                                null
+                            )}
+
+                            
+                            {inboxItems[activeRFile]?.type === "text" || inboxItems[activeRFile]?.type === "url" ? (
+                                <ResponsiveButton
+                                label={"Copy"}
+                                buttonAction={async () => {console.log("item: ", inboxItems[activeRFile]); navigator.clipboard.writeText(inboxItems[activeRFile].buffer);}}
+                                selected={false}
+                                enabled={true}
+                                customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                                shadeA={"#303030"}
+                                shadeB={"#383838"}
+                                shadeC={"#404040"}
+                                />
+                            ) : null}
+
+                            {inboxItems[activeRFile]?.type === "file" ? (
+                                <ResponsiveButton
+                                label={"Open"}
+                                buttonAction={() => {inboxAPI.open(inboxItems[activeRFile].id);}}
+                                selected={false}
+                                enabled={true}
                                 customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                                 disabledStyle={{color: "#808080"}}
                                 shadeA={"#303030"}
                                 shadeB={"#383838"}
                                 shadeC={"#404040"}
                                 />
-                            ) : (
-                                <div style={{display: "flex", flexDirection: "row"}}>
+                            ): null}
+
+                            {inboxItems[activeRFile]?.type === "file" || inboxItems[activeRFile]?.type === "text" ? (
+                                hasCurrentFileBeenSaved() ? (
                                     <ResponsiveButton
-                                    label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
-                                    buttonAction={() => {inboxAPI.save(inboxItems[activeRFile].id);}}
+                                    label={"Reveal"}
+                                    buttonAction={() => {inboxAPI.reveal(inboxItems[activeRFile].id);}}
                                     selected={false}
-                                    enabled={!hasCurrentFileBeenSaved()}
+                                    enabled={hasCurrentFileBeenSaved()}
+                                    customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                                     disabledStyle={{color: "#808080"}}
-                                    customStyle={{display: "flex", width: "50px", height: "35px", borderRadius: "6px 0 0 6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                                     shadeA={"#303030"}
                                     shadeB={"#383838"}
                                     shadeC={"#404040"}
                                     />
+                                ) : (
+                                    <div style={{display: "flex", flexDirection: "row"}}>
+                                        <ResponsiveButton
+                                        label={hasCurrentFileBeenSaved() ? "Saved" : "Save"}
+                                        buttonAction={() => {inboxAPI.save(inboxItems[activeRFile].id);}}
+                                        selected={false}
+                                        enabled={!hasCurrentFileBeenSaved()}
+                                        disabledStyle={{color: "#808080"}}
+                                        customStyle={{display: "flex", width: "50px", height: "35px", borderRadius: "6px 0 0 6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                                        shadeA={"#303030"}
+                                        shadeB={"#383838"}
+                                        shadeC={"#404040"}
+                                        />
 
-                                    <ResponsiveButton
-                                    label={"as..."}
-                                    buttonAction={() => {inboxAPI.save(inboxItems[activeRFile].id, "manual");}}
-                                    selected={false}
-                                    enabled={!hasCurrentFileBeenSaved()}
-                                    disabledStyle={{color: "#808080"}}
-                                    customStyle={{display: "flex", width: "30px", height: "35px", borderRadius: "0 6px 6px 0", justifyContent: "center", alignItems: "center", marginTop: "20px"}}
-                                    shadeA={"#303030"}
-                                    shadeB={"#383838"}
-                                    shadeC={"#404040"}
-                                    />
-                                </div>
-                            )
-                        ) : null}
+                                        <ResponsiveButton
+                                        label={"as..."}
+                                        buttonAction={() => {inboxAPI.save(inboxItems[activeRFile].id, "manual");}}
+                                        selected={false}
+                                        enabled={!hasCurrentFileBeenSaved()}
+                                        disabledStyle={{color: "#808080"}}
+                                        customStyle={{display: "flex", width: "30px", height: "35px", borderRadius: "0 6px 6px 0", justifyContent: "center", alignItems: "center", marginTop: "20px"}}
+                                        shadeA={"#303030"}
+                                        shadeB={"#383838"}
+                                        shadeC={"#404040"}
+                                        />
+                                    </div>
+                                )
+                            ) : null}
 
-                        <ResponsiveButton
-                        label={"Discard"}
-                        buttonAction={() => inboxAPI.discard(inboxItems[activeRFile].id, {delIdx: activeRFile, selIdx: activeRFile})}
-                        selected={false}
-                        enabled={true}
-                        customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                        shadeA={"#303030"}
-                        shadeB={"#983838"}
-                        shadeC={"#c04040"}
-                        />
+                            <ResponsiveButton
+                            label={"Discard"}
+                            buttonAction={() => inboxAPI.discard(inboxItems[activeRFile].id, {delIdx: activeRFile, selIdx: activeRFile})}
+                            selected={false}
+                            enabled={true}
+                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            shadeA={"#303030"}
+                            shadeB={"#983838"}
+                            shadeC={"#c04040"}
+                            />
+                        </div>
+                        <div style={{display: "flex", flexDirection: "row", justifyContent: "start", fontSize: "13px"}}>
+                            <ResponsiveButton
+                            label={"Copy to Outbox"}
+                            buttonAction={async () => {inboxAPI.copyToOutbox(inboxItems[activeRFile].id); setSelectedNavPage(0);}}
+                            selected={false}
+                            enabled={true}
+                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            shadeA={"#303030"}
+                            shadeB={"#383838"}
+                            shadeC={"#404040"}
+                            />
+                        </div>
                     </div>
                 </div>
                 <div style={{display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "flex-start", width: "100%", height: "40px", boxSizing: "border-box"}}>

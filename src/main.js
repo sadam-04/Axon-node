@@ -137,21 +137,15 @@ async function savePendingFile(event, _id, pathMode = "auto", cont = null) {
     return;
   }
 
-  fs.writeFile(savePath, file.buffer, (err) => {
-    if (err) {
-      console.error("Error saving file: ", err);
-      window.webContents.send('savePendingFileResult', {id: id, path: ""});
-      return;
-    }
-    
-    inboxItems.get(id).localPath = savePath;
+  fs.writeFileSync(savePath, file.buffer); 
+  
+  inboxItems.get(id).localPath = savePath;
+  window.webContents.send('savePendingFileResult', {id: id, path: savePath });
+  if (cont != null) {
+    cont();
+  }
 
-    window.webContents.send('savePendingFileResult', {id: id, path: savePath });
-
-    if (cont != null) {
-      cont();
-    }
-  });
+  return savePath;
 }
 
 function revealPendingFile(event, _id) {
@@ -163,32 +157,52 @@ function revealPendingFile(event, _id) {
   shell.showItemInFolder(file.localPath);
 }
 
-async function handleFileOpen(e, path) {
-  if (path == null) {
-    const { canceled, filePaths } = await dialog.showOpenDialog({});
+async function copyToOutbox(event, _id) {
+  const item = inboxItems.get(_id);
+  if (item.type == "file") {
+    let path = await savePendingFile(event, _id, "auto");
+    handleFileOpen(event, [path]);
+  } else if (item.type == "text" || item.type == "url") {
+    addTextToOutbox(event, item.buffer);
+  }
+}
+
+async function handleFileOpen(e, paths) {
+
+  console.log("paths: ", paths);
+
+  if (paths == null) {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ["multiSelections"]
+    });
     if (!canceled && filePaths.length > 0) {
-      path = filePaths[0];
+      paths = filePaths;
     } else {
       return;
     }
   }
 
-  let uid = Math.floor(Math.random() * 1000000);
+  for (const path of paths) {
 
-  let friendlyname = path.replace(/^.*[\\/]/, '');
-  console.log("adding file: ", friendlyname);
+    console.log("opening: ", path);
 
-  outboxItems.set(uid, {
-    type: "file",
-    friendly: friendlyname,
-    buffer: null,
-    size: fs.statSync(path).size,
-    localPath: path
-  });
-
-  let ctx = {newIdx: outboxItems.size - 1};
-
-  updateRendererOutbox(ctx);
+    let uid = Math.floor(Math.random() * 1000000);
+    
+    let friendlyname = path.replace(/^.*[\\/]/, '');
+    console.log("adding file: ", friendlyname);
+    
+    outboxItems.set(uid, {
+      type: "file",
+      friendly: friendlyname,
+      buffer: null,
+      size: fs.statSync(path).size,
+      localPath: path
+    });
+    
+    let ctx = {newIdx: outboxItems.size - 1};
+    
+    updateRendererOutbox(ctx);
+  }
 }
 
 async function addTextToOutbox(event, text) {
@@ -367,9 +381,9 @@ function updateRendererInbox(ctx = null) {
     if (item.type === "file") {
       string = null;
     } else if (item.type === "url") {
-      string = item.url;
+      string = item.buffer;
     } else if (item.type === "text") {
-      string = item.buffer.toString('utf-8');
+      string = item.buffer;
     }
 
     convertedItems.push({
@@ -393,9 +407,9 @@ function updateRendererOutbox(ctx = null) {
     if (item.type === "file") {
       string = null;
     } else if (item.type === "url") {
-      string = item.url;
+      string = item.buffer;
     } else if (item.type === "text") {
-      string = item.buffer.toString('utf-8');
+      string = item.buffer;
     }
 
     convertedItems.push({
@@ -432,6 +446,7 @@ app.whenReady().then(() => {
   ipcMain.handle('savePendingFile', savePendingFile);
   ipcMain.handle('revealPendingFile', revealPendingFile);
   ipcMain.handle('discardPendingFile', deleteInboxItem);
+  ipcMain.handle('copyToOutbox', copyToOutbox);
   ipcMain.handle('discardOutboxItem', deleteOutboxItem);
   ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
   ipcMain.handle('setPort', async (event, newPort) => {if (newPort == null || newPort <= 0 || newPort > 65535 || isNaN(newPort)) {return await userConfig.get('port');} else {await userConfig.set('port', newPort); initServer(protocol); return newPort;}});

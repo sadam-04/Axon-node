@@ -35,6 +35,8 @@ contextBridge.exposeInMainWorld('inboxAPI', {
     save: (id, pathMode) => ipcRenderer.invoke('savePendingFile', id, pathMode),
     reveal: (id) => ipcRenderer.invoke('revealPendingFile', id),
     discard: (id, ctx) => ipcRenderer.invoke('discardPendingFile', id, ctx),
+
+    copyToOutbox: (id) => ipcRenderer.invoke('copyToOutbox', id),
 });
 
 contextBridge.exposeInMainWorld('outboxAPI', {
@@ -43,7 +45,7 @@ contextBridge.exposeInMainWorld('outboxAPI', {
             return ipcRenderer.invoke('openFile', null);
         }
         let path = webUtils.getPathForFile(file);
-        return ipcRenderer.invoke('openFile', path);
+        return ipcRenderer.invoke('openFile', [path]);
     },
     onUpdate: (callback) => ipcRenderer.on('update-outbox', (e, items, ctx) => callback(items, ctx)),
     addText: (text) => ipcRenderer.invoke('addTextToOutbox', text),
