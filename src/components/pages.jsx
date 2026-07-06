@@ -7,6 +7,7 @@ import QrComponent from './QrComponent';
 import SimpleTextHeader from './SimpleTextHeader';
 
 const icon_folder = require("../icons/icon_folder_4.png");
+const copy_icon = require("../icons/copy.png");
 
 const Outbox = ({hostedFiles, setHostedFiles, handleAddText, addTextValue, setAddTextValue, setSelectedSFile, protocol, ip, port, activeSFile}) => {
     return (
@@ -141,9 +142,9 @@ const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems,
                                 selected={false}
                                 enabled={true}
                                 customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                                shadeA={"#303030"}
-                                shadeB={"#383838"}
-                                shadeC={"#404040"}
+                                shadeA={"#3c3c3c"}
+                                shadeB={"#404040"}
+                                shadeC={"#444444"}
                                 />
                             ) : (
                                 null
@@ -152,14 +153,14 @@ const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems,
                             
                             {inboxItems[activeRFile]?.type === "text" || inboxItems[activeRFile]?.type === "url" ? (
                                 <ResponsiveButton
-                                label={"Copy"}
+                                label={<div>Copy<img src={copy_icon} style={{width: "16px"}} /></div>}
                                 buttonAction={async () => {console.log("item: ", inboxItems[activeRFile]); navigator.clipboard.writeText(inboxItems[activeRFile].buffer);}}
                                 selected={false}
                                 enabled={true}
                                 customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                                shadeA={"#303030"}
-                                shadeB={"#383838"}
-                                shadeC={"#404040"}
+                                shadeA={"#3c3c3c"}
+                                shadeB={"#404040"}
+                                shadeC={"#444444"}
                                 />
                             ) : null}
 
@@ -171,9 +172,9 @@ const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems,
                                 enabled={true}
                                 customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                                 disabledStyle={{color: "#808080"}}
-                                shadeA={"#303030"}
-                                shadeB={"#383838"}
-                                shadeC={"#404040"}
+                                shadeA={"#3c3c3c"}
+                                shadeB={"#404040"}
+                                shadeC={"#444444"}
                                 />
                             ): null}
 
@@ -186,9 +187,9 @@ const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems,
                                     enabled={hasCurrentFileBeenSaved()}
                                     customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
                                     disabledStyle={{color: "#808080"}}
-                                    shadeA={"#303030"}
-                                    shadeB={"#383838"}
-                                    shadeC={"#404040"}
+                                    shadeA={"#3c3c3c"}
+                                    shadeB={"#404040"}
+                                    shadeC={"#444444"}
                                     />
                                 ) : (
                                     <div style={{display: "flex", flexDirection: "row"}}>
@@ -199,9 +200,9 @@ const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems,
                                         enabled={!hasCurrentFileBeenSaved()}
                                         disabledStyle={{color: "#808080"}}
                                         customStyle={{display: "flex", width: "50px", height: "35px", borderRadius: "6px 0 0 6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                                        shadeA={"#303030"}
-                                        shadeB={"#383838"}
-                                        shadeC={"#404040"}
+                                        shadeA={"#3c3c3c"}
+                                        shadeB={"#404040"}
+                                        shadeC={"#444444"}
                                         />
 
                                         <ResponsiveButton
@@ -211,9 +212,9 @@ const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems,
                                         enabled={!hasCurrentFileBeenSaved()}
                                         disabledStyle={{color: "#808080"}}
                                         customStyle={{display: "flex", width: "30px", height: "35px", borderRadius: "0 6px 6px 0", justifyContent: "center", alignItems: "center", marginTop: "20px"}}
-                                        shadeA={"#303030"}
-                                        shadeB={"#383838"}
-                                        shadeC={"#404040"}
+                                        shadeA={"#3c3c3c"}
+                                        shadeB={"#404040"}
+                                        shadeC={"#444444"}
                                         />
                                     </div>
                                 )
@@ -225,9 +226,9 @@ const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems,
                             selected={false}
                             enabled={true}
                             customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                            shadeA={"#303030"}
-                            shadeB={"#983838"}
-                            shadeC={"#c04040"}
+                            shadeA={"#3c3c3c"}
+                            shadeB={"#984040"}
+                            shadeC={"#c04444"}
                             />
                         </div>
                         <div style={{display: "flex", flexDirection: "row", justifyContent: "start", fontSize: "13px"}}>
@@ -236,10 +237,10 @@ const Inbox = ({setSelectedNavPage, setSelectedRFile, inboxItems, setinboxItems,
                             buttonAction={async () => {inboxAPI.copyToOutbox(inboxItems[activeRFile].id); setSelectedNavPage(0);}}
                             selected={false}
                             enabled={true}
-                            customStyle={{display: "flex", width: "80px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
-                            shadeA={"#303030"}
-                            shadeB={"#383838"}
-                            shadeC={"#404040"}
+                            customStyle={{display: "flex", width: "120px", height: "35px", borderRadius: "6px", justifyContent: "center", alignItems: "center", marginTop: "20px", marginLeft: "10px"}}
+                            shadeA={"#3c3c3c"}
+                            shadeB={"#404040"}
+                            shadeC={"#444444"}
                             />
                         </div>
                     </div>
