@@ -22,6 +22,8 @@ const projectRoot = app.isPackaged
 
 var protocol = 'HTTP';
 
+let server = null;
+
 const outboxItems = new Map();
 const inboxItems = new Map();
 
@@ -297,24 +299,40 @@ function attemptToggleProtocol(initServer){
     var res;
     if (protocol === 'HTTP') {
       //attempt switching to HTTPS
-      res = initServer('HTTPS');
-      console.log("Attempted to switch to HTTPS, success: " + res);
-      if (res == false) {
-        console.log("Failed to switch to HTTPS, keeping HTTP.");
-        initServer('HTTP');
-        // inform UI of failure
-      } else {
-        // succeeded, update protocol
-        protocol = 'HTTPS';
-      }
+      console.log("Attempting to switch to HTTPS...");
+      if (server != null) server.close();
+      server = initServer('HTTPS');
+      protocol = 'HTTPS';
+      
+      // TODO REIMPLEMENT THIS (handle errors when switching protocols)
+      // if (res == false) {
+      //   console.log("Failed to initialize HTTPS server, reverting to HTTP");
+      //   initServer('HTTP', true);
+      //   // inform UI of failure
+      // } else {
+      //   // succeeded, update protocol
+      //   console.log("Successfully initialized HTTPS server");
+      //   protocol = 'HTTPS';
+      // }
     } else {
       // switch from HTTPS to HTTP
+      console.log("Attempting to switch to HTTP...");
+      if (server != null) server.close();
+      server = initServer('HTTP');
       protocol = 'HTTP';
-      res = initServer(protocol);
+
+      // TODO REIMPLEMENT THIS
+      // if (res == false) {
+      //   console.log("Failed to initialize HTTP server, reverting to HTTPS");
+      //   initServer('HTTPS', true);
+      // } else {
+      //   console.log("Successfully initialized HTTP server");
+      //   protocol = 'HTTP';
+      // }
     }
-    console.log("Protocol updated to " + protocol);
+    console.log("Protocol is now set to: " + protocol);
     userConfig.set('useHTTPS', protocol === 'HTTPS' ? true : false);
-    return [protocol, res];
+    return [protocol, true]; // TODO MAKE THE SECOND VALUE REPRESENT TOGGLE SUCCESS (true) OR FAILURE (false) 
   }
 }
 
@@ -396,6 +414,7 @@ function updateRendererInbox(ctx = null) {
   }
 
   window.webContents.send('update-inbox', convertedItems, ctx);
+  // window.webContents.send('alertt', "ALT TEST");
 }
 
 function updateRendererOutbox(ctx = null) {
@@ -436,6 +455,104 @@ function deleteOutboxItem(event, id, ctx) {
   updateRendererOutbox(ctx);
 }
 
+//async (event, newPort) => {if (newPort == null || newPort < 0 || newPort > 65535 || isNaN(newPort)) {return await userConfig.get('port');} else {await userConfig.set('port', newPort); return initServer(protocol);}}
+
+async function setPort(event, newPort) {
+  if (newPort == null || newPort < 0 || newPort > 65535 || isNaN(newPort)) {
+    return await userConfig.get('port');
+  } else {
+    await userConfig.set('port', newPort); 
+    if (server != null) server.close();
+    server = initServer(protocol);
+    
+    return newPort;
+    // return server.address().port; // return actual bound port (will not be 0)
+  }
+}
+
+function initServer(proto, isFallback=false) {
+  console.log("Initializing server with protocol: " + proto);
+  // if (server != null) {
+  //   server.close();
+  // }
+  let server;
+  if (proto == 'HTTPS') {
+    try {
+      let tlsKeyPath = userConfig.get('tlsKeyPath');
+      let tlsCertPath = userConfig.get('tlsCertPath');
+      console.log("Loaded tlsKeyPath: " + tlsKeyPath);
+      console.log("Loaded tlsCertPath: " + tlsCertPath);
+      if (!tlsKeyPath || tlsKeyPath === "" || !fs.existsSync(tlsKeyPath)) {
+        tlsKeyPath = path.join(projectRoot, "key.pem");
+      }
+      if (!tlsCertPath || tlsCertPath === "" || !fs.existsSync(tlsCertPath)) {
+        tlsCertPath = path.join(projectRoot, "cert.pem");
+      }
+
+      var key = fs.readFileSync(tlsKeyPath);
+      var cert = fs.readFileSync(tlsCertPath);
+      
+      if (!key || !cert) {
+        console.log("SSL key or cert not found.");
+        throw("Unable to load SSL key/cert");
+      }
+      console.log("Loaded SSL key and cert.");
+
+      const SSLOptions = {
+        key: key,
+        cert: cert,
+      };
+    
+      server = require('https').createServer(SSLOptions, serverBehavior(projectRoot, addInboxItem, outboxItems));
+    } catch (e) {
+      console.log("Error initializing HTTPS server: ", e);
+      if (isFallback == true) {
+        process.exit();
+      }
+    }
+  } else {
+    try {
+      server = require('http').createServer(serverBehavior(projectRoot, addInboxItem, outboxItems));
+    } catch (e) {
+      if (isFallback == true) {
+        process.exit();
+        //Failed to bind socket for both HTTP and HTTPS, exit
+      }
+    }
+  }
+  let p = userConfig.get('port');
+  if (!p || isNaN(p)) {
+    p = 2222;
+    userConfig.set('port', p);
+  }
+
+  server.on('error', (e) => {
+    if (e.code == 'EADDRINUSE') {
+      console.log("Failed to bind port: " + e);
+      // call aiden about it
+
+      // ipcMain.on('renderer-ready', (e) => {
+        // const window = BrowserWindow.getAllWindows()[0];
+        // console.log("SENDING ALERT...");
+        // window.webContents.send('alertt', 'Failed to bind port!');
+      // });
+    }
+  });
+
+  try {
+    server.listen(userConfig.get('port'), () => {
+      console.log(`Server listening at ${protocol.toLowerCase()}://*:${server.address().port}/`);
+      console.log("Sending new port to renderer...");
+      BrowserWindow.getAllWindows()[0].webContents.send('real-port-update', server.address().port);
+    });
+
+  } catch (e) {
+    console.error("Failed to bind socket: " + e);
+  }
+
+  return server;
+}
+
 app.whenReady().then(() => {
   ipcMain.handle('openFile', handleFileOpen);
   ipcMain.handle('addTextToOutbox', addTextToOutbox);
@@ -449,10 +566,13 @@ app.whenReady().then(() => {
   ipcMain.handle('copyToOutbox', copyToOutbox);
   ipcMain.handle('discardOutboxItem', deleteOutboxItem);
   ipcMain.handle('attemptToggleProtocol', attemptToggleProtocol(initServer));
-  ipcMain.handle('setPort', async (event, newPort) => {if (newPort == null || newPort <= 0 || newPort > 65535 || isNaN(newPort)) {return await userConfig.get('port');} else {await userConfig.set('port', newPort); initServer(protocol); return newPort;}});
-  ipcMain.handle('getPort', () => {
+  ipcMain.handle('setPort', setPort);
+  ipcMain.handle('getUserPort', () => {
     return userConfig.get('port');
   });
+  ipcMain.handle('getRealPort', () => {
+    return server.address().port;
+  })
   ipcMain.handle('getProtocol', () => {
     return protocol;
   });
@@ -510,68 +630,16 @@ app.whenReady().then(() => {
     return result.filePaths[0];
   });
 
-  let server = null;
-
   console.log("Protocol: " + protocol);
 
   createWindow();
 
-  function initServer(proto) {
-    console.log("Initializing server with protocol: " + proto);
-    if (server != null) {
-      server.close();
-    }
-    if (proto == 'HTTPS') {
-      try {
-        let tlsKeyPath = userConfig.get('tlsKeyPath');
-        let tlsCertPath = userConfig.get('tlsCertPath');
-        console.log("Loaded tlsKeyPath: " + tlsKeyPath);
-        console.log("Loaded tlsCertPath: " + tlsCertPath);
-        if (!tlsKeyPath || tlsKeyPath === "" || !fs.existsSync(tlsKeyPath)) {
-          tlsKeyPath = path.join(projectRoot, "key.pem");
-        }
-        if (!tlsCertPath || tlsCertPath === "" || !fs.existsSync(tlsCertPath)) {
-          tlsCertPath = path.join(projectRoot, "cert.pem");
-        }
-
-        var key = fs.readFileSync(tlsKeyPath);
-        var cert = fs.readFileSync(tlsCertPath);
-        console.log("Loaded SSL key and cert.");
-
-        if (!key || !cert) {
-          console.log("SSL key or cert not found.");
-          throw("Unable to load SSL key/cert");
-        }
-
-        const SSLOptions = {
-          key: key,
-          cert: cert,
-        };
-      
-        server = require('https').createServer(SSLOptions, serverBehavior(projectRoot, addInboxItem, outboxItems));
-      } catch (e) {
-        console.log("Error initializing HTTPS server: ", e);
-        return false;
-      }
-    } else {
-      server = require('http').createServer(serverBehavior(projectRoot, addInboxItem, outboxItems));
-    }
-    let p = userConfig.get('port');
-    if (!p || isNaN(p)) {
-      p = 2222;
-      userConfig.set('port', p);
-    }
-    server.listen(userConfig.get('port'), () => {
-      console.log(`Server listening at ${protocol.toLowerCase()}://*:${userConfig.get('port')}/`);
-    });
-
-    return true;
-  }
-
-  initServer(protocol);
+  if (server != null) server.close();
+  server = initServer(protocol);
 
   // protocol is initialized to HTTP. If userconfig says it should be HTTPS, attempt a switch now
   if (userConfig.get('useHTTPS') == true) {
+    console.log("HTTPS is preferred, attempting to switch...");
     attemptToggleProtocol(initServer)();
   }
 

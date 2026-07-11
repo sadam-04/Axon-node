@@ -38,7 +38,8 @@ function App() {
 
   const [protocolMessage, setProtocolMessage] = useState("");
 
-  const [port, setPort] = useState(2222);
+  const [userPort, setUserPort] = useState(2222);
+  const [realPort, setRealPort] = useState(2222);
 
   const [savePaths, setSavePaths] = useState({});
 
@@ -108,7 +109,7 @@ function App() {
 
   // initialization
   useEffect(() => {
-    initialize(setPort, setPresentedIp, setSaveDir, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
+    initialize(setUserPort, setRealPort, setPresentedIp, setSaveDir, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
   }, []);
 
   function hasCurrentFileBeenSaved() {
@@ -169,9 +170,9 @@ function App() {
         </div>
         <div className="content-wrapper" style={{height: "100%", width: "300px", flexGrow: 1, borderRadius: "8px 0 0 0"}}>
           {selectedNavPage === 0 ? (
-            <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocol={protocol} ip={presentedIp} port={port} activeSFile={activeSFile}/>
+            <Outbox hostedFiles={outboxItems} setHostedFiles={setOutboxItems} handleAddText={handleAddText} addTextValue={addTextValue} setAddTextValue={setAddTextValue} setSelectedSFile={setSelectedSFile} protocol={protocol} ip={presentedIp} port={realPort} activeSFile={activeSFile}/>
           ) : selectedNavPage === 1 ? (
-            <Inbox setSelectedNavPage={setSelectedNavPage} setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} protocol={protocol} ip={presentedIp} port={port} />
+            <Inbox setSelectedNavPage={setSelectedNavPage} setSelectedRFile={setSelectedRFile} inboxItems={inboxItems} setinboxItems={setInboxItems} activeRFile={activeRFile} hasCurrentFileBeenSaved={hasCurrentFileBeenSaved} savePaths={savePaths} protocol={protocol} ip={presentedIp} port={realPort} />
           ) : selectedNavPage === -1 ? (
             <div style={{display: "flex", flexDirection: "column", height: "100%", width: "100%", fontSize: "0.8rem", marginLeft: "12px", overflow: "hidden"}}>
               <h4 style={{marginBottom: "10px", marginTop: "13px"}}>Preferences</h4>
@@ -216,7 +217,7 @@ function App() {
               <div style={{flexDirection: "column", display: "flex"}}>
                 <strong>Server port</strong>
                 <span>Specify the port number the server will listen on. Default is 2222.</span>
-                <input type="number" className="theme-text-input" style={{marginTop: "2px", backgroundColor: "#222222", width: "150px"}} defaultValue={port} onBlur={(e) => {configAPI.setPort(e.target.value).then((result) => {setPort(result);});}} placeholder="Enter server port" />
+                <input type="number" className="theme-text-input" style={{marginTop: "2px", backgroundColor: "#222222", width: "150px"}} defaultValue={userPort} onBlur={(e) => {configAPI.setPort(e.target.value).then((result) => {setUserPort(result);});}} placeholder="Enter server port" />
               </div>
             <br />
               <div style={{flexDirection: "column", display: "flex"}}>

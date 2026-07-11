@@ -45,7 +45,7 @@ export function handleChangedIP(newIP, setPresentedIp) {
 // }
 
 // perform various initialization tasks
-export const initialize = async (setPort, setPresentedIp, setSaveDir, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
+export const initialize = async (setUserPort, setRealPort, setPresentedIp, setSaveDir, setAddrs, setinboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setHostedFiles, setSelectedSFile, setSelectedRFile, setSelectedNavPage) => {
 
     // prevent drag and dropping other urls
     window.addEventListener("dragover", event => {
@@ -75,6 +75,14 @@ export const initialize = async (setPort, setPresentedIp, setSaveDir, setAddrs, 
     // get all addresses available for dropdown/qrs
     let addrs = await configAPI.listAddrs();
     setAddrs(addrs);
+
+    // configAPI.onAlert(msg => {
+    //   console.log("ALERT: " + msg);
+    // });
+
+    configAPI.onRealPortUpdate((val) => {
+      setRealPort(val);
+    })
 
     outboxAPI.onUpdate((items, ctx) => {
       setHostedFiles(items);
@@ -126,8 +134,10 @@ export const initialize = async (setPort, setPresentedIp, setSaveDir, setAddrs, 
     setTLSKeyPath(tlsKeyPath);
     let tlsCertPath = await configAPI.getTLSCertPath();
     setTLSCertPath(tlsCertPath);
-    let savedPort = await configAPI.getPort();
-    setPort(savedPort);
+    let savedUserPort = await configAPI.getUserPort();
+    setUserPort(savedUserPort);
+    let savedRealPort = await configAPI.getRealPort();
+    setRealPort(savedRealPort);
     let savedSaveDir = await configAPI.getSaveDir();
     setSaveDir(savedSaveDir);
   }

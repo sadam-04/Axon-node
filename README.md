@@ -29,7 +29,8 @@ Axon's behavior can be changed through two areas: the **Footer** and the **Setti
 The Footer menu is the small, always-visible ribbon at the bottom of the window. It is used for changing behavior that is more likely to require updates between uses. It includes the following:
 - **IP Address** - A dropdown containing the host IP for each detected network interface. The value of this field changes the hostname of URLs encoded in QR codes  
 _Note: Axon's internal web server binds to all interfaces (0.0.0.0). Axon will treat all incoming requests the same, regardless of hostname._
-- **Protocol** - A toggle for switching between HTTP and HTTPS. Avoid transferring private or sensitive data while using unencrypted HTTP. Running in HTTPS mode requires a valid TLS key and certificate to be provided in the Settings menu.
+- **Protocol** - A toggle for switching between HTTP and HTTPS. Avoid transferring private or sensitive data while using unencrypted HTTP. Running in HTTPS mode requires a TLS key and certificate to be provided in the Settings menu. A key and cert can be generated using openssl: `openssl req -x509 -newkey rsa:4096 -nodes -keyout key.pem -out cert.pem -sha256 -days 365
+`
 
 #### Settings
 

@@ -17,13 +17,19 @@ contextBridge.exposeInMainWorld('configAPI', {
     setTLSCertPath: (path) => ipcRenderer.invoke('setTLSCertPath', path),
     browseForTlsCert: (fallback) => ipcRenderer.invoke('browseForTlsCert', fallback),
 
-    getPort: () => ipcRenderer.invoke('getPort'),
+    getUserPort: () => ipcRenderer.invoke('getUserPort'),
+    getRealPort: () => ipcRenderer.invoke('getRealPort'),
+    onRealPortUpdate: (callback) => ipcRenderer.on('real-port-update', (e, val) => callback(val)),
     setPort: (newPort) => ipcRenderer.invoke('setPort', newPort),
 
     getSaveDir: () => ipcRenderer.invoke('getSaveDir'),
     setSaveDir: (newSaveDir) => ipcRenderer.invoke('setSaveDir', newSaveDir),
     browseForSaveDir: (fallback) => ipcRenderer.invoke('browseForSaveDir', fallback),
 
+    // onAlert: (callback) => {
+    //     callback("Test alert");
+    //     ipcRenderer.on('alertt', (e, msg) => callback(msg));
+    // },
 });
 
 contextBridge.exposeInMainWorld('inboxAPI', {
@@ -53,3 +59,7 @@ contextBridge.exposeInMainWorld('outboxAPI', {
     // argument 2 is only needed so it can be passed back to the renderer with the resulting update, for handling selection changes on discard for example
     discard: (id, ctx) => ipcRenderer.invoke('discardOutboxItem', id, ctx),
 });
+
+window.addEventListener('DOMContentLoaded', () => {
+    ipcRenderer.send("renderer-ready");
+})
