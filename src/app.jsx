@@ -109,7 +109,7 @@ function App() {
 
   // initialization
   useEffect(() => {
-    initialize(setUserPort, setRealPort, setPresentedIp, setSaveDir, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage);
+    initialize(setUserPort, setRealPort, setPresentedIp, setSaveDir, setAddrs, setInboxItems, setSavePaths, setProtocol, setTLSKeyPath, setTLSCertPath, setOutboxItems, setSelectedSFile, setSelectedRFile, setSelectedNavPage, setProtocolMessage);
   }, []);
 
   function hasCurrentFileBeenSaved() {

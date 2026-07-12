@@ -20,11 +20,14 @@ contextBridge.exposeInMainWorld('configAPI', {
     getUserPort: () => ipcRenderer.invoke('getUserPort'),
     getRealPort: () => ipcRenderer.invoke('getRealPort'),
     onRealPortUpdate: (callback) => ipcRenderer.on('real-port-update', (e, val) => callback(val)),
+    
     setPort: (newPort) => ipcRenderer.invoke('setPort', newPort),
 
     getSaveDir: () => ipcRenderer.invoke('getSaveDir'),
     setSaveDir: (newSaveDir) => ipcRenderer.invoke('setSaveDir', newSaveDir),
     browseForSaveDir: (fallback) => ipcRenderer.invoke('browseForSaveDir', fallback),
+
+    onFailedPortBind: (callback) => ipcRenderer.on('failed-port-bind', (e) => callback()),
 
     // onAlert: (callback) => {
     //     callback("Test alert");

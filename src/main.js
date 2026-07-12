@@ -466,7 +466,6 @@ async function setPort(event, newPort) {
     server = initServer(protocol);
     
     return newPort;
-    // return server.address().port; // return actual bound port (will not be 0)
   }
 }
 
@@ -475,7 +474,7 @@ function initServer(proto, isFallback=false) {
   // if (server != null) {
   //   server.close();
   // }
-  let server;
+  let _server;
   if (proto == 'HTTPS') {
     try {
       let tlsKeyPath = userConfig.get('tlsKeyPath');
@@ -503,7 +502,7 @@ function initServer(proto, isFallback=false) {
         cert: cert,
       };
     
-      server = require('https').createServer(SSLOptions, serverBehavior(projectRoot, addInboxItem, outboxItems));
+      _server = require('https').createServer(SSLOptions, serverBehavior(projectRoot, addInboxItem, outboxItems));
     } catch (e) {
       console.log("Error initializing HTTPS server: ", e);
       if (isFallback == true) {
@@ -512,7 +511,7 @@ function initServer(proto, isFallback=false) {
     }
   } else {
     try {
-      server = require('http').createServer(serverBehavior(projectRoot, addInboxItem, outboxItems));
+      _server = require('http').createServer(serverBehavior(projectRoot, addInboxItem, outboxItems));
     } catch (e) {
       if (isFallback == true) {
         process.exit();
@@ -526,10 +525,14 @@ function initServer(proto, isFallback=false) {
     userConfig.set('port', p);
   }
 
-  server.on('error', (e) => {
+  _server.on('error', (e) => {
     if (e.code == 'EADDRINUSE') {
       console.log("Failed to bind port: " + e);
+      
+      BrowserWindow.getAllWindows()[0].webContents.send('failed-port-bind');
+
       // call aiden about it
+      // BrowserWindow.getAllWindows()[0].webContents.send('failed-port-bind');
 
       // ipcMain.on('renderer-ready', (e) => {
         // const window = BrowserWindow.getAllWindows()[0];
@@ -539,18 +542,13 @@ function initServer(proto, isFallback=false) {
     }
   });
 
-  try {
-    server.listen(userConfig.get('port'), () => {
-      console.log(`Server listening at ${protocol.toLowerCase()}://*:${server.address().port}/`);
-      console.log("Sending new port to renderer...");
-      BrowserWindow.getAllWindows()[0].webContents.send('real-port-update', server.address().port);
-    });
+  _server.listen(userConfig.get('port'), () => {
+    console.log(`Server listening at ${protocol.toLowerCase()}://*:${_server.address().port}/`);
+    console.log("Sending new port to renderer...");
+    BrowserWindow.getAllWindows()[0].webContents.send('real-port-update', _server.address().port);
+  });
 
-  } catch (e) {
-    console.error("Failed to bind socket: " + e);
-  }
-
-  return server;
+  return _server;
 }
 
 app.whenReady().then(() => {
@@ -571,8 +569,13 @@ app.whenReady().then(() => {
     return userConfig.get('port');
   });
   ipcMain.handle('getRealPort', () => {
+    if (server.address() == null) {
+      BrowserWindow.getAllWindows()[0].webContents.send('failed-port-bind');
+      return -1;
+    }
+    // console.log("Server: " + server);
     return server.address().port;
-  })
+  });
   ipcMain.handle('getProtocol', () => {
     return protocol;
   });
