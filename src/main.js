@@ -457,6 +457,7 @@ function deleteOutboxItem(event, id, ctx) {
 
 //async (event, newPort) => {if (newPort == null || newPort < 0 || newPort > 65535 || isNaN(newPort)) {return await userConfig.get('port');} else {await userConfig.set('port', newPort); return initServer(protocol);}}
 
+// receives new port request from UI, does basic validation. If valid, restarts server with new port and returns it to UI, otherwise returns the old port.
 async function setPort(event, newPort) {
   if (newPort == null || newPort < 0 || newPort > 65535 || isNaN(newPort)) {
     return await userConfig.get('port');
@@ -529,7 +530,7 @@ function initServer(proto, isFallback=false) {
     if (e.code == 'EADDRINUSE') {
       console.log("Failed to bind port: " + e);
       
-      BrowserWindow.getAllWindows()[0].webContents.send('failed-port-bind');
+      BrowserWindow.getAllWindows()[0].webContents.send('real-port-update', -1);
 
       // call aiden about it
       // BrowserWindow.getAllWindows()[0].webContents.send('failed-port-bind');

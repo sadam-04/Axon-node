@@ -76,10 +76,6 @@ export const initialize = async (setUserPort, setRealPort, setPresentedIp, setSa
     let addrs = await configAPI.listAddrs();
     setAddrs(addrs);
 
-    // configAPI.onAlert(msg => {
-    //   console.log("ALERT: " + msg);
-    // });
-
     configAPI.onRealPortUpdate((val) => {
       if (val == -1) {
         setProtocolMessage("Failed to bind port!");  
@@ -87,10 +83,6 @@ export const initialize = async (setUserPort, setRealPort, setPresentedIp, setSa
         setProtocolMessage("");
         setRealPort(val);
       }
-    });
-
-    configAPI.onFailedPortBind(() => {
-      setProtocolMessage("Failed to bind port!");
     });
 
     outboxAPI.onUpdate((items, ctx) => {
