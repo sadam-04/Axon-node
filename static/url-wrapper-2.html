@@ -106,8 +106,11 @@
       }
 
       function copy_link() {
-          navigator.clipboard.writeText('{{url}}');
-          document.querySelector('#copy-link').innerText = 'Copied!';
+            // Read the text securely from the DOM rather than injecting it into JS
+            const textToCopy = document.getElementById('url-text').innerText;
+            
+            navigator.clipboard.writeText(textToCopy);
+            document.querySelector('#copy-text').innerText = 'Copied!';
       }
     </script>
 
